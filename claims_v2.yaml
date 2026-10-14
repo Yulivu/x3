@@ -1,7 +1,7 @@
 # X3 pre-registered criteria v2 (NEW_TASKS 01, hongyu).  FROZEN before U4-U6 run;
 # sha256 recorded in claims_v2.sha256.  The v1 claims and their verdicts
 # (C1_FAIL / PAST_FAIL / DECONF_NOT_SHOWN) stay in the report untouched.
-version: 2
+version: 2.1
 supersedes: claims.yaml
 seed_base: 20261015
 min_per_class: 30
@@ -11,6 +11,22 @@ masks: [clips, unseen]
 backbones_required: 2
 
 claims:
+  N5:
+    name: ESN (enrolled bona fide speaker normalisation)
+    statement: >-
+      ESN-LR at m=5 beats max(B1, B1+enroll, OC+B1) on the strict_draw mask by >=2.0
+      pooled points with the speaker-clustered (b) interval clear of 0.
+    gate: G17
+    m_enroll: 5
+    effect_points: 2.0
+  N6:
+    name: nuisance-subspace projection
+    statement: >-
+      The best speaker/platform projection beats B1 on strict_draw by >=2.0 pooled
+      points with the (b) interval clear of 0, and is no worse than +0.3 on seen.
+    gate: G18
+    effect_points: 2.0
+    seen_tolerance_points: 0.3
   N1p:
     name: graph-propagation fusion
     statement: >-
@@ -28,6 +44,7 @@ claims:
       strongest of {E, K, TypiClust-lite} by >=0.5 with the interval clear of 0.
       Beating only uniform is recorded as SEL_ONLY_VS_UNIFORM and is not novelty.
     k: 100
+    mask: strict_draw          # V-2: selection strategies are only comparable on a FIXED eval set
     gain_vs_uniform_points: 3.0
     gain_vs_best_other_points: 0.5
   N3p:
@@ -37,6 +54,7 @@ claims:
       cell-coverage selector (CC) by >=1.0 pooled on the clips mask; the unseen
       mask is reported only.
     k: 100
+    mask: strict_draw          # V-2
     gain_points: 1.0
   N4p:
     name: label efficiency
@@ -59,6 +77,8 @@ claims:
     statement: unchanged from v1
 
 gates:
+  G17: {name: N5, rule: "ESN_PASS / ESN_FAIL"}
+  G18: {name: N6, rule: "PROJ_PASS / PROJ_FAIL"}
   G12: {name: N1p, rule: "MALP_PASS / MALP_FAIL"}
   G13: {name: N2p, rule: "SEL_PASS / SEL_ONLY_VS_UNIFORM / SEL_FAIL"}
   G14: {name: N3p, rule: "SPEAKER_COVERAGE_PASS / SPEAKER_COVERAGE_FAIL (+ the unseen difference)"}
@@ -75,3 +95,38 @@ rules:
   - "hyper-parameter parity: every method gets <=16 configurations, selected inside L"
   - "transductive methods (B6, B7, B8, B9, M-ALP, Track Z) are labelled as such in the report"
   - "never move a threshold because a gate failed"
+
+# --- NEW_TASKS 02 corrections (V-1..V-3), frozen before U8/U9 run -----------------
+intervals:
+  # V-1: two intervals, always both, never just one.
+  # (a) sampling level: bootstrap B=2000 over the 100 draw-paired differences ->
+  #     95% interval for the MEAN difference (label-sampling noise), diagnostic only.
+  # (b) population level: inside each draw resample the evaluation SPEAKERS with
+  #     replacement B_s=200 times, average each replicate over the 100 draws and take
+  #     the 2.5/97.5 quantiles -> "a different set of speakers" uncertainty.
+  # A gate that says "the interval excludes 0" uses (b).
+  gate_interval: b
+  bootstrap_draws: 2000
+  speaker_bootstraps: 200
+
+hyperparameter_selection:
+  # V-3
+  unseen_or_strict_draw: leave_one_speaker_out_group_kfold
+  seen: stratified_5fold
+  applies_to: [B1, B2, B3, B5, C1, ESN, projection, M-ALP, and every baseline]
+
+evaluation_protocol:
+  # NEW_TASKS 02 section 1, frozen with the split
+  split: splits/speaker_split_v3.json
+  track_U_unseen_speakers:
+    labels: "drawn from v3 dev, <=10 per cell"
+    evaluation: "every clip of v3 test"
+  track_P_personalised:
+    labels_and_eval: "both inside v3 test"
+    mask: clips
+  required_for_SF2: [track_U, track_P]
+
+novelty_effect_threshold:
+  # unified: on an unseen-speaker view a novelty claim needs >=2.0 points AND (b) clear of 0
+  effect_points: 2.0
+  interval: b
