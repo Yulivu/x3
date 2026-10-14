@@ -272,6 +272,9 @@ def marginals(df: pd.DataFrame, learners: Sequence[str] = LEARNERS,
 def gates(df: pd.DataFrame, iv: pd.DataFrame) -> Dict[str, Any]:
     """G12-G15 (and what part of G16 the two masks can decide)."""
     out: Dict[str, Any] = {}
+    if iv is None or iv.empty or "mask" not in getattr(iv, "columns", []):
+        iv = pd.DataFrame(columns=["mask", "k", "method_a", "method_b", "delta",
+                                   "b_lo", "b_hi", "b_contains_zero"])
     means = df.groupby(["mask", "k", "method"])["pooled_eer"].mean()
 
     def m(mask, k, method):

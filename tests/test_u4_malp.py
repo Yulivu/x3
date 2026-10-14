@@ -171,3 +171,13 @@ def test_g14_fails_when_speaker_coverage_is_not_one_point_better():
     iv.loc[(iv["method_a"] == "SC-DWU|LR+LP"), "delta"] = -0.2
     gate = u4.gates(df, iv)
     assert gate["G14"]["status"] == "SPEAKER_COVERAGE_FAIL"
+
+
+def test_gates_survive_an_empty_interval_table():
+    """Two draws are below the interval floor, so the gates must still be written."""
+    df, _ = _gate_frame()
+    gate = u4.gates(df, pd.DataFrame())
+    assert gate["G13"]["status"] in ("SEL_FAIL", "SEL_ONLY_VS_UNIFORM", "SEL_PASS")
+    assert gate["G13"]["interval_vs_uniform"] is None
+    assert gate["G14"]["interval"] is None
+    assert json.dumps(gate, default=str)
