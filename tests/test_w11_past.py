@@ -80,7 +80,9 @@ def test_run_one_consumes_installed_fam_a_tiles(monkeypatch):
     Z, y, plat, lang, cell, spk = _pool(seed=9)
     monkeypatch.setattr(w11_past, "_VIEW_TILES",
                         {"famA1": Z + 0.01, "famA2": Z - 0.01})
-    rows = w11_past.run_one((0, Z, y, plat, lang, cell, spk, 10))
+    rows = []
+    for d in range(4):          # paired_table needs at least 3 common draws
+        rows += w11_past.run_one((d, Z, y, plat, lang, cell, spk, 10))
     assert rows
     df = pd.DataFrame(rows)
     assert set(df["method"]) == set(w11_past.VARIANTS)
