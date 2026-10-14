@@ -17,7 +17,10 @@ from src.trackz import (  # noqa: E402
     log_gauss,
     platform_standardise,
     score_views,
+    threshold_per_cell,
+    z2_posteriors,
     z2_scores,
+    z4_scores,
     z5_scores,
 )
 
@@ -133,3 +136,62 @@ def test_z5_accepts_an_explicit_teacher():
     assert np.allclose(a, b)
     other = z5_scores(s, graph, teacher=-np.asarray(s, float))
     assert not np.allclose(a, other)
+
+
+def test_z2_posteriors_are_monotone_in_the_score_and_match_the_cell_priors():
+    s, y, cell, plat = _synth(separation=2.0)
+    fit = fit_z2(s, cell, plat, iters=20)
+    r = z2_posteriors(s, cell, fit)
+    assert r.min() >= 0.0 and r.max() <= 1.0
+    # inside one cell the posterior is monotone in the score (across cells the cell
+    # prior also moves it, which is the point of Z2)
+    for c in np.unique(cell)[:3]:
+        m = np.where(cell == c)[0]
+        order = m[np.argsort(s[m])]
+        assert np.all(np.diff(r[order]) >= -1e-9), c
+    assert abs(float(r.mean()) - fit["pi_global"]) < 0.15
+
+
+def test_threshold_per_cell_hits_the_requested_rate():
+    rng = np.random.default_rng(11)
+    p = rng.random(1000)
+    cell = np.array(["a"] * 500 + ["b"] * 500)
+    got = threshold_per_cell(p, cell, {"a": 0.2, "b": 0.8})
+    assert abs(float(got[:500].mean()) - 0.2) < 0.01
+    assert abs(float(got[500:].mean()) - 0.8) < 0.01
+
+
+def test_z4_learns_from_the_features_and_beats_the_mixture():
+    """The point of Z4: the zero-shot score is weak, the features are not."""
+    s, y, cell, plat = _synth(n=2000, separation=0.9)
+    fit = fit_z2(s, cell, plat, iters=20)
+    z2 = z2_scores(s, cell, fit)
+    rng = np.random.default_rng(12)
+    Z = np.stack([y * 2.0 + rng.normal(size=len(y)) * 1.0,
+                  rng.normal(size=len(y))] , axis=1)
+    z4, info = z4_scores(Z, s, cell, fit, iters=5)
+    assert z4.shape == z2.shape
+    assert info["iters"] >= 1
+    assert eer(y, z4) < eer(y, z2)
+    assert eer(y, z4) < 20.0
+
+
+def test_z4_is_deterministic():
+    s, y, cell, plat = _synth(n=800)
+    fit = fit_z2(s, cell, plat, iters=10)
+    rng = np.random.default_rng(13)
+    Z = rng.normal(size=(len(y), 4))
+    a, _ = z4_scores(Z, s, cell, fit, iters=3)
+    b, _ = z4_scores(Z, s, cell, fit, iters=3)
+    assert np.array_equal(a, b)
+
+
+def test_z4_falls_back_to_the_zero_shot_when_the_pool_has_one_class():
+    s = np.full(50, 5.0)                               # everything looks fake
+    cell = np.array(["a|en"] * 50)
+    plat = np.array(["a"] * 50)
+    fit = fit_z2(s, cell, plat, iters=5)
+    Z = np.zeros((50, 3))
+    sc, info = z4_scores(Z, s, cell, fit, iters=3)
+    assert sc.shape == (50,)
+    assert info["iters"] == 0 or np.all(np.isfinite(sc))

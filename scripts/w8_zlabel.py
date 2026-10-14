@@ -42,6 +42,7 @@ from src.trackz import (  # noqa: E402
     platform_standardise,
     score_views,
     z2_scores,
+    z4_scores,
     z5_scores,
 )
 
@@ -110,6 +111,12 @@ def run(root: Path, data_dir: Path, backbone: str, spec: str, split: str
     add("Z5", z5, {"seed_score": "Z2"})
     z5b = z5_scores(z1, graph, teacher=z1)
     add("Z5-z1", z5b, {"seed_score": "Z1"})
+    # Z4 (U6/W22): label-free PAST - self-train an LR on the Z2 posterior, cell priors
+    # held fixed. It is the only arm here that uses the *features* rather than the
+    # detector's score distribution.
+    z4, info4 = z4_scores(Z, s0, cell, fit, iters=5)
+    add("Z4", z4, {"seed_score": "Z2 posterior", "iters": info4["iters"],
+                   "n_pseudo_pos": info4["n_pseudo_pos"]})
     return pd.DataFrame(rows)
 
 

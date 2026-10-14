@@ -22,7 +22,7 @@ import numpy as np
 
 __all__ = [
     "platform_standardise", "iqr", "fit_z2", "z2_scores", "log_gauss",
-    "z5_scores", "score_views",
+    "z5_scores", "score_views", "z2_posteriors", "threshold_per_cell", "z4_scores",
 ]
 
 
@@ -109,6 +109,74 @@ def z2_scores(s: Sequence[float], cell: Sequence[object], fit: Dict[str, Any]
     return (log_gauss(s, fit["mu1"], fit["sig1"])
             - log_gauss(s, fit["mu0"], fit["sig0"])
             + np.log(np.clip(pi, 1e-6, 1 - 1e-6) / np.clip(1 - pi, 1e-6, 1)))
+
+
+def z2_posteriors(s: Sequence[float], cell: Sequence[object], fit: Dict[str, Any]
+                  ) -> np.ndarray:
+    """The responsibility ``P(class 1 | s, cell)`` of the Z2 mixture."""
+    s = np.asarray(s, float)
+    cell = np.asarray(cell)
+    pi = np.array([fit["pi_cell"][c] for c in cell], float)
+    l1 = log_gauss(s, fit["mu1"], fit["sig1"]) + np.log(np.clip(pi, 1e-12, 1))
+    l0 = log_gauss(s, fit["mu0"], fit["sig0"]) + np.log(np.clip(1 - pi, 1e-12, 1))
+    m = np.maximum(l1, l0)
+    return np.exp(l1 - m) / (np.exp(l1 - m) + np.exp(l0 - m))
+
+
+def threshold_per_cell(p: Sequence[float], cell: Sequence[object],
+                       target_rate: Dict[Any, float]) -> np.ndarray:
+    """Label-free class-mass normalisation: pick a per-cell threshold that makes the
+    predicted fake rate equal the prior ``target_rate[cell]``."""
+    p = np.asarray(p, float)
+    cell = np.asarray(cell)
+    out = np.zeros(len(p), bool)
+    for c in np.unique(cell):
+        m = cell == c
+        rate = float(target_rate.get(c, 0.5))
+        if m.sum() == 0:
+            continue
+        cut = float(np.quantile(p[m], 1.0 - rate))
+        out[m] = p[m] >= cut
+    if out.all() or not out.any():                    # degenerate: fall back to the median
+        out = p >= float(np.median(p))
+    return out
+
+
+def z4_scores(Z: np.ndarray, s: Sequence[float], cell: Sequence[object],
+              fit: Dict[str, Any], iters: int = 5, C: float = 1.0,
+              seed: int = 20261015) -> Tuple[np.ndarray, Dict[str, Any]]:
+    """**Z4**: label-free PAST - self-train an LR on the Z2 posterior, with the cell
+    priors held fixed, and iterate.  No label is ever read.
+
+    Each round: fit ``LR(Z -> pseudo)``, then re-threshold its probability per cell so
+    the predicted fake rate matches the mixture's own prior.  The returned score is
+    the logit of the final LR.
+    """
+    from sklearn.linear_model import LogisticRegression
+
+    Z = np.asarray(Z, float)
+    r = z2_posteriors(s, cell, fit)
+    target = dict(fit["pi_cell"])
+    pseudo = r > 0.5
+    history: List[Dict[str, Any]] = []
+    model = None
+    for t in range(int(iters)):
+        if len(np.unique(pseudo)) < 2:                # nothing to learn from
+            break
+        model = LogisticRegression(C=float(C), max_iter=5000,
+                                   random_state=int(seed)).fit(Z, pseudo.astype(int))
+        p = model.predict_proba(Z)[:, 1]
+        new = threshold_per_cell(p, cell, target)
+        history.append({"iter": t, "n_pos": int(new.sum())})
+        if np.array_equal(new, pseudo):
+            pseudo = new
+            break
+        pseudo = new
+    if model is None:                                 # pragma: no cover
+        return np.asarray(s, float), {"iters": 0, "history": history}
+    return (model.decision_function(Z),
+            {"iters": len(history), "history": history,
+             "n_pseudo_pos": int(pseudo.sum())})
 
 
 def z5_scores(z2: Sequence[float], graph, alpha: float = 0.9, iters: int = 50,
