@@ -255,6 +255,9 @@ def summarize_draws(rows: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame, pd.
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
+    # run_one_draw reads these module-level names, so they must be rebound before
+    # any payload is built (the workers inherit them under fork)
+    global BACKBONE, SPEC
     parser = argparse.ArgumentParser(description="X3 W6 baselines")
     parser.add_argument("--root", default=".")
     parser.add_argument("--data", default=None)
@@ -274,8 +277,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     methods = tuple(m.strip() for m in args.methods.split(",") if m.strip())
 
     sub, F = load_spec(root, data_dir, args.backbone, args.spec)
-    global BACKBONE, SPEC
     backbone, spec = args.backbone, args.spec
+    BACKBONE, SPEC = backbone, spec
     Z = preprocess(F, dim=args.pca)
     y = sub["y"].to_numpy()
     plat = sub["platform"].to_numpy()
