@@ -64,6 +64,8 @@ def decide(root: Path, region: str = "dev", select: bool = False) -> Dict[str, A
     # NEW_TASKS 02 gates live in their own files (they are computed by scripts that
     # also own their tables); missing files stay NOT_RUN, never guessed.
     gates.update(_new_task_gates(root))
+    for g in DECISION_ORDER:
+        gates.setdefault(g, {"status": NOT_RUN})
     return gates
 
 
