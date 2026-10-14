@@ -77,6 +77,32 @@ def load_dev(root: Path, data_dir: Path, layers: Sequence[int] = LINEA_LAYERS):
     return sub, F
 
 
+def load_spec(root: Path, data_dir: Path, backbone: str, spec: str):
+    """Dev rows plus the feature block for ``(backbone, spec)``.
+
+    ``backbone == BACKBONE_LINEA`` reads the frozen Line A block; anything else
+    reads ``$DATA/x3/feats/<backbone>/`` and rebuilds the W5 spec menu.
+    """
+    if backbone == BACKBONE:
+        return load_dev(root, data_dir)
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+    import w5_backbones as w5
+
+    split = json.loads((root / "splits" / "speaker_split_v2.json").read_text(encoding="utf-8"))
+    meta = load_mlitw(data_dir)
+    keep = meta["speaker"].isin(set(split["dev_speakers"])).to_numpy()
+    sub = meta.loc[keep].reset_index(drop=True)
+    fdir = data_dir / "x3" / "feats" / backbone
+    mean = np.asarray(np.load(fdir / "mean.npy", mmap_mode="r")[keep], np.float32)
+    std = np.asarray(np.load(fdir / "std.npy", mmap_mode="r")[keep], np.float32)
+    info = json.loads((fdir / "layers.json").read_text(encoding="utf-8"))
+    zero = pd.read_csv(fdir / "scores.csv")["logit_fake_minus_real"].to_numpy()[keep]
+    specs = w5.specs_for(mean, std, zero, info["n_layers"])
+    if spec not in specs:
+        raise KeyError(f"spec {spec!r} not in {sorted(specs)}")
+    return sub, specs[spec]
+
+
 def preprocess(F: np.ndarray, dim: int = PCA_DIM, seed: int = 20261015) -> np.ndarray:
     """Standardise then PCA, fitted on the UNLABELLED region features only."""
     from sklearn.decomposition import PCA
@@ -213,6 +239,8 @@ def summarize_draws(rows: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame, pd.
                 "n": int(d.size)}
 
     rows_paired = []
+    bb = str(main["backbone"].iloc[0]) if "backbone" in main.columns and len(main) else BACKBONE
+    sp = str(main["spec"].iloc[0]) if "spec" in main.columns and len(main) else SPEC
     if "C1" in set(main["method"]):
         for other in ("B1", "B2", "B3", "B11"):
             if other not in set(main["method"]):
@@ -220,7 +248,7 @@ def summarize_draws(rows: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame, pd.
             for metric in ("pooled_eer", "within_macro_eer", "worst_platform_eer"):
                 p = paired("C1", other, metric)
                 if p:
-                    p.update({"backbone": BACKBONE, "spec": SPEC})
+                    p.update({"backbone": bb, "spec": sp})
                     rows_paired.append(p)
     collapse = rows[rows["mask"] == "collapse"].copy()
     return long, pd.DataFrame(rows_paired), collapse
@@ -235,12 +263,19 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--jobs", type=int, default=16)
     parser.add_argument("--methods", default=",".join(PROVISIONAL_METHODS))
     parser.add_argument("--pca", type=int, default=PCA_DIM)
+    parser.add_argument("--backbone", default=BACKBONE,
+                        help=f"{BACKBONE} = the frozen Line A block; anything else reads "
+                             "$DATA/x3/feats/<backbone>/")
+    parser.add_argument("--spec", default=SPEC)
+    parser.add_argument("--suffix", default="", help="suffix for the draws filename")
     args = parser.parse_args(argv)
     root = Path(args.root).resolve()
     data_dir = data_root(args.data)
     methods = tuple(m.strip() for m in args.methods.split(",") if m.strip())
 
-    sub, F = load_dev(root, data_dir)
+    sub, F = load_spec(root, data_dir, args.backbone, args.spec)
+    global BACKBONE, SPEC
+    backbone, spec = args.backbone, args.spec
     Z = preprocess(F, dim=args.pca)
     y = sub["y"].to_numpy()
     plat = sub["platform"].to_numpy()
@@ -249,7 +284,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     speaker = sub["speaker"].to_numpy()
     zp = data_dir / "last_scores_p0cal_raw_s0.npy"
     zero = np.load(zp)[sub["clip_id"].to_numpy()] if zp.exists() else np.zeros(len(sub))
-    print(f"dev clips={len(sub)} classes={np.bincount(y)} pca={Z.shape[1]} methods={methods}")
+    print(f"dev clips={len(sub)} classes={np.bincount(y)} pca={Z.shape[1]} methods={methods} "
+          f"backbone={backbone} spec={spec}")
 
     payloads = [(d, Z, y, plat, lang, cell, speaker, zero, methods, args.k_per_cell)
                 for d in range(args.draws)]
@@ -279,8 +315,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     if errors:
         print("errors:", errors[:5], "...", len(errors))
     df = pd.DataFrame(rows)
+    if not df.empty:
+        df["backbone"] = backbone
+        df["spec"] = spec
     (root / "results").mkdir(parents=True, exist_ok=True)
-    df.to_csv(root / "results" / f"w6_draws_{BACKBONE}_{SPEC}.csv", index=False)
+    df.to_csv(root / "results" / f"w6_draws_{backbone}_{spec}{args.suffix}.csv", index=False)
     summary, paired_tbl, collapse = summarize_draws(df)
     summary.to_csv(root / "results" / "w6_summary.csv", index=False)
     if not paired_tbl.empty:
