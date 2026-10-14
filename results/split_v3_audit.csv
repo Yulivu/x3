@@ -1,0 +1,6 @@
+check,detail,n_hits,ok
+result_files_region_column,"18 result csv with a region column; values=['dev', 'full']; offenders=[""w4_draws.csv:['full']""]",1,False
+source_paths_touching_test_side,"whitelisted=['regions.py', 'w3_split.py', 'w3b_split_v3.py']; hits=[]",0,True
+progress_log_mentions,hits=[],0,True
+frozen_model_scored_every_clip,"2 rows scored by the frozen Line A probe (W2 reproduction); a published model applied to all clips, no test label and no design decision",0,True
+v2_split_shape,dev=68 speakers/7436 clips; test=112 speakers/17093 clips,0,True

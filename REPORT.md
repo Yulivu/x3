@@ -1,12 +1,12 @@
 # X3 report
 
 ```
-DECISION: G0=NOT_RUN G1=NOT_RUN G2=REPRODUCED G3=NOT_RUN G4=C1_FAIL G5=PL_OK G6=PAST_FAIL G7=CASA_PASS G8=NOT_RUN G9=NOT_RUN G10=DECONF_NOT_SHOWN G11=NOT_RUN
+DECISION: G0=pass G1=HEADROOM_OK G2=REPRODUCED G3=xls-r-2b|S3 G4=C1_FAIL G5=PL_OK G6=PAST_FAIL G7=CASA_PASS G8=NOT_RUN G9=NOT_RUN G10=DECONF_NOT_SHOWN G11=SOTA_F_DEV_NO G12=NOT_RUN G13=NOT_RUN G14=NOT_RUN G15=NOT_RUN G16=NOT_RUN G17=ESN_FAIL G18=PROJ_FAIL
 ```
 
 ## 1. Summary
 
-- S-F (few-shot SOTA): NOT_RUN
+- S-F (few-shot SOTA): SOTA_F_DEV_NO
 - S-Z (zero-label SOTA): NOT_RUN
 - N1 (MPP / C1): C1_FAIL
 - N2 (PAST): PAST_FAIL
@@ -17,12 +17,323 @@ DECISION: G0=NOT_RUN G1=NOT_RUN G2=REPRODUCED G3=NOT_RUN G4=C1_FAIL G5=PL_OK G6=
 
 Novelty rule: 1/4 of N1-N4 passed -> one component passed: report it as an implementation detail.
 
+## NEW_TASKS 02 (v3 protocol, priority over U4)
+
+### U1' main table - pooled EER on the v3 dev region (100 draws)
+
+`results/u1p_speaker_split_v3.csv` (rows: budget x mask)
+
+| k | mask | B1 | B3 | B7 | B9 | C1 |
+|---|---|---|---|---|---|---|
+| 100 | seen | 11.75 | 12.68 | 11.46 | 10.18 | 11.72 |
+| 100 | strict_draw | 15.73 | 18.08 | 16 | 18.84 | 17.16 |
+| 100 | unseen | 15.13 | 18.81 | 15.59 | 16.39 | 16.83 |
+| 290 | seen | 10.19 | 11.8 | 9.705 | 7.249 | 10.13 |
+| 290 | strict_draw | 14.45 | 17.15 | 15.13 | 15.04 | 16.1 |
+| 290 | unseen | 11.96 | 17.36 | 13.88 | 10.77 | 14.84 |
+
+Intervals at k=290: old rule (2.5/97.5 of the per-draw differences) vs the speaker-clustered (b) interval
+
+| mask | method_a | method_b | delta | old_lo | old_hi | b_lo | b_hi | b_contains_zero |
+|---|---|---|---|---|---|---|---|---|
+| unseen | C1 | B9 | 4.072 | -2.509 | 11.14 | 3.086 | 4.724 | False |
+| unseen | B9 | B1 | -1.192 | -10.27 | 4.67 | -2.121 | -0.232 | False |
+| unseen | B3 | B1 | 5.401 | -6.518 | 22.14 | 4.413 | 6.061 | False |
+| unseen | B7 | B1 | 1.914 | -2.993 | 6.263 | 1.427 | 2.251 | False |
+| unseen | C1 | B1 | 2.88 | -3.699 | 7.107 | 2.283 | 3.277 | False |
+| strict_draw | C1 | B9 | 1.062 | -4.289 | 6.239 | 0.09 | 1.813 | False |
+| strict_draw | B7 | B1 | 0.678 | -1.668 | 4.291 | 0.407 | 0.937 | False |
+| strict_draw | B3 | B1 | 2.698 | -1.124 | 11.53 | 1.605 | 3.443 | False |
+| strict_draw | B9 | B1 | 0.588 | -4.248 | 4.933 | -0.552 | 1.581 | True |
+| strict_draw | C1 | B1 | 1.65 | -0.798 | 5.175 | 1.161 | 1.891 | False |
+| seen | C1 | B9 | 2.877 | 0.27 | 5.456 | 2.649 | 3.294 | False |
+| seen | B7 | B1 | -0.489 | -1.583 | 0.615 | -0.553 | -0.308 | False |
+| seen | B3 | B1 | 1.611 | -0.716 | 5.243 | 1.317 | 2.053 | False |
+| seen | B9 | B1 | -2.944 | -5.403 | -0.309 | -3.336 | -2.619 | False |
+| seen | C1 | B1 | -0.068 | -1.213 | 0.857 | -0.129 | 0.114 | True |
+
+
+### U1' v2 -> v3 (same protocol, bigger dev region)
+
+`results/u1p_v2v3.csv`
+
+| method | mask | v2_pooled | v3_pooled | delta_v3_minus_v2 |
+|---|---|---|---|---|
+| B1 | seen | 7.269 | 10.19 | 2.924 |
+| B1 | strict_draw | 15.23 | 14.45 | -0.779 |
+| B1 | unseen | 12.53 | 11.96 | -0.561 |
+| B2 | seen | 11.78 | nan | nan |
+| B2 | strict_draw | 26.46 | nan | nan |
+| B2 | unseen | 19.73 | nan | nan |
+| B3 | seen | 7.453 | 11.8 | 4.351 |
+| B3 | strict_draw | 16.4 | 17.15 | 0.747 |
+| B3 | unseen | 13.51 | 17.36 | 3.859 |
+| B7 | seen | 7.01 | 9.705 | 2.695 |
+| B7 | strict_draw | 15.66 | 15.13 | -0.536 |
+| B7 | unseen | 12.37 | 13.88 | 1.508 |
+| B8 | seen | 14.22 | nan | nan |
+| B8 | strict_draw | 26.94 | nan | nan |
+| B8 | unseen | 22.07 | nan | nan |
+| B9 | seen | 5.584 | 7.249 | 1.666 |
+| B9 | strict_draw | 18.62 | 15.04 | -3.587 |
+| B9 | unseen | 12.45 | 10.77 | -1.676 |
+| C1 | seen | 7.447 | 10.13 | 2.679 |
+| C1 | strict_draw | 16.23 | 16.1 | -0.132 |
+| _(1 more rows in the CSV)_ | | | | |
+
+
+Same v2 draws under both rules (`rules_disagree` = the old rule keeps 0 inside while (a) excludes it):
+
+| mask | method_a | method_b | delta | old_lo | old_hi | a_lo | a_hi | rules_disagree |
+|---|---|---|---|---|---|---|---|---|
+| seen | B9 | B1 | -1.686 | -4.113 | 0.292 | -1.926 | -1.447 | True |
+| seen | C1 | B1 | 0.178 | -0.445 | 0.991 | 0.105 | 0.254 | True |
+| seen | B3 | B1 | 0.184 | -0.905 | 1.975 | 0.04 | 0.333 | True |
+| seen | B7 | B1 | -0.26 | -1.077 | 0.497 | -0.345 | -0.169 | True |
+| unseen | B9 | B1 | -0.076 | -8.954 | 12.83 | -1.057 | 0.939 | False |
+| unseen | C1 | B1 | 1.43 | -0.628 | 4.932 | 1.187 | 1.723 | True |
+| unseen | B3 | B1 | 0.981 | -4.169 | 6.558 | 0.416 | 1.525 | True |
+| unseen | B7 | B1 | -0.155 | -2.462 | 2.655 | -0.412 | 0.113 | False |
+| strict_draw | B9 | B1 | 3.396 | -6.702 | 18 | 2.095 | 4.854 | True |
+| strict_draw | C1 | B1 | 1.003 | -0.689 | 5.586 | 0.717 | 1.327 | True |
+| strict_draw | B3 | B1 | 1.172 | -3.268 | 9.279 | 0.52 | 1.879 | True |
+| strict_draw | B7 | B1 | 0.436 | -1.836 | 5.085 | 0.1 | 0.786 | True |
+
+
+### U8 ESN - pooled EER by enrolment size m (all clips)
+
+`results/u8_esn.csv`
+
+| mask | method | 0 | 3 | 5 | 10 |
+|---|---|---|---|---|---|
+| seen | B1 | 10.19 | 10.22 | 10.11 | 10.06 |
+| seen | B1+enroll | 10.19 | 9.63 | 9.707 | 9.257 |
+| seen | ESN | 10.19 | 8.751 | 8.626 | 8.591 |
+| seen | ESN-P | 10.19 | 8.749 | 8.576 | 8.497 |
+| seen | OC | nan | 18.08 | 15.59 | 12.81 |
+| seen | OC+B1 | nan | 7.996 | 6.388 | 4.397 |
+| strict_draw | B1 | 14.45 | 14.31 | 14.32 | 14.3 |
+| strict_draw | B1+enroll | 14.45 | 13.06 | 12.79 | 12.34 |
+| strict_draw | ESN | 14.45 | 13.22 | 13.27 | 13.14 |
+| strict_draw | ESN-P | 14.45 | 13.22 | 13.23 | 13 |
+| strict_draw | OC | nan | 19.37 | 16.64 | 13.6 |
+| strict_draw | OC+B1 | nan | 9.83 | 7.757 | 5.697 |
+| unseen | B1 | 11.96 | 12.06 | 10.91 | 10.51 |
+| unseen | B1+enroll | 11.96 | 10.92 | 9.829 | 9.153 |
+| unseen | ESN | 11.96 | 10.5 | 9.591 | 9.235 |
+| unseen | ESN-P | 11.96 | 10.49 | 9.523 | 9.113 |
+| unseen | OC | nan | 24.59 | 21.16 | 17.98 |
+| unseen | OC+B1 | nan | 11.84 | 8.737 | 6.194 |
+
+
+U8 intervals (delta = method - control; negative = method better)
+
+| m | mask | method_a | method_b | delta | old_lo | old_hi | b_lo | b_hi | meets_2pt_rule |
+|---|---|---|---|---|---|---|---|---|---|
+| 0 | unseen | ESN-P | B1 | 0 | 0 | 0 | 0 | 0 | False |
+| 0 | unseen | ESN-P | B1+enroll | 0 | 0 | 0 | 0 | 0 | False |
+| 0 | unseen | B1+enroll | B1 | 0 | 0 | 0 | 0 | 0 | False |
+| 0 | unseen | ESN | B1 | 0 | 0 | 0 | 0 | 0 | False |
+| 0 | unseen | ESN | B1+enroll | 0 | 0 | 0 | 0 | 0 | False |
+| 3 | unseen | ESN | B1 | -1.557 | -8.123 | 1.763 | -2.021 | -1.054 | False |
+| 3 | unseen | ESN | B1+enroll | -0.423 | -4.206 | 2.241 | -0.511 | 0.139 | False |
+| 3 | unseen | ESN-P | B1 | -1.561 | -8.123 | 1.82 | -2.018 | -1.064 | False |
+| 0 | strict_draw | ESN | B1+enroll | 0 | 0 | 0 | 0 | 0 | False |
+| 3 | unseen | ESN-P | B1+enroll | -0.427 | -4.112 | 2.34 | -0.513 | 0.129 | False |
+| 3 | unseen | ESN | OC+B1 | -1.339 | -7.694 | 9.166 | -2.084 | -0.751 | False |
+| 0 | strict_draw | ESN-P | B1 | 0 | 0 | 0 | 0 | 0 | False |
+| 0 | strict_draw | B1+enroll | B1 | 0 | 0 | 0 | 0 | 0 | False |
+| 0 | strict_draw | ESN-P | B1+enroll | 0 | 0 | 0 | 0 | 0 | False |
+| 0 | strict_draw | ESN | B1 | 0 | 0 | 0 | 0 | 0 | False |
+| 3 | unseen | ESN-P | OC+B1 | -1.343 | -7.742 | 9.285 | -2.1 | -0.758 | False |
+| _(80 more rows in the CSV)_ | | | | | | | | | |
+
+
+### U9 projection - packaged view
+
+`results/u9_projection.csv` (CV-selected variant per draw)
+
+| method | seen | strict_draw | unseen |
+|---|---|---|---|
+| B1 | 10.19 | 14.45 | 11.96 |
+| GRID-ind | nan | 14.47 | nan |
+| GRID-tra | nan | 14.39 | nan |
+| PROJ-ind | 10.26 | 14.47 | 12.04 |
+| PROJ-tra | 10.2 | 14.48 | 11.79 |
+
+
+### G17 (N5, ESN)
+
+```json
+{
+  "b_excludes_zero": true,
+  "best_control": "OC+B1",
+  "delta_points": 5.508007225318261,
+  "effect_ge_2": false,
+  "interval_b": [
+    4.231945025882896,
+    6.794665527272493
+  ],
+  "interval_old": [
+    1.5942066744745678,
+    10.43977702993291
+  ],
+  "m": 5,
+  "mask": "strict_draw",
+  "means": {
+    "B1": 14.320741630485031,
+    "B1+enroll": 12.790540481510225,
+    "ESN": 13.265034648768358,
+    "ESN-P": 13.229142474350276,
+    "OC": 16.641382975051055,
+    "OC+B1": 7.757027423450097
+  },
+  "population": "all",
+  "verdict": "ESN_FAIL"
+}
+```
+
+### G18 (N6, projection)
+
+```json
+{
+  "b1_strict_draw": 14.44969564859901,
+  "b_excludes_zero": false,
+  "best_grid_cells": [
+    {
+      "m_p": 0,
+      "m_s": 4,
+      "pooled_eer": 14.195042117053617,
+      "scope": "transductive"
+    },
+    {
+      "m_p": 2,
+      "m_s": 8,
+      "pooled_eer": 14.246976912704993,
+      "scope": "transductive"
+    },
+    {
+      "m_p": 0,
+      "m_s": 8,
+      "pooled_eer": 14.262488833280134,
+      "scope": "transductive"
+    },
+    {
+      "m_p": 2,
+      "m_s": 32,
+      "pooled_eer": 14.370609707824519,
+      "scope": "transductive"
+    },
+    {
+      "m_p": 0,
+      "m_s": 32,
+      "pooled_eer": 14.378213044843621,
+      "scope": "transductive"
+    }
+  ],
+  "best_grid_note": "choosing the best cell after seeing strict_draw is optimistic; the CV-selected number above is the pre-registered comparison",
+  "cv_selected": {
+    "seen|B1": 10.193662061010695,
+    "seen|PROJ-ind": 10.264264824365384,
+    "seen|PROJ-tra": 10.197554465065478,
+    "strict_draw|B1": 14.44969564859901,
+    "strict_draw|GRID-ind": 14.466019411372853,
+    "strict_draw|GRID-tra": 14.387026227125485,
+    "strict_draw|PROJ-ind": 14.467374819087011,
+    "strict_draw|PROJ-tra": 14.475845254680719,
+    "unseen|B1": 11.963969067064927,
+    "unseen|PROJ-ind": 12.044137242407123,
+    "unseen|PROJ-tra": 11.78452988987242
+  },
+  "delta_vs_b1": 0.017679170488001716,
+  "effect_ge_2": false,
+  "interval_b": [
+    -0.018825364972594124,
+    0.06187870655338064
+  ],
+  "method": "PROJ-ind",
+  "seen": 10.264264824365384,
+  "seen_delta": 0.07060276335468885,
+  "seen_within_tolerance": true,
+  "strict_draw": 14.467374819087011,
+  "verdict": "PROJ_FAIL"
+}
+```
+
+### U1' verdicts
+
+```json
+{
+  "B9_minus_B1_unseen": -1.1918230881230043,
+  "B9_minus_B1_unseen_ci_b": [
+    -2.1206788684265963,
+    -0.2320875955407337
+  ],
+  "B9_minus_B1_unseen_ci_old": [
+    -10.264579860558005,
+    4.670090701425648
+  ],
+  "G4_C1_minus_B1_strict_draw": {
+    "C1_beats_B1": false,
+    "b": [
+      1.161454315123263,
+      1.8905929410866749
+    ],
+    "delta": 1.650156500202433,
+    "old": [
+      -0.7981131240316968,
+      5.175322309599283
+    ]
+  },
+  "LP_GAIN_IS_SPEAKER_LOCAL": false,
+  "SPEAKER_GAP": true,
+  "SPEAKER_GAP_methods": [
+    "B9"
+  ],
+  "speaker_ratio": {
+    "B1": {
+      "ratio": 1.2349172452632216,
+      "seen": 10.969883181399412,
+      "unseen": 13.546897919233107
+    },
+    "B3": {
+      "ratio": 1.4776927439001106,
+      "seen": 12.240035240260932,
+      "unseen": 18.087011259615227
+    },
+    "B7": {
+      "ratio": 1.3927719886694243,
+      "seen": 10.579761515315873,
+      "unseen": 14.73519548533473
+    },
+    "B9": {
+      "ratio": 1.5583716290505585,
+      "seen": 8.716335978261684,
+      "unseen": 13.583290697795654
+    },
+    "C1": {
+      "ratio": 1.450041737315278,
+      "seen": 10.920889159737367,
+      "unseen": 15.835745090213159
+    }
+  }
+}
+```
+
 - {'item': 'TASKBOOK 1.2 headline attribution', 'what': "TASKBOOK says Line A's headline 13.64/14.56/20.79 comes from 'frozen XLS-R features + a small probe trained on 290 labels, plus cell-prior correction'. Measured on the box, that route gives 24.65 pooled (k=10, BB+EB), and even an ORACLE cell prior only reaches 21.52 pooled on the p0cal scores. The 13.64 number is COMPARISON.md's line A: 290 labels train a head directly with NO prior correction (clips 13.05 / strict 13.64, AUC 0.94).", 'impact': "S-F must be judged against the ADAPTATION route (BASE_F's B11 family), not only against the prior-correction family; otherwise the SOTA bar is ~9 EER points too low. The prior-correction family stays in BASE_F under its own name.", 'source': 'W4 on the box, 2026-10-14; wx2/docs/COMPARISON.md 0.0 line 42'}
 - {'item': 'B10_REDUCED is not a usable baseline', 'what': "B10_REDUCED scored mean AUC 0.412 (< 0.5) over 50 draws: the head never trained. With a random initialisation the declared budget (5 epochs, lr <= 3e-5, AdamW) leaves the weights essentially at their random values, so the score is a random projection dominated by PC1 and comes out anti-correlated with the label. The full B10 (W13 on the GPU lane) is supposed to start from the backbone's own pretrained head, which this variant cannot do.", 'impact': "Any 'we beat B10' statement made with these rows is vacuous. Either run the full B10 on the encoder, or report B10 as NOT_MEANINGFUL and keep it out of the S-F comparison.", 'source': 'W13 on the box, 2026-10-14'}
 
 ## W2 zero-shot
 
-NOT_RUN - `results/zeroshot_mlitw.csv` missing
+Per-backbone zero-shot three views.
+
+| pooled_eer | within_macro_eer | worst_platform | worst_platform_eer | auc | hter_pooled | n_eval | n_pos | eer_bilibili | eer_douyin | eer_facebook | eer_rednote | eer_tiktok | eer_x | eer_youtube | backbone | kind | fidelity |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 20.21 | 21.52 | tiktok | 23.89 | 0.8627 | 35.6 | 24529 | 6361 | 21.91 | 19.23 | 22.5 | 23.62 | 23.89 | 18.22 | 21.27 | xls-r-2b | antideepfake | pass |
+| 22.62 | 22.04 | rednote | 27.62 | 0.8501 | 35.73 | 24529 | 6361 | 24.59 | 23.2 | 20.91 | 27.62 | 20.33 | 19.33 | 18.28 | xls-r-1b | antideepfake | pass |
+| 26.32 | 23.59 | douyin | 29.76 | 0.82 | 39.62 | 24529 | 6361 | 23.08 | 29.76 | 20.47 | 29.57 | 22.99 | 20.28 | 19 | mms-1b | antideepfake | pass |
+| 32.26 | 50 | bilibili | 50 | 0.7531 | 34.19 | 24529 | 6361 | 50 | 50 | 50 | 50 | 50 | 50 | 50 | metadata-lookup | metadata | nan |
+
 
 ## W4 reconciliation
 
@@ -52,7 +363,35 @@ M0 / M1 / M2 under one draw protocol.
 
 ## W5 backbone rank
 
-NOT_RUN - `results/backbone_rank.csv` missing
+Candidate (backbone, spec) ranking.
+
+| backbone | spec | metric | mean | sd | paired_mean | paired_lo | paired_hi | paired_n | n_draws |
+|---|---|---|---|---|---|---|---|---|---|
+| xls-r-2b | S1 | pooled_eer | 12.38 | 2.78 | -7.38 | -11.83 | -3.244 | 30 | 30 |
+| xls-r-2b | S1 | within_macro_eer | 10.38 | 1.403 | -5.661 | -9.261 | -2.909 | 30 | 30 |
+| xls-r-2b | S1 | worst_platform_eer | 18.04 | 7.1 | -9.001 | -21.72 | 4.008 | 30 | 30 |
+| xls-r-2b | S1 | auc | 0.9432 | 0.01737 | nan | nan | nan | 0 | 30 |
+| xls-r-2b | S2 | pooled_eer | 12.05 | 2.225 | -7.708 | -13.3 | -2.489 | 30 | 30 |
+| xls-r-2b | S2 | within_macro_eer | 11.18 | 1.376 | -4.859 | -8.724 | -1.767 | 30 | 30 |
+| xls-r-2b | S2 | worst_platform_eer | 19.13 | 5.209 | -7.911 | -25.7 | 5.939 | 30 | 30 |
+| xls-r-2b | S2 | auc | 0.9455 | 0.01498 | nan | nan | nan | 0 | 30 |
+| xls-r-2b | S3 | pooled_eer | 12.17 | 2.984 | -7.586 | -13.43 | -3.735 | 30 | 30 |
+| xls-r-2b | S3 | within_macro_eer | 10.25 | 1.168 | -5.795 | -9.601 | -2.634 | 30 | 30 |
+| xls-r-2b | S3 | worst_platform_eer | 17.4 | 5.358 | -9.643 | -25.58 | 2.007 | 30 | 30 |
+| xls-r-2b | S3 | auc | 0.945 | 0.01684 | nan | nan | nan | 0 | 30 |
+| xls-r-2b | S4 | pooled_eer | 12.08 | 2.164 | -7.682 | -12.79 | -2.889 | 30 | 30 |
+| xls-r-2b | S4 | within_macro_eer | 11.02 | 1.379 | -5.019 | -8.636 | -1.862 | 30 | 30 |
+| xls-r-2b | S4 | worst_platform_eer | 18.93 | 5.719 | -8.114 | -24.34 | 4.181 | 30 | 30 |
+| xls-r-2b | S4 | auc | 0.9456 | 0.01455 | nan | nan | nan | 0 | 30 |
+| xls-r-2b | S5 | pooled_eer | 12.17 | 2.979 | -7.592 | -13.45 | -3.735 | 30 | 30 |
+| xls-r-2b | S5 | within_macro_eer | 10.25 | 1.165 | -5.793 | -9.6 | -2.642 | 30 | 30 |
+| xls-r-2b | S5 | worst_platform_eer | 17.4 | 5.36 | -9.639 | -25.58 | 2.007 | 30 | 30 |
+| xls-r-2b | S5 | auc | 0.945 | 0.01684 | nan | nan | nan | 0 | 30 |
+| xlsr300m-linea | S1-lineA | pooled_eer | 19.76 | 3.774 | nan | nan | nan | 0 | 30 |
+| xlsr300m-linea | S1-lineA | within_macro_eer | 16.04 | 2.314 | nan | nan | nan | 0 | 30 |
+| xlsr300m-linea | S1-lineA | worst_platform_eer | 27.04 | 9.389 | nan | nan | nan | 0 | 30 |
+| xlsr300m-linea | S1-lineA | auc | 0.895 | 0.02566 | nan | nan | nan | 0 | 30 |
+
 
 ## W6 summary
 
@@ -60,46 +399,46 @@ k=290, every baseline plus C1.
 
 | backbone | spec | method | mask | metric | mean | std |
 |---|---|---|---|---|---|---|
-| xlsr300m-linea | S1-lineA | B1 | clips | pooled_eer | 12.99 | 1.759 |
-| xlsr300m-linea | S1-lineA | B1 | clips | within_macro_eer | 14.56 | 2.385 |
-| xlsr300m-linea | S1-lineA | B1 | clips | worst_platform_eer | 26.84 | 8.662 |
-| xlsr300m-linea | S1-lineA | B1 | clips | auc | 0.9373 | 0.0132 |
-| xlsr300m-linea | S1-lineA | B1 | strict | pooled_eer | 21.5 | 5.66 |
-| xlsr300m-linea | S1-lineA | B1 | strict | within_macro_eer | 20.94 | 7.628 |
-| xlsr300m-linea | S1-lineA | B1 | strict | worst_platform_eer | 22.46 | 8.478 |
-| xlsr300m-linea | S1-lineA | B1 | strict | auc | 0.8596 | 0.05708 |
-| xlsr300m-linea | S1-lineA | B11 | clips | pooled_eer | 26.01 | 1.772 |
-| xlsr300m-linea | S1-lineA | B11 | clips | within_macro_eer | 26.97 | 1.889 |
-| xlsr300m-linea | S1-lineA | B11 | clips | worst_platform_eer | 39.15 | 5.215 |
-| xlsr300m-linea | S1-lineA | B11 | clips | auc | 0.8157 | 0.01874 |
-| xlsr300m-linea | S1-lineA | B11 | strict | pooled_eer | 38.22 | 5.17 |
-| xlsr300m-linea | S1-lineA | B11 | strict | within_macro_eer | 40.53 | 7.887 |
-| xlsr300m-linea | S1-lineA | B11 | strict | worst_platform_eer | 41.72 | 8.341 |
-| xlsr300m-linea | S1-lineA | B11 | strict | auc | 0.6634 | 0.06597 |
-| xlsr300m-linea | S1-lineA | B2 | clips | pooled_eer | 18.72 | 3.825 |
-| xlsr300m-linea | S1-lineA | B2 | clips | within_macro_eer | 15.87 | 2.426 |
-| xlsr300m-linea | S1-lineA | B2 | clips | worst_platform_eer | 26.5 | 8.869 |
-| xlsr300m-linea | S1-lineA | B2 | clips | auc | 0.8974 | 0.02636 |
-| xlsr300m-linea | S1-lineA | B2 | strict | pooled_eer | 26.11 | 7.338 |
-| xlsr300m-linea | S1-lineA | B2 | strict | within_macro_eer | 21.65 | 7.877 |
-| xlsr300m-linea | S1-lineA | B2 | strict | worst_platform_eer | 23.26 | 9.308 |
-| xlsr300m-linea | S1-lineA | B2 | strict | auc | 0.7984 | 0.08098 |
-| xlsr300m-linea | S1-lineA | B3 | clips | pooled_eer | 13.92 | 2.228 |
-| xlsr300m-linea | S1-lineA | B3 | clips | within_macro_eer | 14.56 | 2.385 |
-| xlsr300m-linea | S1-lineA | B3 | clips | worst_platform_eer | 26.84 | 8.662 |
-| xlsr300m-linea | S1-lineA | B3 | clips | auc | 0.9318 | 0.01586 |
-| xlsr300m-linea | S1-lineA | B3 | strict | pooled_eer | 22.1 | 6.068 |
-| xlsr300m-linea | S1-lineA | B3 | strict | within_macro_eer | 20.94 | 7.628 |
-| xlsr300m-linea | S1-lineA | B3 | strict | worst_platform_eer | 22.46 | 8.478 |
-| xlsr300m-linea | S1-lineA | B3 | strict | auc | 0.8483 | 0.06435 |
-| xlsr300m-linea | S1-lineA | B5 | clips | pooled_eer | 18.96 | 1.955 |
-| xlsr300m-linea | S1-lineA | B5 | clips | within_macro_eer | 20.29 | 2.196 |
-| xlsr300m-linea | S1-lineA | B5 | clips | worst_platform_eer | 33.39 | 7.848 |
-| xlsr300m-linea | S1-lineA | B5 | clips | auc | 0.8872 | 0.01495 |
-| xlsr300m-linea | S1-lineA | B5 | strict | pooled_eer | 28.99 | 6.003 |
-| xlsr300m-linea | S1-lineA | B5 | strict | within_macro_eer | 28.34 | 9.131 |
-| xlsr300m-linea | S1-lineA | B5 | strict | worst_platform_eer | 29.44 | 9.609 |
-| xlsr300m-linea | S1-lineA | B5 | strict | auc | 0.774 | 0.06865 |
+| xls-r-2b | S3 | B1 | clips | pooled_eer | 7.695 | 1.093 |
+| xls-r-2b | S3 | B1 | clips | within_macro_eer | 8.763 | 1.311 |
+| xls-r-2b | S3 | B1 | clips | worst_platform_eer | 16.13 | 5.204 |
+| xls-r-2b | S3 | B1 | clips | auc | 0.9731 | 0.004672 |
+| xls-r-2b | S3 | B1 | strict | pooled_eer | 12.52 | 4.199 |
+| xls-r-2b | S3 | B1 | strict | within_macro_eer | 11.16 | 5.829 |
+| xls-r-2b | S3 | B1 | strict | worst_platform_eer | 12.29 | 7.121 |
+| xls-r-2b | S3 | B1 | strict | auc | 0.9378 | 0.02862 |
+| xls-r-2b | S3 | B11 | clips | pooled_eer | 26.62 | 1.875 |
+| xls-r-2b | S3 | B11 | clips | within_macro_eer | 26.22 | 1.704 |
+| xls-r-2b | S3 | B11 | clips | worst_platform_eer | 42.26 | 5.414 |
+| xls-r-2b | S3 | B11 | clips | auc | 0.8073 | 0.0208 |
+| xls-r-2b | S3 | B11 | strict | pooled_eer | 35.15 | 6.137 |
+| xls-r-2b | S3 | B11 | strict | within_macro_eer | 36.74 | 7.66 |
+| xls-r-2b | S3 | B11 | strict | worst_platform_eer | 38.16 | 8.475 |
+| xls-r-2b | S3 | B11 | strict | auc | 0.7005 | 0.07392 |
+| xls-r-2b | S3 | B2 | clips | pooled_eer | 12.55 | 2.966 |
+| xls-r-2b | S3 | B2 | clips | within_macro_eer | 10.44 | 1.485 |
+| xls-r-2b | S3 | B2 | clips | worst_platform_eer | 17.86 | 5.262 |
+| xls-r-2b | S3 | B2 | clips | auc | 0.942 | 0.01681 |
+| xls-r-2b | S3 | B2 | strict | pooled_eer | 19.73 | 6.993 |
+| xls-r-2b | S3 | B2 | strict | within_macro_eer | 11.98 | 6.215 |
+| xls-r-2b | S3 | B2 | strict | worst_platform_eer | 13.36 | 8.454 |
+| xls-r-2b | S3 | B2 | strict | auc | 0.8625 | 0.06953 |
+| xls-r-2b | S3 | B3 | clips | pooled_eer | 7.916 | 1.488 |
+| xls-r-2b | S3 | B3 | clips | within_macro_eer | 8.763 | 1.311 |
+| xls-r-2b | S3 | B3 | clips | worst_platform_eer | 16.13 | 5.204 |
+| xls-r-2b | S3 | B3 | clips | auc | 0.9705 | 0.006698 |
+| xls-r-2b | S3 | B3 | strict | pooled_eer | 13.51 | 4.897 |
+| xls-r-2b | S3 | B3 | strict | within_macro_eer | 11.16 | 5.829 |
+| xls-r-2b | S3 | B3 | strict | worst_platform_eer | 12.29 | 7.121 |
+| xls-r-2b | S3 | B3 | strict | auc | 0.9284 | 0.03916 |
+| xls-r-2b | S3 | B5 | clips | pooled_eer | 9.067 | 1.028 |
+| xls-r-2b | S3 | B5 | clips | within_macro_eer | 9.372 | 0.8159 |
+| xls-r-2b | S3 | B5 | clips | worst_platform_eer | 15.79 | 3.218 |
+| xls-r-2b | S3 | B5 | clips | auc | 0.969 | 0.00417 |
+| xls-r-2b | S3 | B5 | strict | pooled_eer | 14.03 | 4.819 |
+| xls-r-2b | S3 | B5 | strict | within_macro_eer | 12.51 | 5.92 |
+| xls-r-2b | S3 | B5 | strict | worst_platform_eer | 13.69 | 6.671 |
+| xls-r-2b | S3 | B5 | strict | auc | 0.9324 | 0.03086 |
 | _(32 more rows in the CSV)_ | | | | | | |
 
 
@@ -109,18 +448,18 @@ C1 vs B1/B2/B3/B11, draw-paired.
 
 | method | other | metric | mean | lo | hi | n | backbone | spec |
 |---|---|---|---|---|---|---|---|---|
-| C1 | B1 | pooled_eer | 0.7668 | -2.103 | 4.347 | 200 | xlsr300m-linea | S1-lineA |
-| C1 | B1 | within_macro_eer | 0.5735 | -2.461 | 4.517 | 189 | xlsr300m-linea | S1-lineA |
-| C1 | B1 | worst_platform_eer | -0.01373 | -7.435 | 5.156 | 189 | xlsr300m-linea | S1-lineA |
-| C1 | B2 | pooled_eer | -4.406 | -14.17 | 6.766 | 200 | xlsr300m-linea | S1-lineA |
-| C1 | B2 | within_macro_eer | -0.4551 | -4.484 | 4.497 | 189 | xlsr300m-linea | S1-lineA |
-| C1 | B2 | worst_platform_eer | -0.2147 | -8.843 | 4.992 | 189 | xlsr300m-linea | S1-lineA |
-| C1 | B3 | pooled_eer | -0.004444 | -5.056 | 6.771 | 200 | xlsr300m-linea | S1-lineA |
-| C1 | B3 | within_macro_eer | 0.5735 | -2.461 | 4.517 | 189 | xlsr300m-linea | S1-lineA |
-| C1 | B3 | worst_platform_eer | -0.01373 | -7.435 | 5.156 | 189 | xlsr300m-linea | S1-lineA |
-| C1 | B11 | pooled_eer | -14.11 | -29.11 | -3.606 | 200 | xlsr300m-linea | S1-lineA |
-| C1 | B11 | within_macro_eer | -15.22 | -36.75 | -3.829 | 189 | xlsr300m-linea | S1-lineA |
-| C1 | B11 | worst_platform_eer | -15.6 | -36.66 | 2.582 | 189 | xlsr300m-linea | S1-lineA |
+| C1 | B1 | pooled_eer | 0.3031 | -0.3762 | 1.163 | 100 | xls-r-2b | S3 |
+| C1 | B1 | within_macro_eer | 0.4325 | -0.5027 | 1.522 | 100 | xls-r-2b | S3 |
+| C1 | B1 | worst_platform_eer | 0.3744 | -3.347 | 3.388 | 100 | xls-r-2b | S3 |
+| C1 | B2 | pooled_eer | -4.556 | -10.06 | 0.2749 | 100 | xls-r-2b | S3 |
+| C1 | B2 | within_macro_eer | -1.241 | -3.382 | 0.5556 | 100 | xls-r-2b | S3 |
+| C1 | B2 | worst_platform_eer | -1.348 | -10.92 | 3.306 | 100 | xls-r-2b | S3 |
+| C1 | B3 | pooled_eer | 0.0818 | -2.019 | 1.678 | 100 | xls-r-2b | S3 |
+| C1 | B3 | within_macro_eer | 0.4325 | -0.5027 | 1.522 | 100 | xls-r-2b | S3 |
+| C1 | B3 | worst_platform_eer | 0.3744 | -3.347 | 3.388 | 100 | xls-r-2b | S3 |
+| C1 | B11 | pooled_eer | -18.62 | -21.9 | -15.38 | 100 | xls-r-2b | S3 |
+| C1 | B11 | within_macro_eer | -17.02 | -19.94 | -14.02 | 100 | xls-r-2b | S3 |
+| C1 | B11 | worst_platform_eer | -25.75 | -38.93 | -12.91 | 100 | xls-r-2b | S3 |
 
 
 ## W7 budget curve
@@ -195,18 +534,18 @@ Leakage and negative controls.
 
 PAST and its ablations.
 
-| method | other | metric | mean | lo | hi | n | backbone | spec |
-|---|---|---|---|---|---|---|---|---|
-| PAST | C1 | pooled_eer | -0.6834 | -2.19 | 0.4498 | 50 | xlsr300m-linea | S1-lineA |
-| PAST | C1 | within_macro_eer | -0.6052 | -1.725 | 0.5326 | 50 | xlsr300m-linea | S1-lineA |
-| PAST | B7 | pooled_eer | 0.3469 | -1.572 | 1.675 | 50 | xlsr300m-linea | S1-lineA |
-| PAST | B7 | within_macro_eer | 0.3184 | -0.898 | 1.608 | 50 | xlsr300m-linea | S1-lineA |
-| PAST | PAST-noEM | pooled_eer | -0.3267 | -3.1 | 1.675 | 50 | xlsr300m-linea | S1-lineA |
-| PAST | PAST-noEM | within_macro_eer | -0.1299 | -1.112 | 1.222 | 50 | xlsr300m-linea | S1-lineA |
-| PAST | PAST-noQuota | pooled_eer | -0.5209 | -1.986 | 0.682 | 50 | xlsr300m-linea | S1-lineA |
-| PAST | PAST-noQuota | within_macro_eer | -0.5729 | -1.604 | 0.5823 | 50 | xlsr300m-linea | S1-lineA |
-| PAST | PAST-1round | pooled_eer | -0.5613 | -1.839 | 0.4276 | 50 | xlsr300m-linea | S1-lineA |
-| PAST | PAST-1round | within_macro_eer | -0.542 | -1.381 | 0.5233 | 50 | xlsr300m-linea | S1-lineA |
+| method | other | metric | mean | lo | hi | n | backbone | spec | views |
+|---|---|---|---|---|---|---|---|---|---|
+| PAST | C1 | pooled_eer | -0.2249 | -1.754 | 0.981 | 50 | xls-r-2b | S3 | famA1,famA2 |
+| PAST | C1 | within_macro_eer | 0.2783 | -0.9491 | 1.879 | 50 | xls-r-2b | S3 | famA1,famA2 |
+| PAST | B7 | pooled_eer | 0.2843 | -0.8806 | 1.337 | 50 | xls-r-2b | S3 | famA1,famA2 |
+| PAST | B7 | within_macro_eer | 0.6188 | -0.5258 | 1.869 | 50 | xls-r-2b | S3 | famA1,famA2 |
+| PAST | PAST-noEM | pooled_eer | 0.1414 | -0.3853 | 0.7253 | 50 | xls-r-2b | S3 | famA1,famA2 |
+| PAST | PAST-noEM | within_macro_eer | 0.07589 | -0.3685 | 0.6376 | 50 | xls-r-2b | S3 | famA1,famA2 |
+| PAST | PAST-noQuota | pooled_eer | -0.2499 | -0.7874 | 0.3539 | 50 | xls-r-2b | S3 | famA1,famA2 |
+| PAST | PAST-noQuota | within_macro_eer | 0.02246 | -0.5179 | 0.9622 | 50 | xls-r-2b | S3 | famA1,famA2 |
+| PAST | PAST-1round | pooled_eer | 0.301 | -0.3907 | 1.005 | 50 | xls-r-2b | S3 | famA1,famA2 |
+| PAST | PAST-1round | within_macro_eer | 0.5097 | -0.2986 | 1.558 | 50 | xls-r-2b | S3 | famA1,famA2 |
 
 
 ## W12 CASA
@@ -357,15 +696,79 @@ NOT_RUN - `results/w17_nda.csv` missing
 
 ## W18 C4 ensemble
 
-NOT_RUN - `results/w18_c4.csv` missing
+E1 - E3.
+
+| method | other | metric | arm | mean | lo | hi | n | backbone | spec | note |
+|---|---|---|---|---|---|---|---|---|---|---|
+| C1+TTA | C1 | pooled_eer | E2 | 0.7665 | -0.01982 | 1.66 | 50 | xls-r-2b | S3 | nan |
+| C1+TTA | C1 | within_macro_eer | E2 | 0.6364 | -0.02416 | 1.86 | 50 | xls-r-2b | S3 | nan |
+| PAST+TTA | PAST | pooled_eer | E2 | 0.6195 | -0.04366 | 1.324 | 50 | xls-r-2b | S3 | nan |
+| PAST+TTA | PAST | within_macro_eer | E2 | 0.6163 | -0.3529 | 1.667 | 50 | xls-r-2b | S3 | nan |
+| E1 | top-2 backbones | pooled_eer | E1 | nan | nan | nan | 0 | xls-r-2b | S3 | NOT_RUN(needs_2nd_backbone) |
+| E3 | E1+E2 | pooled_eer | E3 | nan | nan | nan | 0 | xls-r-2b | S3 | NOT_RUN(needs_2nd_backbone) |
+
 
 ## W19 Fam-B robustness
 
-NOT_RUN - `results/w19_famb.csv` missing
+Unseen transcoding chain.
+
+| method | clean | famb | dEER | backbone | spec |
+|---|---|---|---|---|---|
+| B1 | 7.443 | 8.127 | 0.6834 | xls-r-2b | S3 |
+| B2 | 11.94 | 8.127 | -3.813 | xls-r-2b | S3 |
+| C1 | 7.748 | 8.361 | 0.6126 | xls-r-2b | S3 |
+| PAST | 7.434 | 7.932 | 0.4983 | xls-r-2b | S3 |
+| PAST+TTA | 8.053 | 8.264 | 0.2105 | xls-r-2b | S3 |
+
 
 ## W20 sensitivity
 
-NOT_RUN - `results/w20_sensitivity.csv` missing
+Grid and setting sensitivity.
+
+| knob | value | method | pooled_eer_mean | pooled_eer_std | within_macro_eer_mean | within_macro_eer_std | worst_platform_eer_mean | worst_platform_eer_std | auc_mean | auc_std | backbone | spec |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| cell | language | B1 | 7.477 | 0.8436 | 8.684 | 1.188 | 16.23 | 5.122 | 0.9737 | 0.003607 | xls-r-2b | S3 |
+| cell | language | B2 | 12.48 | 2.766 | 11.65 | 1.663 | 22.86 | 7.286 | 0.9345 | 0.02239 | xls-r-2b | S3 |
+| cell | language | C1 | 7.792 | 0.9251 | 9.095 | 1.225 | 16.57 | 4.406 | 0.9709 | 0.003901 | xls-r-2b | S3 |
+| cell | language | PAST | 7.865 | 0.9013 | 9.192 | 1.211 | 16.74 | 4.307 | 0.9699 | 0.004073 | xls-r-2b | S3 |
+| cell | platform | B1 | 7.477 | 0.8436 | 8.684 | 1.188 | 16.23 | 5.122 | 0.9737 | 0.003607 | xls-r-2b | S3 |
+| cell | platform | B2 | 8.003 | 1.559 | 8.684 | 1.188 | 16.23 | 5.122 | 0.9669 | 0.009045 | xls-r-2b | S3 |
+| cell | platform | C1 | 7.793 | 0.9257 | 9.094 | 1.226 | 16.57 | 4.406 | 0.9709 | 0.003902 | xls-r-2b | S3 |
+| cell | platform | PAST | 7.551 | 0.8796 | 9.138 | 1.214 | 16.64 | 4.502 | 0.9726 | 0.003638 | xls-r-2b | S3 |
+| cell | platform_x_language | B1 | 7.477 | 0.8436 | 8.684 | 1.188 | 16.23 | 5.122 | 0.9737 | 0.003607 | xls-r-2b | S3 |
+| cell | platform_x_language | B2 | 12.17 | 2.992 | 10.24 | 1.182 | 17.37 | 5.363 | 0.945 | 0.01686 | xls-r-2b | S3 |
+| cell | platform_x_language | C1 | 7.79 | 0.9247 | 9.096 | 1.225 | 16.57 | 4.406 | 0.9709 | 0.003901 | xls-r-2b | S3 |
+| cell | platform_x_language | PAST | 7.527 | 0.8833 | 9.128 | 1.261 | 16.72 | 4.834 | 0.9726 | 0.003816 | xls-r-2b | S3 |
+| label_draw | global | B1 | 6.749 | 0.9293 | 9.067 | 1.64 | 18.13 | 6.878 | 0.9789 | 0.003675 | xls-r-2b | S3 |
+| label_draw | global | B2 | 11.31 | 1.913 | 10.14 | 1.749 | 18.72 | 7.097 | 0.9496 | 0.01307 | xls-r-2b | S3 |
+| label_draw | global | C1 | 6.857 | 0.9709 | 9.197 | 1.636 | 18.31 | 6.764 | 0.9773 | 0.00423 | xls-r-2b | S3 |
+| label_draw | global | PAST | 6.651 | 1.032 | 9.179 | 1.678 | 18.54 | 7.494 | 0.9779 | 0.004406 | xls-r-2b | S3 |
+| label_draw | per_cell | B1 | 7.477 | 0.8436 | 8.684 | 1.188 | 16.23 | 5.122 | 0.9737 | 0.003607 | xls-r-2b | S3 |
+| label_draw | per_cell | B2 | 12.17 | 2.992 | 10.24 | 1.182 | 17.37 | 5.363 | 0.945 | 0.01686 | xls-r-2b | S3 |
+| label_draw | per_cell | C1 | 7.79 | 0.9247 | 9.096 | 1.225 | 16.57 | 4.406 | 0.9709 | 0.003901 | xls-r-2b | S3 |
+| label_draw | per_cell | PAST | 7.527 | 0.8833 | 9.128 | 1.261 | 16.72 | 4.834 | 0.9726 | 0.003816 | xls-r-2b | S3 |
+| label_draw | speaker_clustered | B1 | 11.55 | 1.953 | 12.7 | 2.155 | 22.78 | 6.057 | 0.9537 | 0.01258 | xls-r-2b | S3 |
+| label_draw | speaker_clustered | B2 | 19.62 | 4.941 | 14.13 | 2.314 | 25.54 | 6.718 | 0.8805 | 0.03906 | xls-r-2b | S3 |
+| label_draw | speaker_clustered | C1 | 11.8 | 2.226 | 13 | 2.342 | 23.22 | 6.598 | 0.9511 | 0.01516 | xls-r-2b | S3 |
+| label_draw | speaker_clustered | PAST | 10.88 | 1.768 | 12.46 | 2.171 | 22.46 | 7.076 | 0.9569 | 0.0115 | xls-r-2b | S3 |
+| label_noise | 0.0 | B1 | 7.477 | 0.8436 | 8.684 | 1.188 | 16.23 | 5.122 | 0.9737 | 0.003607 | xls-r-2b | S3 |
+| label_noise | 0.0 | B2 | 12.17 | 2.992 | 10.24 | 1.182 | 17.37 | 5.363 | 0.945 | 0.01686 | xls-r-2b | S3 |
+| label_noise | 0.0 | C1 | 7.79 | 0.9247 | 9.096 | 1.225 | 16.57 | 4.406 | 0.9709 | 0.003901 | xls-r-2b | S3 |
+| label_noise | 0.0 | PAST | 7.527 | 0.8833 | 9.128 | 1.261 | 16.72 | 4.834 | 0.9726 | 0.003816 | xls-r-2b | S3 |
+| label_noise | 0.05 | B1 | 8.838 | 1.253 | 9.703 | 1.399 | 17.52 | 5.783 | 0.9678 | 0.006282 | xls-r-2b | S3 |
+| label_noise | 0.05 | B2 | 12.06 | 3.077 | 11 | 1.623 | 18.26 | 5.582 | 0.9462 | 0.01776 | xls-r-2b | S3 |
+| label_noise | 0.05 | C1 | 12.33 | 3.097 | 13.55 | 3.111 | 22.4 | 6.78 | 0.9411 | 0.02143 | xls-r-2b | S3 |
+| label_noise | 0.05 | PAST | 11.61 | 3.066 | 13.27 | 2.958 | 22.08 | 6.865 | 0.9457 | 0.0205 | xls-r-2b | S3 |
+| label_noise | 0.1 | B1 | 9.583 | 1.262 | 10.63 | 1.584 | 19.4 | 5.487 | 0.9636 | 0.0083 | xls-r-2b | S3 |
+| label_noise | 0.1 | B2 | 12.15 | 2.613 | 11.82 | 1.912 | 19.62 | 5.352 | 0.9454 | 0.0173 | xls-r-2b | S3 |
+| label_noise | 0.1 | C1 | 16.8 | 3.176 | 17.95 | 3.116 | 28.41 | 7.241 | 0.9055 | 0.02748 | xls-r-2b | S3 |
+| label_noise | 0.1 | PAST | 15.63 | 3.116 | 17.24 | 3.068 | 28.06 | 7.528 | 0.9149 | 0.02629 | xls-r-2b | S3 |
+| pca | 128 | B1 | 7.689 | 0.9053 | 9.03 | 1.334 | 16.82 | 5.785 | 0.9724 | 0.003803 | xls-r-2b | S3 |
+| pca | 128 | B2 | 12.41 | 3.113 | 10.51 | 1.26 | 17.83 | 5.92 | 0.9435 | 0.01723 | xls-r-2b | S3 |
+| pca | 128 | C1 | 8.696 | 1.194 | 10.15 | 1.584 | 18.07 | 5.163 | 0.9655 | 0.005472 | xls-r-2b | S3 |
+| pca | 128 | PAST | 8.362 | 1.152 | 10.11 | 1.55 | 18.11 | 5.225 | 0.9675 | 0.00509 | xls-r-2b | S3 |
+| _(12 more rows in the CSV)_ | | | | | | | | | | | | |
+
 
 ## W21 ADD-GP
 
@@ -373,5 +776,5 @@ NOT_RUN - `results/w21_addgp.csv` missing
 
 ## 5. Reproduction and commit
 
-- commit: `25d6768`
+- commit: `f3b6cfe`
 - environment: `scripts/w1_env.py`; queue: `queue.yaml`; criteria: `claims.yaml`

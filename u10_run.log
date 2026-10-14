@@ -1,0 +1,54 @@
+xls-r-2b/S3: clips=15002 Z=(15002, 256) zero_col=False
+xls-r-2b/S5: clips=15002 Z=(15002, 256) zero_col=True
+xls-r-1b/S3: clips=15002 Z=(15002, 256) zero_col=False
+xls-r-1b/S5: clips=15002 Z=(15002, 256) zero_col=True
+mms-1b/S3: clips=15002 Z=(15002, 256) zero_col=False
+mms-1b/S5: clips=15002 Z=(15002, 256) zero_col=True
+
+member pooled EER
+mask           seen  strict_draw
+method                          
+mms-1b|S3     8.904       13.531
+mms-1b|S5     8.882       13.522
+xls-r-1b|S3  10.902       15.291
+xls-r-1b|S5  10.899       15.286
+xls-r-2b|S3  10.194       14.450
+xls-r-2b|S5  10.194       14.451
+
+fused archives: 200 draw/mask entries
+
+ensembles and the S5/S3 contrast (mean over draws)
+mask           seen  strict_draw
+variant                         
+ENS3-S3       8.923       13.415
+ENS3-S5       8.920       13.422
+ENS3-mix      8.921       13.416
+mms-1b|S3     8.904       13.531
+mms-1b|S5     8.882       13.522
+xls-r-1b|S3  10.902       15.291
+xls-r-1b|S5  10.899       15.286
+xls-r-2b|S3  10.194       14.450
+xls-r-2b|S5  10.194       14.451
+
+intervals (delta = a - b; negative means a is better)
+       mask    method_a    method_b  n_draws  delta  old_lo  old_hi   b_lo   b_hi  b_contains_zero  effect_points  meets_2pt_rule
+       seen     ENS3-S3 xls-r-2b|S3      100 -1.270  -2.398  -0.238 -1.444 -1.199            False          1.270           False
+       seen     ENS3-S5 xls-r-2b|S5      100 -1.274  -2.451  -0.319 -1.431 -1.196            False          1.274           False
+       seen   mms-1b|S5   mms-1b|S3      100 -0.022  -0.160   0.116 -0.041 -0.001            False          0.022           False
+       seen     ENS3-S3 xls-r-1b|S3      100 -1.979  -3.408  -0.677 -2.162 -1.916            False          1.979           False
+       seen xls-r-2b|S5 xls-r-2b|S3      100  0.000  -0.029   0.031 -0.004  0.005             True          0.000           False
+       seen xls-r-1b|S5 xls-r-1b|S3      100 -0.003  -0.125   0.121 -0.018  0.013             True          0.003           False
+       seen     ENS3-S5     ENS3-S3      100 -0.004  -0.201   0.188 -0.022  0.020             True          0.004           False
+       seen     ENS3-S3   mms-1b|S3      100  0.019  -1.169   1.469 -0.195  0.162             True          0.019           False
+strict_draw xls-r-2b|S5 xls-r-2b|S3      100  0.002  -0.043   0.043 -0.005  0.003             True          0.002           False
+strict_draw     ENS3-S5     ENS3-S3      100  0.007  -0.123   0.113 -0.025  0.028             True          0.007           False
+strict_draw xls-r-1b|S5 xls-r-1b|S3      100 -0.005  -0.099   0.098 -0.021  0.013             True          0.005           False
+strict_draw     ENS3-S3 xls-r-2b|S3      100 -1.035  -2.873   1.469 -1.413 -0.865            False          1.035           False
+strict_draw   mms-1b|S5   mms-1b|S3      100 -0.009  -0.142   0.101 -0.046  0.012             True          0.009           False
+strict_draw     ENS3-S3 xls-r-1b|S3      100 -1.876  -5.187   0.293 -2.306 -1.602            False          1.876           False
+       seen     ENS3-S5 xls-r-1b|S5      100 -1.979  -3.409  -0.643 -2.154 -1.916            False          1.979           False
+       seen     ENS3-S5   mms-1b|S5      100  0.037  -1.156   1.596 -0.175  0.178             True          0.037           False
+strict_draw     ENS3-S5 xls-r-2b|S5      100 -1.030  -2.608   1.388 -1.403 -0.858            False          1.030           False
+strict_draw     ENS3-S5 xls-r-1b|S5      100 -1.864  -5.212   0.257 -2.289 -1.611            False          1.864           False
+strict_draw     ENS3-S3   mms-1b|S3      100 -0.116  -2.766   1.928 -0.513  0.596             True          0.116           False
+strict_draw     ENS3-S5   mms-1b|S5      100 -0.100  -2.802   1.761 -0.507  0.629             True          0.100           False

@@ -1,0 +1,118 @@
+
+pooled EER, all clips
+m                          0       3       5       10
+mask        method                                   
+seen        B1         10.194  10.225  10.107  10.063
+            B1+enroll  10.194   9.630   9.707   9.257
+            ESN        10.194   8.751   8.626   8.591
+            ESN-P      10.194   8.749   8.576   8.497
+            OC            NaN  18.080  15.591  12.812
+            OC+B1         NaN   7.996   6.388   4.397
+strict_draw B1         14.450  14.310  14.321  14.299
+            B1+enroll  14.450  13.058  12.791  12.335
+            ESN        14.450  13.218  13.265  13.138
+            ESN-P      14.450  13.216  13.229  13.003
+            OC            NaN  19.374  16.641  13.597
+            OC+B1         NaN   9.830   7.757   5.697
+unseen      B1         11.964  12.056  10.907  10.510
+            B1+enroll  11.964  10.922   9.829   9.153
+            ESN        11.964  10.499   9.591   9.235
+            ESN-P      11.964  10.495   9.523   9.113
+            OC            NaN  24.593  21.162  17.983
+            OC+B1         NaN  11.838   8.737   6.194
+
+intervals (delta = a - b; negative means a is better)
+ m        mask method_a  method_b  n_draws  delta  old_lo  old_hi   a_lo   a_hi   b_lo   b_hi  b_contains_zero  effect_points  meets_2pt_rule
+ 3      unseen    ESN-P B1+enroll      100 -0.427  -4.112   2.340 -0.793 -0.073 -0.513  0.129             True          0.427           False
+ 3      unseen    ESN-P        B1      100 -1.561  -8.123   1.820 -2.066 -1.087 -2.018 -1.064            False          1.561           False
+ 3      unseen      ESN B1+enroll      100 -0.423  -4.206   2.241 -0.788 -0.070 -0.511  0.139             True          0.423           False
+ 3      unseen      ESN        B1      100 -1.557  -8.123   1.763 -2.067 -1.086 -2.021 -1.054            False          1.557           False
+ 0      unseen      ESN        B1      100  0.000   0.000   0.000  0.000  0.000  0.000  0.000             True          0.000           False
+ 0      unseen    ESN-P B1+enroll      100  0.000   0.000   0.000  0.000  0.000  0.000  0.000             True          0.000           False
+ 0      unseen      ESN B1+enroll      100  0.000   0.000   0.000  0.000  0.000  0.000  0.000             True          0.000           False
+ 0      unseen    ESN-P        B1      100  0.000   0.000   0.000  0.000  0.000  0.000  0.000             True          0.000           False
+ 3      unseen    ESN-P     OC+B1      100 -1.343  -7.742   9.285 -2.190 -0.523 -2.100 -0.758            False          1.343           False
+ 3      unseen      ESN     OC+B1      100 -1.339  -7.694   9.166 -2.174 -0.533 -2.084 -0.751            False          1.339           False
+ 0 strict_draw      ESN B1+enroll      100  0.000   0.000   0.000  0.000  0.000  0.000  0.000             True          0.000           False
+ 0 strict_draw    ESN-P B1+enroll      100  0.000   0.000   0.000  0.000  0.000  0.000  0.000             True          0.000           False
+ 0 strict_draw    ESN-P        B1      100  0.000   0.000   0.000  0.000  0.000  0.000  0.000             True          0.000           False
+ 0 strict_draw      ESN        B1      100  0.000   0.000   0.000  0.000  0.000  0.000  0.000             True          0.000           False
+ 3 strict_draw      ESN B1+enroll      100  0.160  -2.454   2.949 -0.096  0.413 -0.418  0.576             True          0.160           False
+ 3 strict_draw      ESN        B1      100 -1.092  -3.930   1.422 -1.340 -0.840 -1.744 -0.815            False          1.092           False
+ 3 strict_draw    ESN-P B1+enroll      100  0.157  -2.401   2.989 -0.093  0.411 -0.399  0.562             True          0.157           False
+ 3 strict_draw    ESN-P        B1      100 -1.094  -3.927   1.557 -1.342 -0.849 -1.765 -0.816            False          1.094           False
+ 3 strict_draw    ESN-P     OC+B1      100  3.385  -1.623   8.613  2.845  3.936  2.129  4.804            False          3.385            True
+ 3 strict_draw      ESN     OC+B1      100  3.388  -1.644   8.613  2.846  3.936  2.127  4.818            False          3.388            True
+ 3        seen      ESN B1+enroll      100 -0.879  -2.657   1.150 -1.087 -0.663 -1.082 -0.640            False          0.879           False
+ 0        seen      ESN B1+enroll      100  0.000   0.000   0.000  0.000  0.000  0.000  0.000             True          0.000           False
+ 3        seen    ESN-P B1+enroll      100 -0.881  -2.633   1.198 -1.089 -0.664 -1.076 -0.645            False          0.881           False
+ 0        seen      ESN        B1      100  0.000   0.000   0.000  0.000  0.000  0.000  0.000             True          0.000           False
+ 0        seen    ESN-P B1+enroll      100  0.000   0.000   0.000  0.000  0.000  0.000  0.000             True          0.000           False
+ 3        seen    ESN-P     OC+B1      100  0.753  -2.194   4.443  0.401  1.122  0.389  1.302            False          0.753           False
+ 0        seen    ESN-P        B1      100  0.000   0.000   0.000  0.000  0.000  0.000  0.000             True          0.000           False
+ 5      unseen      ESN        B1      100 -1.317  -9.861   1.729 -1.845 -0.816 -1.798 -0.894            False          1.317           False
+ 3        seen      ESN        B1      100 -1.474  -2.894  -0.059 -1.627 -1.308 -1.650 -1.261            False          1.474           False
+ 5      unseen      ESN B1+enroll      100 -0.238  -3.736   2.531 -0.565  0.076 -0.403  0.224             True          0.238           False
+ 5      unseen      ESN     OC+B1      100  0.853  -4.609  10.432  0.125  1.562  0.039  1.550            False          0.853           False
+ 5      unseen    ESN-P        B1      100 -1.384  -9.649   1.752 -1.907 -0.883 -1.852 -0.968            False          1.384           False
+ 5      unseen    ESN-P B1+enroll      100 -0.305  -3.939   2.649 -0.633  0.015 -0.480  0.165             True          0.305           False
+ 5      unseen    ESN-P     OC+B1      100  0.786  -4.888  10.377  0.050  1.495 -0.039  1.464             True          0.786           False
+ 5        seen      ESN        B1      100 -1.481  -3.114  -0.262 -1.630 -1.325 -1.650 -1.261            False          1.481           False
+ 5        seen      ESN B1+enroll      100 -1.081  -3.118   1.226 -1.279 -0.884 -1.257 -0.864            False          1.081           False
+ 5        seen      ESN     OC+B1      100  2.238   0.120   4.938  1.994  2.497  1.962  2.660            False          2.238            True
+ 5        seen    ESN-P        B1      100 -1.530  -3.171  -0.302 -1.678 -1.370 -1.697 -1.303            False          1.530           False
+ 3        seen      ESN     OC+B1      100  0.755  -2.215   4.398  0.403  1.124  0.388  1.300            False          0.755           False
+ 3        seen    ESN-P        B1      100 -1.476  -2.891   0.004 -1.630 -1.307 -1.649 -1.268            False          1.476           False
+10      unseen      ESN B1+enroll      100  0.082  -3.238   3.530 -0.243  0.390 -0.082  0.470             True          0.082           False
+10      unseen      ESN        B1      100 -1.275  -8.076   1.326 -1.765 -0.837 -1.634 -0.815            False          1.275           False
+10      unseen    ESN-P        B1      100 -1.397  -8.137   1.460 -1.879 -0.958 -1.769 -0.936            False          1.397           False
+10      unseen      ESN     OC+B1      100  3.041  -1.511  13.000  2.334  3.832  2.252  3.532            False          3.041            True
+10      unseen    ESN-P B1+enroll      100 -0.040  -3.405   3.480 -0.360  0.257 -0.230  0.348             True          0.040           False
+ 5 strict_draw      ESN        B1      100 -1.056  -3.482   1.099 -1.272 -0.842 -1.926 -0.759            False          1.056           False
+ 5 strict_draw      ESN B1+enroll      100  0.474  -1.594   2.830  0.231  0.710 -0.107  0.993             True          0.474           False
+ 5 strict_draw    ESN-P B1+enroll      100  0.439  -1.685   2.823  0.196  0.680 -0.112  0.954             True          0.439           False
+ 5        seen    ESN-P B1+enroll      100 -1.131  -3.199   1.238 -1.328 -0.933 -1.298 -0.890            False          1.131           False
+ 5 strict_draw      ESN     OC+B1      100  5.508   1.594  10.440  5.013  5.991  4.232  6.795            False          5.508            True
+ 5 strict_draw    ESN-P        B1      100 -1.092  -3.513   1.011 -1.312 -0.875 -1.969 -0.782            False          1.092           False
+ 5        seen    ESN-P     OC+B1      100  2.189   0.116   4.890  1.935  2.454  1.933  2.631            False          2.189            True
+10      unseen    ESN-P     OC+B1      100  2.919  -1.570  12.734  2.213  3.714  2.108  3.397            False          2.919            True
+ 5 strict_draw    ESN-P     OC+B1      100  5.472   1.495  10.303  4.973  5.950  4.218  6.771            False          5.472            True
+10        seen      ESN B1+enroll      100 -0.666  -2.373   1.524 -0.868 -0.457 -0.859 -0.444            False          0.666           False
+10        seen      ESN        B1      100 -1.471  -2.881  -0.048 -1.610 -1.328 -1.684 -1.256            False          1.471           False
+10        seen      ESN     OC+B1      100  4.194   2.471   6.888  3.955  4.443  3.895  4.514            False          4.194            True
+10 strict_draw      ESN        B1      100 -1.161  -3.429   0.821 -1.361 -0.962 -1.998 -0.862            False          1.161           False
+10        seen    ESN-P        B1      100 -1.565  -3.032  -0.049 -1.714 -1.416 -1.745 -1.335            False          1.565           False
+10 strict_draw      ESN B1+enroll      100  0.802  -1.747   3.187  0.559  1.050  0.292  1.448            False          0.802           False
+10        seen    ESN-P B1+enroll      100 -0.760  -2.463   1.442 -0.964 -0.548 -0.949 -0.528            False          0.760           False
+10        seen    ESN-P     OC+B1      100  4.100   2.296   6.807  3.861  4.351  3.819  4.433            False          4.100            True
+10 strict_draw      ESN     OC+B1      100  7.440   2.634  12.666  6.954  7.945  6.095  8.835            False          7.440            True
+10 strict_draw    ESN-P        B1      100 -1.296  -3.509   0.440 -1.495 -1.104 -2.126 -0.961            False          1.296           False
+10 strict_draw    ESN-P B1+enroll      100  0.667  -1.885   2.949  0.426  0.909  0.170  1.271            False          0.667           False
+10 strict_draw    ESN-P     OC+B1      100  7.305   2.594  12.399  6.821  7.802  5.972  8.704            False          7.305            True
+
+{
+  "b_excludes_zero": true,
+  "best_control": "OC+B1",
+  "delta_points": 5.508007225318261,
+  "effect_ge_2": false,
+  "interval_b": [
+    4.231945025882896,
+    6.794665527272493
+  ],
+  "interval_old": [
+    1.5942066744745678,
+    10.43977702993291
+  ],
+  "m": 5,
+  "mask": "strict_draw",
+  "means": {
+    "B1": 14.320741630485031,
+    "B1+enroll": 12.790540481510225,
+    "ESN": 13.265034648768358,
+    "ESN-P": 13.229142474350276,
+    "OC": 16.641382975051055,
+    "OC+B1": 7.757027423450097
+  },
+  "population": "all",
+  "verdict": "ESN_FAIL"
+}

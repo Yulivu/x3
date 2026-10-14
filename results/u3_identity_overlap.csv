@@ -1,0 +1,7 @@
+method,group,mean,std,overlap_speakers,overlap_clip_share,vox2_note
+B1,all,7.477,0.844,0,0.0,"the published VoxCeleb2 metadata carries only anonymous ids (n000012 style), so no name matching is possible; UNTESTABLE"
+B1,non_overlap,7.477,0.844,0,0.0,"the published VoxCeleb2 metadata carries only anonymous ids (n000012 style), so no name matching is possible; UNTESTABLE"
+B9,all,5.891,1.093,0,0.0,"the published VoxCeleb2 metadata carries only anonymous ids (n000012 style), so no name matching is possible; UNTESTABLE"
+B9,non_overlap,5.891,1.093,0,0.0,"the published VoxCeleb2 metadata carries only anonymous ids (n000012 style), so no name matching is possible; UNTESTABLE"
+zeroshot,all,49.737,0.117,0,0.0,"the published VoxCeleb2 metadata carries only anonymous ids (n000012 style), so no name matching is possible; UNTESTABLE"
+zeroshot,non_overlap,49.737,0.117,0,0.0,"the published VoxCeleb2 metadata carries only anonymous ids (n000012 style), so no name matching is possible; UNTESTABLE"

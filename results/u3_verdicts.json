@@ -1,0 +1,6 @@
+{
+  "IDENTITY_OVERLAP_FLAG": false,
+  "share": 0.0,
+  "vox1_names": 1251,
+  "vox2_note": "the published VoxCeleb2 metadata carries only anonymous ids (n000012 style), so no name matching is possible; UNTESTABLE"
+}

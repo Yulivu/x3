@@ -1,0 +1,12 @@
+v3 dev: clips=15002 speakers=122 Z=(15002, 256) (xls-r-2b/S3)
+building the kNN graph once for every draw ...
+  20/200 draw-budget units (300 rows, 0 errors)
+  40/200 draw-budget units (600 rows, 0 errors)
+  60/200 draw-budget units (900 rows, 0 errors)
+  80/200 draw-budget units (1195 rows, 0 errors)
+  100/200 draw-budget units (1495 rows, 0 errors)
+  120/200 draw-budget units (1795 rows, 0 errors)
+  140/200 draw-budget units (2095 rows, 0 errors)
+  160/200 draw-budget units (2395 rows, 0 errors)
+  180/200 draw-budget units (2695 rows, 0 errors)
+  200/200 draw-budget units (2995 rows, 0 errors)

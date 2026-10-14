@@ -1,0 +1,68 @@
+decoded 24529 clips; alignment={'n_clips': 24529, 'n_shards': 4, 'alignment_ok': True, 'misaligned_rows': 0}
+  2028/24529 clips  (116/s)
+  4017/24529 clips  (121/s)
+  6006/24529 clips  (128/s)
+  8034/24529 clips  (135/s)
+  10023/24529 clips  (140/s)
+  12012/24529 clips  (143/s)
+  14001/24529 clips  (146/s)
+  16029/24529 clips  (147/s)
+  18018/24529 clips  (149/s)
+  20007/24529 clips  (147/s)
+  22035/24529 clips  (143/s)
+  24024/24529 clips  (141/s)
+{
+  "backbone": "xls-r-1b",
+  "model_dir": "/root/autodl-tmp/data/x3/models/xls-r-1b",
+  "n_clips": 24529,
+  "n_hidden_states": 49,
+  "hidden_size": 1280,
+  "std_layers": [
+    12,
+    24,
+    30,
+    36,
+    42,
+    47,
+    48
+  ],
+  "n_layers": 48,
+  "load_info": {
+    "n_encoder_tensors": 903,
+    "n_missing": 1,
+    "missing_sample": [
+      "masked_spec_embed"
+    ],
+    "n_unexpected": 96,
+    "unexpected_sample": [
+      "encoder.layers.0.attention_layer_norm.bias",
+      "encoder.layers.0.attention_layer_norm.weight",
+      "encoder.layers.1.attention_layer_norm.bias",
+      "encoder.layers.1.attention_layer_norm.weight",
+      "encoder.layers.2.attention_layer_norm.bias",
+      "encoder.layers.2.attention_layer_norm.weight",
+      "encoder.layers.3.attention_layer_norm.bias",
+      "encoder.layers.3.attention_layer_norm.weight",
+      "encoder.layers.4.attention_layer_norm.bias",
+      "encoder.layers.4.attention_layer_norm.weight"
+    ],
+    "has_head": true,
+    "head_shape": [
+      2,
+      1280
+    ],
+    "n_hidden_layers": 48,
+    "hidden_size": 1280,
+    "do_stable_layer_norm": true,
+    "layerdrop": 0.0
+  },
+  "batch_seconds": 160.0,
+  "elapsed_s": 214.6,
+  "sample_rate": 16000,
+  "n_samples": 64600,
+  "head_classes": 2,
+  "fake_index": 0,
+  "real_index": 1,
+  "auc_index0": 0.8505778976993431,
+  "auc_chosen": 0.8501410934753424
+}

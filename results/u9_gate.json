@@ -1,0 +1,62 @@
+{
+  "b1_strict_draw": 14.44969564859901,
+  "b_excludes_zero": false,
+  "best_grid_cells": [
+    {
+      "m_p": 0,
+      "m_s": 4,
+      "pooled_eer": 14.195042117053617,
+      "scope": "transductive"
+    },
+    {
+      "m_p": 2,
+      "m_s": 8,
+      "pooled_eer": 14.246976912704993,
+      "scope": "transductive"
+    },
+    {
+      "m_p": 0,
+      "m_s": 8,
+      "pooled_eer": 14.262488833280134,
+      "scope": "transductive"
+    },
+    {
+      "m_p": 2,
+      "m_s": 32,
+      "pooled_eer": 14.370609707824519,
+      "scope": "transductive"
+    },
+    {
+      "m_p": 0,
+      "m_s": 32,
+      "pooled_eer": 14.378213044843621,
+      "scope": "transductive"
+    }
+  ],
+  "best_grid_note": "choosing the best cell after seeing strict_draw is optimistic; the CV-selected number above is the pre-registered comparison",
+  "cv_selected": {
+    "seen|B1": 10.193662061010695,
+    "seen|PROJ-ind": 10.264264824365384,
+    "seen|PROJ-tra": 10.197554465065478,
+    "strict_draw|B1": 14.44969564859901,
+    "strict_draw|GRID-ind": 14.466019411372853,
+    "strict_draw|GRID-tra": 14.387026227125485,
+    "strict_draw|PROJ-ind": 14.467374819087011,
+    "strict_draw|PROJ-tra": 14.475845254680719,
+    "unseen|B1": 11.963969067064927,
+    "unseen|PROJ-ind": 12.044137242407123,
+    "unseen|PROJ-tra": 11.78452988987242
+  },
+  "delta_vs_b1": 0.017679170488001716,
+  "effect_ge_2": false,
+  "interval_b": [
+    -0.018825364972594124,
+    0.06187870655338064
+  ],
+  "method": "PROJ-ind",
+  "seen": 10.264264824365384,
+  "seen_delta": 0.07060276335468885,
+  "seen_within_tolerance": true,
+  "strict_draw": 14.467374819087011,
+  "verdict": "PROJ_FAIL"
+}

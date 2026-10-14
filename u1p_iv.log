@@ -1,0 +1,103 @@
+
+pooled EER (mean over draws)
+mask          seen  strict_draw  unseen
+k   method                             
+100 B1      11.746       15.728  15.130
+    B3      12.675       18.079  18.809
+    B7      11.455       15.996  15.593
+    B9      10.183       18.845  16.394
+    C1      11.716       17.159  16.827
+290 B1      10.194       14.450  11.964
+    B3      11.805       17.148  17.365
+    B7       9.705       15.128  13.878
+    B9       7.249       15.038  10.772
+    C1      10.126       16.100  14.844
+
+intervals (delta = a - b; negative means a is better)
+  k        mask method_a method_b  n_draws  delta  old_lo  old_hi  old_contains_zero   a_lo   a_hi   b_lo   b_hi  b_contains_zero  effect_points  meets_2pt_rule
+290      unseen       C1       B9      100  4.072  -2.509  11.143               True  3.329  4.770  3.086  4.724            False          4.072            True
+290      unseen       B9       B1      100 -1.192 -10.265   4.670               True -1.942 -0.481 -2.121 -0.232            False          1.192           False
+290      unseen       B3       B1      100  5.401  -6.518  22.140               True  4.060  6.815  4.413  6.061            False          5.401            True
+290      unseen       B7       B1      100  1.914  -2.993   6.263               True  1.467  2.360  1.427  2.251            False          1.914           False
+290      unseen       C1       B1      100  2.880  -3.699   7.107               True  2.369  3.355  2.283  3.277            False          2.880            True
+100      unseen       B9       B1      100  1.265  -4.272   8.712               True  0.576  1.938  0.284  1.884            False          1.265           False
+100      unseen       B7       B1      100  0.463  -1.621   3.439               True  0.197  0.742  0.334  0.719            False          0.463           False
+100      unseen       C1       B1      100  1.698  -0.458   5.131               True  1.413  1.991  1.384  1.863            False          1.698           False
+100      unseen       B3       B1      100  3.679  -1.579  10.354               True  3.007  4.379  2.900  4.051            False          3.679            True
+290 strict_draw       C1       B9      100  1.062  -4.289   6.239               True  0.370  1.704  0.090  1.813            False          1.062           False
+290 strict_draw       B7       B1      100  0.678  -1.668   4.291               True  0.351  1.024  0.407  0.937            False          0.678           False
+290 strict_draw       B3       B1      100  2.698  -1.124  11.531               True  2.082  3.374  1.605  3.443            False          2.698            True
+290 strict_draw       B9       B1      100  0.588  -4.248   4.933               True -0.016  1.243 -0.552  1.581             True          0.588           False
+290 strict_draw       C1       B1      100  1.650  -0.798   5.175               True  1.324  2.002  1.161  1.891            False          1.650           False
+100        seen       C1       B9      100  1.532  -4.489   6.477               True  0.989  2.074  0.938  2.112            False          1.532           False
+100        seen       B9       B1      100 -1.563  -6.209   4.229               True -2.132 -1.001 -2.163 -0.920            False          1.563           False
+100        seen       B3       B1      100  0.929  -2.287   6.452               True  0.499  1.385  0.548  1.354            False          0.929           False
+100        seen       C1       B1      100 -0.030  -1.504   1.245               True -0.161  0.090 -0.204  0.119             True          0.030           False
+100        seen       B7       B1      100 -0.291  -1.970   1.772               True -0.447 -0.134 -0.400 -0.076            False          0.291           False
+100      unseen       C1       B9      100  0.433  -7.464   5.980               True -0.247  1.126 -0.050  1.259             True          0.433           False
+290        seen       C1       B9      100  2.877   0.270   5.456              False  2.573  3.188  2.649  3.294            False          2.877            True
+100 strict_draw       B3       B1       99  2.351  -1.760   9.664               True  1.740  3.075  1.365  3.027            False          2.351            True
+100 strict_draw       B9       B1       99  3.116  -2.854  13.362               True  2.247  4.023  1.867  4.122            False          3.116            True
+290        seen       B7       B1      100 -0.489  -1.583   0.615               True -0.609 -0.374 -0.553 -0.308            False          0.489           False
+100 strict_draw       C1       B1       99  1.430  -0.262   5.536               True  1.141  1.741  1.071  1.599            False          1.430           False
+290        seen       B3       B1      100  1.611  -0.716   5.243               True  1.337  1.895  1.317  2.053            False          1.611           False
+100 strict_draw       B7       B1       99  0.267  -1.714   4.252               True -0.009  0.563  0.005  0.508            False          0.267           False
+290        seen       B9       B1      100 -2.944  -5.403  -0.309              False -3.235 -2.648 -3.336 -2.619            False          2.944            True
+290        seen       C1       B1      100 -0.068  -1.213   0.857               True -0.175  0.036 -0.129  0.114             True          0.068           False
+100 strict_draw       C1       B9       99 -1.686 -11.931   4.298               True -2.589 -0.821 -2.620 -0.696            False          1.686           False
+
+{
+  "B9_minus_B1_unseen": -1.1918230881230043,
+  "B9_minus_B1_unseen_ci_b": [
+    -2.1206788684265963,
+    -0.2320875955407337
+  ],
+  "B9_minus_B1_unseen_ci_old": [
+    -10.264579860558005,
+    4.670090701425648
+  ],
+  "G4_C1_minus_B1_strict_draw": {
+    "C1_beats_B1": false,
+    "b": [
+      1.161454315123263,
+      1.8905929410866749
+    ],
+    "delta": 1.650156500202433,
+    "old": [
+      -0.7981131240316968,
+      5.175322309599283
+    ]
+  },
+  "LP_GAIN_IS_SPEAKER_LOCAL": false,
+  "SPEAKER_GAP": true,
+  "SPEAKER_GAP_methods": [
+    "B9"
+  ],
+  "speaker_ratio": {
+    "B1": {
+      "ratio": 1.2349172452632216,
+      "seen": 10.969883181399412,
+      "unseen": 13.546897919233107
+    },
+    "B3": {
+      "ratio": 1.4776927439001106,
+      "seen": 12.240035240260932,
+      "unseen": 18.087011259615227
+    },
+    "B7": {
+      "ratio": 1.3927719886694243,
+      "seen": 10.579761515315873,
+      "unseen": 14.73519548533473
+    },
+    "B9": {
+      "ratio": 1.5583716290505585,
+      "seen": 8.716335978261684,
+      "unseen": 13.583290697795654
+    },
+    "C1": {
+      "ratio": 1.450041737315278,
+      "seen": 10.920889159737367,
+      "unseen": 15.835745090213159
+    }
+  }
+}

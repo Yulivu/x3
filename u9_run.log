@@ -1,0 +1,107 @@
+v3 dev: clips=15002 speakers=122
+  10/100 draws (390 rows, 0 errors)
+  20/100 draws (780 rows, 0 errors)
+  30/100 draws (1170 rows, 0 errors)
+  40/100 draws (1560 rows, 0 errors)
+  50/100 draws (1950 rows, 0 errors)
+  60/100 draws (2340 rows, 0 errors)
+  70/100 draws (2730 rows, 0 errors)
+  80/100 draws (3120 rows, 0 errors)
+  90/100 draws (3510 rows, 0 errors)
+  100/100 draws (3900 rows, 0 errors)
+
+CV-selected projection, pooled EER
+mask        seen  strict_draw  unseen
+method                               
+PROJ-ind  10.264       14.467  12.044
+PROJ-tra  10.198       14.476  11.785
+
+B1
+mask      seen  strict_draw  unseen
+method                             
+B1      10.194        14.45  11.964
+
+best grid cells on strict_draw (informational)
+       scope  m_s  m_p  pooled_eer
+transductive    4    0      14.195
+transductive    8    2      14.247
+transductive    8    0      14.262
+transductive   32    2      14.371
+transductive   32    0      14.378
+transductive   32    4      14.382
+transductive   16    2      14.429
+transductive   64    0      14.430
+transductive    0    4      14.438
+transductive    0    2      14.440
+
+intervals
+       mask method_a method_b  n_draws  delta  old_lo  old_hi   a_lo   a_hi   b_lo   b_hi  b_contains_zero  effect_points  meets_2pt_rule
+     unseen PROJ-ind       B1      100  0.080  -0.318   0.622  0.030  0.133  0.025  0.131            False          0.080           False
+     unseen PROJ-tra       B1      100 -0.179  -1.478   0.928 -0.293 -0.068 -0.264 -0.023            False          0.179           False
+strict_draw PROJ-tra       B1      100  0.026  -0.838   1.098 -0.064  0.112 -0.063  0.141             True          0.026           False
+strict_draw PROJ-ind       B1      100  0.018  -0.234   0.395 -0.021  0.054 -0.019  0.062             True          0.018           False
+       seen PROJ-ind       B1      100  0.071  -0.208   0.546  0.038  0.106  0.036  0.104            False          0.071           False
+       seen PROJ-tra       B1      100  0.004  -0.333   0.617 -0.043  0.056 -0.032  0.043             True          0.004           False
+
+{
+  "b1_strict_draw": 14.44969564859901,
+  "b_excludes_zero": false,
+  "best_grid_cells": [
+    {
+      "m_p": 0,
+      "m_s": 4,
+      "pooled_eer": 14.195042117053617,
+      "scope": "transductive"
+    },
+    {
+      "m_p": 2,
+      "m_s": 8,
+      "pooled_eer": 14.246976912704993,
+      "scope": "transductive"
+    },
+    {
+      "m_p": 0,
+      "m_s": 8,
+      "pooled_eer": 14.262488833280134,
+      "scope": "transductive"
+    },
+    {
+      "m_p": 2,
+      "m_s": 32,
+      "pooled_eer": 14.370609707824519,
+      "scope": "transductive"
+    },
+    {
+      "m_p": 0,
+      "m_s": 32,
+      "pooled_eer": 14.378213044843621,
+      "scope": "transductive"
+    }
+  ],
+  "best_grid_note": "choosing the best cell after seeing strict_draw is optimistic; the CV-selected number above is the pre-registered comparison",
+  "cv_selected": {
+    "seen|B1": 10.193662061010695,
+    "seen|PROJ-ind": 10.264264824365384,
+    "seen|PROJ-tra": 10.197554465065478,
+    "strict_draw|B1": 14.44969564859901,
+    "strict_draw|GRID-ind": 14.466019411372853,
+    "strict_draw|GRID-tra": 14.387026227125485,
+    "strict_draw|PROJ-ind": 14.467374819087011,
+    "strict_draw|PROJ-tra": 14.475845254680719,
+    "unseen|B1": 11.963969067064927,
+    "unseen|PROJ-ind": 12.044137242407123,
+    "unseen|PROJ-tra": 11.78452988987242
+  },
+  "delta_vs_b1": 0.017679170488001716,
+  "effect_ge_2": false,
+  "interval_b": [
+    -0.018825364972594124,
+    0.06187870655338064
+  ],
+  "method": "PROJ-ind",
+  "seen": 10.264264824365384,
+  "seen_delta": 0.07060276335468885,
+  "seen_within_tolerance": true,
+  "strict_draw": 14.467374819087011,
+  "verdict": "PROJ_FAIL"
+}

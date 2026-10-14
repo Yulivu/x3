@@ -1,8 +1,8 @@
 {
   "G0": {
-    "backbones_with_fidelity": 1,
-    "n_rows": 2,
-    "status": "amber"
+    "backbones_with_fidelity": 3,
+    "n_rows": 4,
+    "status": "pass"
   },
   "G1": {
     "best_pooled": 20.208649644316065,
@@ -308,6 +308,85 @@
       "xls-r-2b|S5": false
     },
     "status": "SOTA_F_DEV_NO"
+  },
+  "G12": {
+    "status": "NOT_RUN"
+  },
+  "G13": {
+    "status": "NOT_RUN"
+  },
+  "G14": {
+    "status": "NOT_RUN"
+  },
+  "G15": {
+    "status": "NOT_RUN"
+  },
+  "G16": {
+    "status": "NOT_RUN"
+  },
+  "G17": {
+    "detail": {
+      "b_excludes_zero": true,
+      "best_control": "OC+B1",
+      "delta_points": 5.508007225318261,
+      "effect_ge_2": false,
+      "interval_b": [
+        4.231945025882896,
+        6.794665527272493
+      ],
+      "interval_old": [
+        1.5942066744745678,
+        10.43977702993291
+      ],
+      "m": 5,
+      "mask": "strict_draw",
+      "means": {
+        "B1": 14.320741630485031,
+        "B1+enroll": 12.790540481510225,
+        "ESN": 13.265034648768358,
+        "ESN-P": 13.229142474350276,
+        "OC": 16.641382975051055,
+        "OC+B1": 7.757027423450097
+      },
+      "population": "all",
+      "verdict": "ESN_FAIL"
+    },
+    "source": "results/u8_gate.json",
+    "status": "ESN_FAIL"
+  },
+  "G18": {
+    "detail": {
+      "b1_strict_draw": 14.44969564859901,
+      "b_excludes_zero": false,
+      "best_grid_note": "choosing the best cell after seeing strict_draw is optimistic; the CV-selected number above is the pre-registered comparison",
+      "cv_selected": {
+        "seen|B1": 10.193662061010695,
+        "seen|PROJ-ind": 10.264264824365384,
+        "seen|PROJ-tra": 10.197554465065478,
+        "strict_draw|B1": 14.44969564859901,
+        "strict_draw|GRID-ind": 14.466019411372853,
+        "strict_draw|GRID-tra": 14.387026227125485,
+        "strict_draw|PROJ-ind": 14.467374819087011,
+        "strict_draw|PROJ-tra": 14.475845254680719,
+        "unseen|B1": 11.963969067064927,
+        "unseen|PROJ-ind": 12.044137242407123,
+        "unseen|PROJ-tra": 11.78452988987242
+      },
+      "delta_vs_b1": 0.017679170488001716,
+      "effect_ge_2": false,
+      "interval_b": [
+        -0.018825364972594124,
+        0.06187870655338064
+      ],
+      "method": "PROJ-ind",
+      "seen": 10.264264824365384,
+      "seen_delta": 0.07060276335468885,
+      "seen_within_tolerance": true,
+      "strict_draw": 14.467374819087011,
+      "verdict": "PROJ_FAIL"
+    },
+    "source": "results/u9_gate.json",
+    "status": "PROJ_FAIL"
   },
   "G2": {
     "stability": "NOT_RUN",
