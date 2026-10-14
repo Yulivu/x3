@@ -102,6 +102,28 @@ def test_md_table_helper_is_used_for_the_u10_levers(tmp_path):
     assert "| seen | -1.31 |" in text
 
 
+def test_the_document_reports_u4_and_its_gates(tmp_path):
+    root = _root(tmp_path)
+    pd.DataFrame([{"mask": "strict_draw", "k": 100, "selector": "full",
+                   "learner": "LR+LP", "pooled_eer": 11.0, "draw": 0,
+                   "method": "full|LR+LP"},
+                  {"mask": "strict_draw", "k": 100, "selector": "U",
+                   "learner": "LR+LP", "pooled_eer": 15.0, "draw": 0,
+                   "method": "U|LR+LP"}]).to_csv(root / "results" / "u4_malp.csv",
+                                                 index=False)
+    pd.DataFrame([{"mask": "strict_draw", "k": 100, "factor": "selector",
+                   "level": "full", "reference": "U", "learner": "LR+LP",
+                   "mean": 11.0, "effect": -4.0}]).to_csv(
+        root / "results" / "u4_marginals.csv", index=False)
+    (root / "results" / "malp_gate.json").write_text(json.dumps(
+        {"G13": {"status": "SEL_PASS", "gain_vs_uniform": 4.0},
+         "G14": {"status": "SPEAKER_COVERAGE_FAIL"}}), encoding="utf-8")
+    text = dp.write_document(root)
+    assert "U4 / M-ALP" in text
+    assert "SEL_PASS" in text and "SPEAKER_COVERAGE_FAIL" in text
+    assert "Largest factor effects" in text
+
+
 def test_document_reports_missing_inputs_instead_of_inventing_them(tmp_path):
     (tmp_path / "results").mkdir()
     text = dp.write_document(tmp_path)

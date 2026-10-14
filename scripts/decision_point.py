@@ -261,6 +261,39 @@ def write_document(root: Path) -> str:
                      "reproduces the best single member.")
         lines.append("")
 
+    # U4 / M-ALP: the learner, the selector and the ablation marginals
+    u4 = _read(root, "u4_malp.csv")
+    g12 = _read_json(root, "malp_gate.json")
+    if u4 is not None and not u4.empty:
+        lines.append("### U4 / M-ALP (active label propagation, revised masks)")
+        lines.append("")
+        piv = (u4.pivot_table(index=["mask", "k", "selector"], columns="learner",
+                              values="pooled_eer", aggfunc="mean").round(3).reset_index())
+        lines.append(_md_table(piv, max_rows=24))
+        mg = _read(root, "u4_marginals.csv")
+        if mg is not None and not mg.empty:
+            top = (mg.reindex(mg["effect"].abs().sort_values(ascending=False).index)
+                   .head(8))
+            lines.append("")
+            lines.append("Largest factor effects (negative = better than its reference; "
+                         "selector vs `U`, learner vs `LR`):")
+            lines.append("")
+            lines.append(_md_table(top[["mask", "k", "factor", "level", "reference",
+                                        "effect"]].round(3), max_rows=8))
+        if g12:
+            lines.append("")
+            lines.append("| gate | verdict | key numbers |")
+            lines.append("|---|---|---|")
+            for g in ("G12", "G13", "G14", "G15", "G16"):
+                blob = g12.get(g, {})
+                if isinstance(blob, dict):
+                    key = {k: v for k, v in blob.items()
+                           if k not in ("status", "reason", "baselines", "beats",
+                                        "others", "interval", "rule")}
+                    lines.append(f"| {g} | {blob.get('status', 'NOT_RUN')} | "
+                                 f"{json.dumps(key, default=str)[:220]} |")
+        lines.append("")
+
     lines.append("## 3. U1' v2 -> v3")
     lines.append("")
     if v23 is None:
