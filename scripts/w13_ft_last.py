@@ -117,6 +117,33 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     summary = df[df["mask"] == "clips"][["pooled_eer", "within_macro_eer", "auc"]].mean().round(3)
     print(summary.to_string())
     print(f"wrote {out}  ({B10_REDUCED_NOTE})")
+    auc_mean = float(df[df["mask"] == "clips"]["auc"].mean())
+    if auc_mean < 0.5:
+        # A head that scores BELOW chance is not a weak baseline, it is a broken
+        # one: with a random init the declared budget (5 epochs at <=3e-5) barely
+        # moves the weights, so the score is dominated by the first principal
+        # direction. Record it rather than quietly reporting "we beat B10".
+        note = {
+            "item": "B10_REDUCED is not a usable baseline",
+            "what": (
+                f"B10_REDUCED scored mean AUC {auc_mean:.3f} (< 0.5) over {args.draws} draws: "
+                "the head never trained. With a random initialisation the declared budget "
+                "(5 epochs, lr <= 3e-5, AdamW) leaves the weights essentially at their random "
+                "values, so the score is a random projection dominated by PC1 and comes out "
+                "anti-correlated with the label. The full B10 (W13 on the GPU lane) is supposed "
+                "to start from the backbone's own pretrained head, which this variant cannot do."
+            ),
+            "impact": (
+                "Any 'we beat B10' statement made with these rows is vacuous. Either run the full "
+                "B10 on the encoder, or report B10 as NOT_MEANINGFUL and keep it out of the S-F "
+                "comparison."
+            ),
+            "source": "W13 on the box, 2026-10-14",
+        }
+        dev_path = root / "results" / "deviations.csv"
+        existing = pd.read_csv(dev_path) if dev_path.exists() else pd.DataFrame()
+        pd.concat([existing, pd.DataFrame([note])], ignore_index=True).to_csv(dev_path, index=False)
+        print(f"DEVIATION recorded: B10_REDUCED mean AUC {auc_mean:.3f} < 0.5")
     return 0
 
 
