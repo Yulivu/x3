@@ -1,11 +1,13 @@
 {
   "G0": {
-    "status": "NOT_RUN",
-    "why": "results/zeroshot_mlitw.csv missing or has no fidelity column"
+    "backbones_with_fidelity": 1,
+    "n_rows": 2,
+    "status": "amber"
   },
   "G1": {
-    "status": "NOT_RUN",
-    "why": "zero-shot table missing"
+    "best_pooled": 20.208649644316065,
+    "best_within_macro": 21.521080123833663,
+    "status": "HEADROOM_OK"
   },
   "G10": {
     "platform_auc": {
