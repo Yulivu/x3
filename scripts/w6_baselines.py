@@ -135,6 +135,33 @@ def fit_preprocess(F: np.ndarray, dim: int = PCA_DIM, seed: int = 20261015):
     return transform, pca.transform(Zs).astype(np.float32)
 
 
+def resolve_b6_zero(data_dir: Path, backbone: str, clip_ids: np.ndarray,
+                    choice: str = "lineA") -> np.ndarray:
+    """The detector B6 calibrates.
+
+    ``lineA`` (the default, unchanged) is Line A's frozen probe score - the choice
+    the provisional W6 run made when the only zero-shot detector available was
+    theirs.  It is *backbone-independent*, so B6's number is identical on every
+    backbone by construction.  ``backbone`` reads the AntiDeepfake zero-shot score
+    of the backbone under test from ``$DATA/x3/feats/<backbone>/scores.csv``, which
+    is the detector B6 is supposed to stand for once AntiDeepfake exists.
+    """
+    choice = str(choice)
+    if choice == "lineA":
+        zp = data_dir / "last_scores_p0cal_raw_s0.npy"
+        return np.load(zp)[clip_ids] if zp.exists() else np.zeros(len(clip_ids))
+    if choice != "backbone":
+        raise ValueError(f"unknown --b6-zero {choice!r}; use 'lineA' or 'backbone'")
+    if backbone == BACKBONE_LINEA:
+        raise ValueError("--b6-zero backbone needs an AntiDeepfake backbone "
+                         "(feats/<backbone>/scores.csv)")
+    path = data_dir / "x3" / "feats" / backbone / "scores.csv"
+    if not path.exists():
+        raise FileNotFoundError(f"{path} is missing; B6 has no zero-shot detector")
+    col = pd.read_csv(path)["logit_fake_minus_real"].to_numpy()
+    return np.asarray(col[clip_ids], float)
+
+
 # ------------------------------------------------------------------- a draw
 def run_one_draw(args) -> List[Dict[str, Any]]:
     """One draw: label per cell, fit every method, score both masks."""
@@ -297,6 +324,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--suffix", default="", help="suffix for the draws filename")
     parser.add_argument("--split", default="speaker_split_v2.json",
                         help="frozen split to read the dev region from")
+    parser.add_argument("--b6-zero", default="lineA", choices=["lineA", "backbone"],
+                        help="detector B6 calibrates: Line A's frozen probe (the "
+                             "provisional wiring, backbone-independent) or the "
+                             "AntiDeepfake zero-shot of the backbone under test")
     parser.add_argument("--summary-only", action="store_true",
                         help="rebuild the tables from an existing draws file")
     args = parser.parse_args(argv)
@@ -325,8 +356,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     lang = sub["language"].to_numpy()
     cell = sub["cell"].to_numpy()
     speaker = sub["speaker"].to_numpy()
-    zp = data_dir / "last_scores_p0cal_raw_s0.npy"
-    zero = np.load(zp)[sub["clip_id"].to_numpy()] if zp.exists() else np.zeros(len(sub))
+    zero = resolve_b6_zero(data_dir, backbone, sub["clip_id"].to_numpy(),
+                           args.b6_zero)
     print(f"dev clips={len(sub)} classes={np.bincount(y)} pca={Z.shape[1]} methods={methods} "
           f"backbone={backbone} spec={spec}")
 

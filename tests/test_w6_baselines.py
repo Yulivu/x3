@@ -50,6 +50,51 @@ def test_load_spec_defaults_to_the_v2_split(tmp_path, monkeypatch):
     assert sub["speaker"].tolist() == ["b"]
 
 
+def test_b6_zero_defaults_to_the_line_a_probe_and_is_backbone_independent(tmp_path):
+    np.save(tmp_path / "last_scores_p0cal_raw_s0.npy", np.array([5.0, 6.0]))
+    got = w6_baselines.resolve_b6_zero(tmp_path, "xls-r-2b", np.array([1, 0]))
+    assert np.allclose(got, [6.0, 5.0])           # aligned to the caller's order
+    other = w6_baselines.resolve_b6_zero(tmp_path, "mms-1b", np.array([1, 0]))
+    assert np.allclose(got, other)                # the same file, whatever the backbone
+
+
+def test_b6_zero_can_use_the_backbone_zero_shot(tmp_path):
+    fdir = tmp_path / "x3" / "feats" / "toy"
+    fdir.mkdir(parents=True)
+    pd.DataFrame({"clip_id": [0, 1], "logit_fake_minus_real": [2.0, -2.0]}).to_csv(
+        fdir / "scores.csv", index=False)
+    got = w6_baselines.resolve_b6_zero(tmp_path, "toy", np.array([1, 0]),
+                                       choice="backbone")
+    assert np.allclose(got, [-2.0, 2.0])
+
+
+def test_b6_zero_rejects_bad_choices(tmp_path, monkeypatch):
+    monkeypatch.setattr(w6_baselines, "BACKBONE_LINEA", "xlsr300m-linea")
+    try:
+        w6_baselines.resolve_b6_zero(tmp_path, "xlsr300m-linea", np.array([0]),
+                                     choice="backbone")
+    except ValueError as exc:
+        assert "AntiDeepfake" in str(exc)
+    else:                                          # pragma: no cover
+        raise AssertionError("the Line A block has no AntiDeepfake zero-shot")
+    try:
+        w6_baselines.resolve_b6_zero(tmp_path, "toy", np.array([0]), choice="nope")
+    except ValueError as exc:
+        assert "unknown" in str(exc)
+    else:                                          # pragma: no cover
+        raise AssertionError("an unknown choice must raise")
+
+
+def test_b6_zero_reports_a_missing_backbone_score_file(tmp_path):
+    try:
+        w6_baselines.resolve_b6_zero(tmp_path, "ghost", np.array([0]),
+                                     choice="backbone")
+    except FileNotFoundError as exc:
+        assert "ghost" in str(exc)
+    else:                                          # pragma: no cover
+        raise AssertionError("a missing scores.csv must raise")
+
+
 def _pool(seed=0, d=16, n_cells=6, per=90):
     rng = np.random.default_rng(seed)
     Z, y, plat, lang, cell, spk = [], [], [], [], [], []
