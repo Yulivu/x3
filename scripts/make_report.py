@@ -226,6 +226,28 @@ def _nt02_block(root: Path) -> List[str]:
     u5 = read_csv(root, "u5_summary.csv")
     lines.append("### U5 label-noise robustness")
     lines.append("")
+
+    w6b = read_csv(root, "w6_summary_v3_mms1b.csv")
+    w8z = read_csv(root, "w8_zlabel.csv")
+    lines.append("### Second backbone + Track Z (W17 / W8)")
+    lines.append("")
+    if w6b is None:
+        lines.append("NOT_RUN - `results/w6_summary_v3_mms1b.csv` missing "
+                     "(the second-backbone rerun of W6)")
+    else:
+        piv = (w6b[w6b["metric"] == "pooled_eer"]
+               .pivot_table(index="method", columns="mask", values="mean").round(3))
+        lines.append("`results/w6_summary_v3_mms1b.csv` (mms-1b/S3 on the v3 dev region)")
+        lines.append("")
+        lines.append(_md_table(piv.reset_index(), max_rows=12))
+    if w8z is not None:
+        lines.append("")
+        lines.append("Track Z (k=0, v3 dev): `results/w8_zlabel.csv`")
+        lines.append("")
+        lines.append(_md_table(w8z[["method", "pooled_eer", "within_macro_eer",
+                                    "worst_platform_eer", "auc"]].round(3),
+                               max_rows=10))
+    lines.append("")
     if u5 is None:
         lines.append("NOT_RUN - `results/u5_summary.csv` missing")
     else:
