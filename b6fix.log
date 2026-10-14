@@ -1,0 +1,12 @@
+usage: w6_baselines.py [-h] [--root ROOT] [--data DATA] [--draws DRAWS]
+                       [--k-per-cell K_PER_CELL] [--jobs JOBS]
+                       [--methods METHODS] [--pca PCA] [--backbone BACKBONE]
+                       [--spec SPEC] [--suffix SUFFIX] [--split SPLIT]
+                       [--b6-zero {lineA,backbone}] [--summary-only]
+w6_baselines.py: error: argument --backbone: expected one argument
+usage: w6_baselines.py [-h] [--root ROOT] [--data DATA] [--draws DRAWS]
+                       [--k-per-cell K_PER_CELL] [--jobs JOBS]
+                       [--methods METHODS] [--pca PCA] [--backbone BACKBONE]
+                       [--spec SPEC] [--suffix SUFFIX] [--split SPLIT]
+                       [--b6-zero {lineA,backbone}] [--summary-only]
+w6_baselines.py: error: argument --backbone: expected one argument

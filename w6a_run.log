@@ -1,0 +1,76 @@
+dev clips=15002 classes=[11012  3990] pca=256 methods=('B1', 'B2', 'B3', 'B5', 'B6', 'B7', 'B9', 'C1') backbone=xls-r-2b spec=S3
+  draw 0 done (117 rows)
+  draw 10 done (429 rows)
+  draw 20 done (819 rows)
+  draw 30 done (1209 rows)
+  draw 40 done (1599 rows)
+  draw 50 done (1989 rows)
+  draw 60 done (2379 rows)
+  draw 70 done (2769 rows)
+  draw 80 done (3159 rows)
+  draw 90 done (3627 rows)
+backbone spec method   mask             metric      mean       std
+xls-r-2b   S3     B1  clips         pooled_eer 10.863178  1.117328
+xls-r-2b   S3     B1  clips   within_macro_eer 11.653952  1.128802
+xls-r-2b   S3     B1  clips worst_platform_eer 18.500858  2.967521
+xls-r-2b   S3     B1  clips                auc  0.954397  0.008542
+xls-r-2b   S3     B1 strict         pooled_eer 13.553214  5.021551
+xls-r-2b   S3     B1 strict   within_macro_eer 13.395448  4.123219
+xls-r-2b   S3     B1 strict worst_platform_eer 22.915046  9.919001
+xls-r-2b   S3     B1 strict                auc  0.932681  0.037690
+xls-r-2b   S3     B2  clips         pooled_eer 15.402097  2.773894
+xls-r-2b   S3     B2  clips   within_macro_eer 13.473326  1.466410
+xls-r-2b   S3     B2  clips worst_platform_eer 21.693857  4.488852
+xls-r-2b   S3     B2  clips                auc  0.922226  0.016880
+xls-r-2b   S3     B2 strict         pooled_eer 18.358243  6.216663
+xls-r-2b   S3     B2 strict   within_macro_eer 16.000332  4.630908
+xls-r-2b   S3     B2 strict worst_platform_eer 29.158535 12.302473
+xls-r-2b   S3     B2 strict                auc  0.898359  0.042599
+xls-r-2b   S3     B3  clips         pooled_eer 12.975288  1.590998
+xls-r-2b   S3     B3  clips   within_macro_eer 11.653952  1.128802
+xls-r-2b   S3     B3  clips worst_platform_eer 18.500858  2.967521
+xls-r-2b   S3     B3  clips                auc  0.942529  0.011166
+xls-r-2b   S3     B3 strict         pooled_eer 16.533839  4.673746
+xls-r-2b   S3     B3 strict   within_macro_eer 13.395448  4.123219
+xls-r-2b   S3     B3 strict worst_platform_eer 22.915046  9.919001
+xls-r-2b   S3     B3 strict                auc  0.921532  0.033608
+xls-r-2b   S3     B5  clips         pooled_eer 11.939051  0.641068
+xls-r-2b   S3     B5  clips   within_macro_eer 12.234740  0.890023
+xls-r-2b   S3     B5  clips worst_platform_eer 19.621012  2.261789
+xls-r-2b   S3     B5  clips                auc  0.946264  0.006325
+xls-r-2b   S3     B5 strict         pooled_eer 12.905418  5.156102
+xls-r-2b   S3     B5 strict   within_macro_eer 13.312961  3.759371
+xls-r-2b   S3     B5 strict worst_platform_eer 22.748528  9.056028
+xls-r-2b   S3     B5 strict                auc  0.932253  0.044345
+xls-r-2b   S3     B6  clips         pooled_eer 33.121196  0.923855
+xls-r-2b   S3     B6  clips   within_macro_eer 33.693992  0.277693
+xls-r-2b   S3     B6  clips worst_platform_eer 46.588945  2.143954
+xls-r-2b   S3     B6  clips                auc  0.740968  0.010081
+xls-r-2b   S3     B6 strict         pooled_eer 26.020039  4.484637
+xls-r-2b   S3     B6 strict   within_macro_eer 27.805162  4.573950
+xls-r-2b   S3     B6 strict worst_platform_eer 39.613695 10.341928
+xls-r-2b   S3     B6 strict                auc  0.792580  0.051817
+xls-r-2b   S3     B7  clips         pooled_eer 10.744261  1.343518
+xls-r-2b   S3     B7  clips   within_macro_eer 11.843412  1.399403
+xls-r-2b   S3     B7  clips worst_platform_eer 18.988279  3.519931
+xls-r-2b   S3     B7  clips                auc  0.953418  0.010500
+xls-r-2b   S3     B7 strict         pooled_eer 14.235223  5.074622
+xls-r-2b   S3     B7 strict   within_macro_eer 14.070565  4.291295
+xls-r-2b   S3     B7 strict worst_platform_eer 23.647121 10.472140
+xls-r-2b   S3     B7 strict                auc  0.927472  0.041044
+xls-r-2b   S3     B9  clips         pooled_eer  8.017210  1.160643
+xls-r-2b   S3     B9  clips   within_macro_eer  9.697487  1.384655
+xls-r-2b   S3     B9  clips worst_platform_eer 17.936435  3.950154
+xls-r-2b   S3     B9  clips                auc  0.957222  0.005215
+xls-r-2b   S3     B9 strict         pooled_eer 10.788154  4.258050
+xls-r-2b   S3     B9 strict   within_macro_eer 13.870509  5.073772
+xls-r-2b   S3     B9 strict worst_platform_eer 25.884152 12.287462
+xls-r-2b   S3     B9 strict                auc  0.919400  0.024082
+xls-r-2b   S3     C1  clips         pooled_eer 11.328909  1.290285
+xls-r-2b   S3     C1  clips   within_macro_eer 12.480532  1.374670
+xls-r-2b   S3     C1  clips worst_platform_eer 19.752155  3.507390
+xls-r-2b   S3     C1  clips                auc  0.950525  0.009735
+xls-r-2b   S3     C1 strict         pooled_eer 15.052501  4.817075
+xls-r-2b   S3     C1 strict   within_macro_eer 15.061523  4.163154
+xls-r-2b   S3     C1 strict worst_platform_eer 24.682407  9.964085
+xls-r-2b   S3     C1 strict                auc  0.921920  0.039058

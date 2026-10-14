@@ -154,6 +154,33 @@ U8 intervals (delta = method - control; negative = method better)
 
 ### U5 label-noise robustness
 
+### Second backbone + Track Z (W17 / W8)
+
+`results/w6_summary_v3_mms1b.csv` (mms-1b/S3 on the v3 dev region)
+
+| method | clips | strict |
+|---|---|---|
+| B1 | 9.634 | 12.24 |
+| B2 | 14.67 | 18.25 |
+| B3 | 11.36 | 15.25 |
+| B5 | 11.42 | 12.61 |
+| B6 | 33.12 | 26.02 |
+| B7 | 9.532 | 12.53 |
+| B9 | 7.918 | 13.8 |
+| C1 | 10.13 | 13.58 |
+
+
+Track Z (k=0, v3 dev): `results/w8_zlabel.csv`
+
+| method | pooled_eer | within_macro_eer | worst_platform_eer | auc |
+|---|---|---|---|---|
+| Z0 | 20.86 | 21.55 | 30.03 | 0.857 |
+| Z1 | 25.62 | 21.55 | 30.03 | 0.813 |
+| Z2 | 22.18 | 23.33 | 33.25 | 0.837 |
+| Z5 | 16.16 | 18.41 | 36.73 | 0.894 |
+| Z5-z1 | 23.74 | 21.04 | 31.02 | 0.851 |
+
+
 `results/u5_noise.csv` (pooled EER, clips mask)
 
 | method | k | 0.0 | 0.05 | 0.1 | 0.2 |
@@ -410,6 +437,7 @@ U8 intervals (delta = method - control; negative = method better)
 
 - {'item': 'TASKBOOK 1.2 headline attribution', 'what': "TASKBOOK says Line A's headline 13.64/14.56/20.79 comes from 'frozen XLS-R features + a small probe trained on 290 labels, plus cell-prior correction'. Measured on the box, that route gives 24.65 pooled (k=10, BB+EB), and even an ORACLE cell prior only reaches 21.52 pooled on the p0cal scores. The 13.64 number is COMPARISON.md's line A: 290 labels train a head directly with NO prior correction (clips 13.05 / strict 13.64, AUC 0.94).", 'impact': "S-F must be judged against the ADAPTATION route (BASE_F's B11 family), not only against the prior-correction family; otherwise the SOTA bar is ~9 EER points too low. The prior-correction family stays in BASE_F under its own name.", 'source': 'W4 on the box, 2026-10-14; wx2/docs/COMPARISON.md 0.0 line 42'}
 - {'item': 'B10_REDUCED is not a usable baseline', 'what': "B10_REDUCED scored mean AUC 0.412 (< 0.5) over 50 draws: the head never trained. With a random initialisation the declared budget (5 epochs, lr <= 3e-5, AdamW) leaves the weights essentially at their random values, so the score is a random projection dominated by PC1 and comes out anti-correlated with the label. The full B10 (W13 on the GPU lane) is supposed to start from the backbone's own pretrained head, which this variant cannot do.", 'impact': "Any 'we beat B10' statement made with these rows is vacuous. Either run the full B10 on the encoder, or report B10 as NOT_MEANINGFUL and keep it out of the S-F comparison.", 'source': 'W13 on the box, 2026-10-14'}
+- {'item': 'W6 B6 detector was wired to Line A for every backbone', 'what': 'scripts/w6_baselines.py fed B6 the frozen Line A probe score (last_scores_p0cal_raw_s0.npy) regardless of --backbone, so B6 was identical on mms-1b and xls-r-2b (33.12 clips / 26.02 strict) and much worse than the true zero-shot (20.86). With --b6-zero backbone the same draws give xls-r-2b 18.92/19.94 and mms-1b 23.32/23.22.', 'impact': 'No S-F claim used B6 (it is not in BASE_F prime), but the stored B6 rows overstate its error by 6 to 14 points and hid the backbone dependence. The default stays lineA so old files remain reproducible; new runs should pass --b6-zero backbone.', 'source': 'w6b/w6a v3 reruns on the box, 2026-10-15 (results/w6_summary_v3_*_b6fix.csv)'}
 
 ## W2 zero-shot
 
@@ -873,5 +901,5 @@ NOT_RUN - `results/w21_addgp.csv` missing
 
 ## 5. Reproduction and commit
 
-- commit: `d1e2ca5`
+- commit: `afd3e2b`
 - environment: `scripts/w1_env.py`; queue: `queue.yaml`; criteria: `claims.yaml`

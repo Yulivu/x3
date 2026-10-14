@@ -1,0 +1,76 @@
+dev clips=15002 classes=[11012  3990] pca=256 methods=('B1', 'B2', 'B3', 'B5', 'B6', 'B7', 'B9', 'C1') backbone=mms-1b spec=S3
+  draw 0 done (312 rows)
+  draw 10 done (390 rows)
+  draw 20 done (819 rows)
+  draw 30 done (1209 rows)
+  draw 40 done (1599 rows)
+  draw 50 done (2067 rows)
+  draw 60 done (2301 rows)
+  draw 70 done (2769 rows)
+  draw 80 done (3159 rows)
+  draw 90 done (3549 rows)
+backbone spec method   mask             metric      mean       std
+  mms-1b   S3     B1  clips         pooled_eer  9.634133  1.029420
+  mms-1b   S3     B1  clips   within_macro_eer 10.483941  1.085707
+  mms-1b   S3     B1  clips worst_platform_eer 16.428600  2.557665
+  mms-1b   S3     B1  clips                auc  0.963254  0.006530
+  mms-1b   S3     B1 strict         pooled_eer 12.237448  3.931608
+  mms-1b   S3     B1 strict   within_macro_eer 12.030995  3.459976
+  mms-1b   S3     B1 strict worst_platform_eer 19.495415  6.997389
+  mms-1b   S3     B1 strict                auc  0.941900  0.025845
+  mms-1b   S3     B2  clips         pooled_eer 14.666426  2.918915
+  mms-1b   S3     B2  clips   within_macro_eer 12.264240  1.408528
+  mms-1b   S3     B2  clips worst_platform_eer 19.801113  4.230681
+  mms-1b   S3     B2  clips                auc  0.928787  0.016717
+  mms-1b   S3     B2 strict         pooled_eer 18.253985  6.142918
+  mms-1b   S3     B2 strict   within_macro_eer 14.427933  4.318970
+  mms-1b   S3     B2 strict worst_platform_eer 26.260490 12.314351
+  mms-1b   S3     B2 strict                auc  0.903162  0.039657
+  mms-1b   S3     B3  clips         pooled_eer 11.356506  1.364026
+  mms-1b   S3     B3  clips   within_macro_eer 10.483941  1.085707
+  mms-1b   S3     B3  clips worst_platform_eer 16.428600  2.557665
+  mms-1b   S3     B3  clips                auc  0.952299  0.009732
+  mms-1b   S3     B3 strict         pooled_eer 15.247564  4.176143
+  mms-1b   S3     B3 strict   within_macro_eer 12.030995  3.459976
+  mms-1b   S3     B3 strict worst_platform_eer 19.495415  6.997389
+  mms-1b   S3     B3 strict                auc  0.931031  0.028376
+  mms-1b   S3     B5  clips         pooled_eer 11.420787  0.646563
+  mms-1b   S3     B5  clips   within_macro_eer 11.742050  0.877379
+  mms-1b   S3     B5  clips worst_platform_eer 16.697863  3.002325
+  mms-1b   S3     B5  clips                auc  0.952199  0.005347
+  mms-1b   S3     B5 strict         pooled_eer 12.613906  5.162973
+  mms-1b   S3     B5 strict   within_macro_eer 12.681085  3.427351
+  mms-1b   S3     B5 strict worst_platform_eer 20.305990  7.190707
+  mms-1b   S3     B5 strict                auc  0.938458  0.036532
+  mms-1b   S3     B6  clips         pooled_eer 33.121196  0.923855
+  mms-1b   S3     B6  clips   within_macro_eer 33.693992  0.277693
+  mms-1b   S3     B6  clips worst_platform_eer 46.588945  2.143954
+  mms-1b   S3     B6  clips                auc  0.740968  0.010081
+  mms-1b   S3     B6 strict         pooled_eer 26.020039  4.484637
+  mms-1b   S3     B6 strict   within_macro_eer 27.805162  4.573950
+  mms-1b   S3     B6 strict worst_platform_eer 39.613695 10.341928
+  mms-1b   S3     B6 strict                auc  0.792580  0.051817
+  mms-1b   S3     B7  clips         pooled_eer  9.532117  1.387504
+  mms-1b   S3     B7  clips   within_macro_eer 10.520318  1.424945
+  mms-1b   S3     B7  clips worst_platform_eer 16.807723  3.080413
+  mms-1b   S3     B7  clips                auc  0.961963  0.009226
+  mms-1b   S3     B7 strict         pooled_eer 12.531223  4.268109
+  mms-1b   S3     B7 strict   within_macro_eer 12.360941  3.764737
+  mms-1b   S3     B7 strict worst_platform_eer 20.244882  8.030311
+  mms-1b   S3     B7 strict                auc  0.939567  0.029663
+  mms-1b   S3     B9  clips         pooled_eer  7.918283  1.506654
+  mms-1b   S3     B9  clips   within_macro_eer  9.854199  1.581225
+  mms-1b   S3     B9  clips worst_platform_eer 17.926025  4.939311
+  mms-1b   S3     B9  clips                auc  0.954503  0.006539
+  mms-1b   S3     B9 strict         pooled_eer 13.801289  5.101935
+  mms-1b   S3     B9 strict   within_macro_eer 14.648672  4.962489
+  mms-1b   S3     B9 strict worst_platform_eer 25.315024 11.675769
+  mms-1b   S3     B9 strict                auc  0.896382  0.037731
+  mms-1b   S3     C1  clips         pooled_eer 10.132822  1.374250
+  mms-1b   S3     C1  clips   within_macro_eer 11.329132  1.459560
+  mms-1b   S3     C1  clips worst_platform_eer 18.022594  3.250675
+  mms-1b   S3     C1  clips                auc  0.958992  0.009216
+  mms-1b   S3     C1 strict         pooled_eer 13.580335  4.214088
+  mms-1b   S3     C1 strict   within_macro_eer 13.635339  3.879790
+  mms-1b   S3     C1 strict worst_platform_eer 21.852561  7.918440
+  mms-1b   S3     C1 strict                auc  0.932238  0.030394

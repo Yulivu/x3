@@ -1,0 +1,20 @@
+dev clips=15002 classes=[11012  3990] pca=256 methods=('B6',) backbone=xls-r-2b spec=S3
+  draw 0 done (2 rows)
+  draw 10 done (22 rows)
+  draw 20 done (42 rows)
+  draw 30 done (62 rows)
+  draw 40 done (82 rows)
+  draw 50 done (102 rows)
+  draw 60 done (122 rows)
+  draw 70 done (142 rows)
+  draw 80 done (162 rows)
+  draw 90 done (182 rows)
+backbone spec method   mask             metric      mean      std
+xls-r-2b   S3     B6  clips         pooled_eer 18.923117 0.282653
+xls-r-2b   S3     B6  clips   within_macro_eer 21.492640 0.092116
+xls-r-2b   S3     B6  clips worst_platform_eer 30.010726 0.397843
+xls-r-2b   S3     B6  clips                auc  0.868995 0.002773
+xls-r-2b   S3     B6 strict         pooled_eer 19.934693 4.920247
+xls-r-2b   S3     B6 strict   within_macro_eer 22.083938 4.415334
+xls-r-2b   S3     B6 strict worst_platform_eer 33.929285 8.753933
+xls-r-2b   S3     B6 strict                auc  0.873298 0.056477

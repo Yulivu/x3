@@ -141,6 +141,33 @@ U8 intervals (delta = method - control; negative = method better)
 
 ### U5 label-noise robustness
 
+### Second backbone + Track Z (W17 / W8)
+
+`results/w6_summary_v3_mms1b.csv` (mms-1b/S3 on the v3 dev region)
+
+| method | clips | strict |
+|---|---|---|
+| B1 | 9.634 | 12.24 |
+| B2 | 14.67 | 18.25 |
+| B3 | 11.36 | 15.25 |
+| B5 | 11.42 | 12.61 |
+| B6 | 33.12 | 26.02 |
+| B7 | 9.532 | 12.53 |
+| B9 | 7.918 | 13.8 |
+| C1 | 10.13 | 13.58 |
+
+
+Track Z (k=0, v3 dev): `results/w8_zlabel.csv`
+
+| method | pooled_eer | within_macro_eer | worst_platform_eer | auc |
+|---|---|---|---|---|
+| Z0 | 20.86 | 21.55 | 30.03 | 0.857 |
+| Z1 | 25.62 | 21.55 | 30.03 | 0.813 |
+| Z2 | 22.18 | 23.33 | 33.25 | 0.837 |
+| Z5 | 16.16 | 18.41 | 36.73 | 0.894 |
+| Z5-z1 | 23.74 | 21.04 | 31.02 | 0.851 |
+
+
 `results/u5_noise.csv` (pooled EER, clips mask)
 
 | method | k | 0.0 | 0.05 | 0.1 | 0.2 |
@@ -527,4 +554,4 @@ _(empty)_
 | 16.16 | 18.41 | tiktok | 36.73 | 0.8941 | nan | 15002 | 3990 | 17.14 | 10.92 | 13.57 | 20.07 | 36.73 | 14.56 | 15.9 | track_z_v3_dev | dev | xls-r-2b | S3 | Z5 | 0 | clips | 0 | nan | nan | nan | nan | nan | nan | Z2 |
 | 23.74 | 21.04 | tiktok | 31.02 | 0.8508 | nan | 15002 | 3990 | 20.8 | 14.82 | 29.57 | 15.66 | 31.02 | 16.17 | 19.19 | track_z_v3_dev | dev | xls-r-2b | S3 | Z5-z1 | 0 | clips | 0 | nan | nan | nan | nan | nan | nan | Z1 |
 
-commit: `d1e2ca5`
+commit: `afd3e2b`
