@@ -1,0 +1,52 @@
+{
+  "G0": {
+    "status": "NOT_RUN",
+    "why": "results/zeroshot_mlitw.csv missing or has no fidelity column"
+  },
+  "G1": {
+    "status": "NOT_RUN",
+    "why": "zero-shot table missing"
+  },
+  "G10": {
+    "status": "NOT_RUN",
+    "why": "results/w16_mechanism.csv missing"
+  },
+  "G11": {
+    "status": "NOT_RUN",
+    "why": "no chosen (backbone, spec) yet - run G3 with --select"
+  },
+  "G2": {
+    "stability": "NOT_RUN",
+    "status": "REPRODUCED",
+    "worst_reproduction_gap": 0.4479426648035378
+  },
+  "G3": {
+    "status": "NOT_RUN",
+    "why": "results/backbone_rank.csv missing"
+  },
+  "G4": {
+    "status": "NOT_RUN",
+    "why": "results/w6_summary.csv missing"
+  },
+  "G5": {
+    "n_extreme_cells": 500,
+    "share_of_extreme_cells": 0.006,
+    "status": "PL_OK"
+  },
+  "G6": {
+    "status": "NOT_RUN",
+    "why": "results/w11_past.csv missing"
+  },
+  "G7": {
+    "status": "NOT_RUN",
+    "why": "results/w12_casa.csv missing"
+  },
+  "G8": {
+    "status": "NOT_RUN",
+    "why": "results/w8_zlabel.csv missing"
+  },
+  "G9": {
+    "status": "NOT_RUN",
+    "why": "results/w15_itw.csv missing"
+  }
+}

@@ -1,0 +1,3 @@
+route,clips_pooled,strict_pooled,prior_correction,source
+A-adaptation,13.05,13.64,False,"wx2/docs/COMPARISON.md 0.0 line 42, line 128"
+B-prior-correction,24.65,,True,"fsc_var_results.csv (bb, k=10)"

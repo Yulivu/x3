@@ -1,0 +1,5 @@
+scope,metric,headline,rerun,diff,mask,n_draws,reference
+3draw,pooled_eer,24.65,25.84759890953036,1.1975989095303632,clips,3,"fsc_var_results.csv (bb, k=10)"
+3draw,within_macro_eer,34.36,35.070245782126506,0.7102457821265062,clips,3,"fsc_var_results.csv (bb, k=10)"
+100draw,pooled_eer,24.65,25.097942664803536,0.44794266480353784,clips,100,"fsc_var_results.csv (bb, k=10)"
+100draw,within_macro_eer,34.36,34.24379483506281,-0.1162051649371918,clips,100,"fsc_var_results.csv (bb, k=10)"

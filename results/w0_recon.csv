@@ -1,0 +1,9 @@
+platform,expected_real,real,expected_fake,fake,match
+youtube,5948.0,5948.0,531.0,531.0,True
+bilibili,4263.0,4263.0,793.0,793.0,True
+facebook,3027.0,3027.0,1129.0,1129.0,True
+twitter,3046.0,0.0,1061.0,0.0,False
+rednote,1333.0,1333.0,1393.0,1393.0,True
+douyin,182.0,182.0,1149.0,1149.0,True
+tiktok,369.0,369.0,305.0,305.0,True
+unexpected: ['x'],,,,,False
