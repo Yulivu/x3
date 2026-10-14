@@ -1,0 +1,7 @@
+kind,factor,effect,n
+marginal,c1,-0.0010555219382819558,240
+marginal,past,-0.3660296617713392,240
+marginal,casa,-5.575435825682561,240
+interaction,c1xpast,0.36774465928206723,240
+interaction,c1xcasa,5.57554169300974,240
+interaction,pastxcasa,4.985315580812794,240

@@ -8,8 +8,15 @@
     "why": "zero-shot table missing"
   },
   "G10": {
-    "status": "NOT_RUN",
-    "why": "results/w16_mechanism.csv missing"
+    "platform_auc": {
+      "B1": 0.6303744292494801,
+      "C1": 0.6305327801175161
+    },
+    "status": "DECONF_NOT_SHOWN",
+    "within_macro": {
+      "B1": 17.328811497735845,
+      "C1": 17.54519334457888
+    }
   },
   "G11": {
     "status": "NOT_RUN",
