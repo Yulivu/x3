@@ -139,6 +139,7 @@ class PAST:
         cv_select: bool = False,
         use_em: bool = True,
         use_quota: bool = True,
+        mode: str = "full",
         seed: int = 20261015,
     ) -> None:
         self.__dict__.update(
@@ -146,7 +147,7 @@ class PAST:
             weight_view=weight_view, quota_r0=quota_r0, quota_step=quota_step,
             tau0=tau0, tau_step=tau_step, min_unlab=min_unlab, sigma_p=sigma_p,
             sigma_gamma=sigma_gamma, lam=lam, cv_select=cv_select, seed=seed,
-            use_em=use_em, use_quota=use_quota,
+            use_em=use_em, use_quota=use_quota, mode=mode,
         )
         self.history_: List[Dict[str, Any]] = []
 
@@ -237,14 +238,16 @@ class PAST:
             model, cfg = fit_cv(Z, y, plat, lang, cell, lam=self.lam)
             self.cv_cfg_ = cfg
             return model
-        return MPP(sigma_p=self.sigma_p, sigma_gamma=self.sigma_gamma, lam=self.lam).fit(
+        return MPP(sigma_p=self.sigma_p, sigma_gamma=self.sigma_gamma, lam=self.lam,
+                   mode=self.mode).fit(
             Z, y, plat, lang, cell
         )
 
     def _fit_augmented(self, X, t, w, plat, lang, cell) -> MPP:
         # hyper-parameters are re-selected inside L only (here: the base choice),
         # never on the augmented rows
-        return MPP(sigma_p=self.sigma_p, sigma_gamma=self.sigma_gamma, lam=self.lam).fit(
+        return MPP(sigma_p=self.sigma_p, sigma_gamma=self.sigma_gamma, lam=self.lam,
+                   mode=self.mode).fit(
             X, t, plat, lang, cell, sample_weight=w
         )
 
