@@ -10,7 +10,11 @@ from src.metrics3 import auc
 def _synth(seed=3, d=12, n=400, sep=1.1):
     rng = np.random.default_rng(seed)
     y = rng.integers(0, 2, n)
-    X = rng.normal(size=(n, d)) + (2 * y[:, None] - 1) * sep
+    # the class signal lives in ONE direction: a shift applied uniformly to every
+    # feature would be erased by the head's LayerNorm before the linear layer sees it
+    u = rng.normal(size=d)
+    u /= np.linalg.norm(u)
+    X = rng.normal(size=(n, d)) + (2 * y[:, None] - 1) * sep * u
     return X, y
 
 
