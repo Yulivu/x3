@@ -105,12 +105,21 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--ks", default=",".join(str(k) for k in KS))
     parser.add_argument("--strategies", default=",".join(STRATEGIES))
     parser.add_argument("--jobs", type=int, default=16)
+    parser.add_argument("--backbone", default=w6.BACKBONE,
+                        help="default is the frozen Line A block; anything else reads "
+                             "$DATA/x3/feats/<backbone>/")
+    parser.add_argument("--spec", default=w6.SPEC)
+    parser.add_argument("--split", default="speaker_split_v2.json",
+                        help="frozen split defining the dev region")
+    parser.add_argument("--suffix", default="",
+                        help="suffix for the output files (never overwrite)")
     args = parser.parse_args(argv)
     root = Path(args.root).resolve()
     ks = tuple(int(x) for x in args.ks.split(",") if x.strip())
     strategies = tuple(s.strip() for s in args.strategies.split(",") if s.strip())
 
-    sub, F = w6.load_dev(root, data_root(args.data))
+    sub, F = w6.load_spec(root, data_root(args.data), args.backbone, args.spec,
+                          split_name=args.split)
     Z = w6.preprocess(F)
     y = sub["y"].to_numpy()
     plat = sub["platform"].to_numpy()
@@ -146,9 +155,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print("errors:", errors[:5], "...", len(errors))
     df = pd.DataFrame(rows)
     (root / "results").mkdir(parents=True, exist_ok=True)
-    df.to_csv(root / "results" / "w12_draws.csv", index=False)
+    df.to_csv(root / "results" / f"w12_draws{args.suffix}.csv", index=False)
     paired_tbl = paired_table(df)
-    paired_tbl.to_csv(root / "results" / "w12_casa.csv", index=False)
+    paired_tbl.to_csv(root / "results" / f"w12_casa{args.suffix}.csv", index=False)
     summary = (df[df["mask"] == "clips"].groupby(["method", "k"])
                [["pooled_eer", "within_macro_eer", "auc"]].mean().round(3))
     print(summary.to_string())

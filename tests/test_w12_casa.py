@@ -86,3 +86,29 @@ def test_casa_can_be_better_than_uniform_when_one_cell_is_starved():
     assert not paired.empty
     # both directions are recorded with the right sign
     assert (paired["lo"] <= paired["mean"]).all() and (paired["mean"] <= paired["hi"]).all()
+def test_w12_can_target_a_backbone_and_a_suffix(monkeypatch, tmp_path):
+    """W22 item 5 needs CASA on the second backbone without touching the stored table."""
+    import w12_casa as w12
+
+    called = {}
+
+    def fake_load_spec(root, data_dir, backbone, spec, split_name=None):
+        called.update({"backbone": backbone, "spec": spec, "split": split_name})
+        n = 200
+        sub = pd.DataFrame({"y": np.tile([0, 1], n // 2),
+                            "platform": ["p"] * n, "language": ["en"] * n,
+                            "speaker": [f"s{i // 4:02d}" for i in range(n)]})
+        sub["cell"] = "p|en"
+        return sub, np.zeros((n, 6), np.float32)
+
+    monkeypatch.setattr(w12.w6, "load_spec", fake_load_spec)
+
+    rc = w12.main(["--root", str(tmp_path), "--data", str(tmp_path), "--draws", "1",
+                   "--jobs", "1", "--backbone", "mms-1b", "--spec", "S3",
+                   "--split", "speaker_split_v3.json", "--suffix", "_mms1b"])
+    assert rc == 0
+    assert called == {"backbone": "mms-1b", "spec": "S3",
+                      "split": "speaker_split_v3.json"}
+    out = tmp_path / "results"
+    assert (out / "w12_draws_mms1b.csv").exists()
+    assert (out / "w12_casa_mms1b.csv").exists()
