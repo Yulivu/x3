@@ -38,8 +38,12 @@
     "why": "results/w11_past.csv missing"
   },
   "G7": {
-    "status": "NOT_RUN",
-    "why": "results/w12_casa.csv missing"
+    "pooled": {
+      "hi": -0.8107222131273473,
+      "mean": -6.41639364074118,
+      "n": 30
+    },
+    "status": "CASA_PASS"
   },
   "G8": {
     "status": "NOT_RUN",

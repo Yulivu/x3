@@ -1,7 +1,7 @@
 # X3 checkpoint report
 
 ```
-DECISION: G0=NOT_RUN G1=NOT_RUN G2=REPRODUCED G3=NOT_RUN G4=NOT_RUN G5=PL_OK G6=NOT_RUN G7=NOT_RUN G8=NOT_RUN G9=NOT_RUN G10=NOT_RUN G11=NOT_RUN
+DECISION: G0=NOT_RUN G1=NOT_RUN G2=REPRODUCED G3=NOT_RUN G4=NOT_RUN G5=PL_OK G6=NOT_RUN G7=CASA_PASS G8=NOT_RUN G9=NOT_RUN G10=NOT_RUN G11=NOT_RUN
 ```
 
 ## Work packages
@@ -89,4 +89,4 @@ NOT_RUN - `results/w7_curve.csv` missing
 
 NOT_RUN - `results/w8_zlabel.csv` missing
 
-commit: `73c4b7f`
+commit: `7a945d2`

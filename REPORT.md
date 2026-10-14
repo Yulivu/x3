@@ -1,7 +1,7 @@
 # X3 report
 
 ```
-DECISION: G0=NOT_RUN G1=NOT_RUN G2=REPRODUCED G3=NOT_RUN G4=NOT_RUN G5=PL_OK G6=NOT_RUN G7=NOT_RUN G8=NOT_RUN G9=NOT_RUN G10=NOT_RUN G11=NOT_RUN
+DECISION: G0=NOT_RUN G1=NOT_RUN G2=REPRODUCED G3=NOT_RUN G4=NOT_RUN G5=PL_OK G6=NOT_RUN G7=CASA_PASS G8=NOT_RUN G9=NOT_RUN G10=NOT_RUN G11=NOT_RUN
 ```
 
 ## 1. Summary
@@ -10,12 +10,12 @@ DECISION: G0=NOT_RUN G1=NOT_RUN G2=REPRODUCED G3=NOT_RUN G4=NOT_RUN G5=PL_OK G6=
 - S-Z (zero-label SOTA): NOT_RUN
 - N1 (MPP / C1): NOT_RUN
 - N2 (PAST): NOT_RUN
-- N3 (CASA): NOT_RUN
+- N3 (CASA): CASA_PASS
 - N4 (de-confounding): NOT_RUN
 - S-K (budget curve): see results/w7_curve.csv
 - S-R (ITW replication): NOT_RUN
 
-Novelty rule: 0/4 of N1-N4 passed -> method gain not shown: report the protocol and baseline results only.
+Novelty rule: 1/4 of N1-N4 passed -> one component passed: report it as an implementation detail.
 
 - {'item': 'TASKBOOK 1.2 headline attribution', 'what': "TASKBOOK says Line A's headline 13.64/14.56/20.79 comes from 'frozen XLS-R features + a small probe trained on 290 labels, plus cell-prior correction'. Measured on the box, that route gives 24.65 pooled (k=10, BB+EB), and even an ORACLE cell prior only reaches 21.52 pooled on the p0cal scores. The 13.64 number is COMPARISON.md's line A: 290 labels train a head directly with NO prior correction (clips 13.05 / strict 13.64, AUC 0.94).", 'impact': "S-F must be judged against the ADAPTATION route (BASE_F's B11 family), not only against the prior-correction family; otherwise the SOTA bar is ~9 EER points too low. The prior-correction family stays in BASE_F under its own name.", 'source': 'W4 on the box, 2026-10-14; wx2/docs/COMPARISON.md 0.0 line 42'}
 
@@ -109,7 +109,29 @@ NOT_RUN - `results/w8_zlabel.csv` missing
 
 ## W9 audit
 
-NOT_RUN - `results/w9_audit.csv` missing
+Leakage and negative controls.
+
+| check | method | mask | eer | reference_eer | n_draws | flag | expectation |
+|---|---|---|---|---|---|---|---|
+| label-permutation-global | B1 | clips | 50.3 | 50 | 30 | False | fully shuffled labels -> EER ~ 50 (+-3) |
+| label-permutation-within-platform | B1 | clips | 44.38 | 30.59 | 30 | False | the platform mix is preserved, so the correct floor is the metadata-only level; beating it by >3 means leakage |
+| cell-permutation | B1 | clips | 10.8 | 13.28 | 30 | False | C1's gain over the permuted-cell run disappears |
+| clips-vs-strict-baseline | B1 | clips | 13.28 | nan | 30 | False | baseline (no expectation) |
+| label-permutation-global | B2 | clips | 50.12 | 50 | 30 | False | fully shuffled labels -> EER ~ 50 (+-3) |
+| label-permutation-within-platform | B2 | clips | 40.45 | 30.59 | 30 | False | the platform mix is preserved, so the correct floor is the metadata-only level; beating it by >3 means leakage |
+| cell-permutation | B2 | clips | 12.23 | 19.76 | 30 | False | C1's gain over the permuted-cell run disappears |
+| clips-vs-strict-baseline | B2 | clips | 19.76 | nan | 30 | False | baseline (no expectation) |
+| label-permutation-global | C1 | clips | 50.21 | 50 | 30 | False | fully shuffled labels -> EER ~ 50 (+-3) |
+| label-permutation-within-platform | C1 | clips | 45.97 | 30.59 | 30 | False | the platform mix is preserved, so the correct floor is the metadata-only level; beating it by >3 means leakage |
+| cell-permutation | C1 | clips | 10.79 | 13.67 | 30 | False | C1's gain over the permuted-cell run disappears |
+| clips-vs-strict-baseline | C1 | clips | 13.67 | nan | 30 | False | baseline (no expectation) |
+| label-permutation-global | B7 | clips | 50.19 | 50 | 30 | False | fully shuffled labels -> EER ~ 50 (+-3) |
+| label-permutation-within-platform | B7 | clips | 45.6 | 30.59 | 30 | False | the platform mix is preserved, so the correct floor is the metadata-only level; beating it by >3 means leakage |
+| cell-permutation | B7 | clips | 10.28 | 12.67 | 30 | False | C1's gain over the permuted-cell run disappears |
+| clips-vs-strict-baseline | B7 | clips | 12.67 | nan | 30 | False | baseline (no expectation) |
+| near-duplicate-share | - | clips | 0.0001936 | nan | 30 | False | share of eval clips with a labelled neighbour > cos 0.99 below 5% |
+| metadata-only | platform x language | clips | 30.59 | nan | 1 | False | shortcut level; any audio claim must beat this |
+
 
 ## W11 PAST
 
@@ -117,7 +139,35 @@ NOT_RUN - `results/w11_past.csv` missing
 
 ## W12 CASA
 
-NOT_RUN - `results/w12_casa.csv` missing
+Selection strategies at k=100/290.
+
+| method | other | metric | k | mean | lo | hi | n | backbone | spec |
+|---|---|---|---|---|---|---|---|---|---|
+| CASA | U | pooled_eer | 100 | -6.416 | -12.05 | -0.8107 | 30 | xlsr300m-linea | S1-lineA |
+| CASA | U | within_macro_eer | 100 | -5.008 | -10.74 | 1.443 | 30 | xlsr300m-linea | S1-lineA |
+| CASA | P | pooled_eer | 100 | -2.851 | -6.983 | 1.821 | 30 | xlsr300m-linea | S1-lineA |
+| CASA | P | within_macro_eer | 100 | -3.398 | -11.37 | 2.024 | 30 | xlsr300m-linea | S1-lineA |
+| CASA | N | pooled_eer | 100 | -2.849 | -7.109 | 1.821 | 30 | xlsr300m-linea | S1-lineA |
+| CASA | N | within_macro_eer | 100 | -3.443 | -11.37 | 2.024 | 30 | xlsr300m-linea | S1-lineA |
+| CASA | E | pooled_eer | 100 | -0.2336 | -4.627 | 3.37 | 30 | xlsr300m-linea | S1-lineA |
+| CASA | E | within_macro_eer | 100 | 0.08276 | -4.678 | 4.978 | 30 | xlsr300m-linea | S1-lineA |
+| CASA | K | pooled_eer | 100 | -5.25 | -8.543 | -2.04 | 30 | xlsr300m-linea | S1-lineA |
+| CASA | K | within_macro_eer | 100 | -5.575 | -12 | -1.235 | 30 | xlsr300m-linea | S1-lineA |
+| CASA | BADGE | pooled_eer | 100 | -2.138 | -6.74 | 1.24 | 30 | xlsr300m-linea | S1-lineA |
+| CASA | BADGE | within_macro_eer | 100 | -2.022 | -6.762 | 4.758 | 30 | xlsr300m-linea | S1-lineA |
+| CASA | U | pooled_eer | 290 | -5.799 | -9.201 | -2.003 | 30 | xlsr300m-linea | S1-lineA |
+| CASA | U | within_macro_eer | 290 | -5.631 | -8.358 | -1.723 | 30 | xlsr300m-linea | S1-lineA |
+| CASA | P | pooled_eer | 290 | -4.211 | -8.054 | -1.289 | 30 | xlsr300m-linea | S1-lineA |
+| CASA | P | within_macro_eer | 290 | -4.394 | -7.547 | -1.713 | 30 | xlsr300m-linea | S1-lineA |
+| CASA | N | pooled_eer | 290 | -3.972 | -7.096 | -1.273 | 30 | xlsr300m-linea | S1-lineA |
+| CASA | N | within_macro_eer | 290 | -4.328 | -7.347 | -2.288 | 30 | xlsr300m-linea | S1-lineA |
+| CASA | E | pooled_eer | 290 | -0.02713 | -1.563 | 1.131 | 30 | xlsr300m-linea | S1-lineA |
+| CASA | E | within_macro_eer | 290 | -0.04881 | -1.375 | 1.524 | 30 | xlsr300m-linea | S1-lineA |
+| CASA | K | pooled_eer | 290 | -8.407 | -9.823 | -7.077 | 30 | xlsr300m-linea | S1-lineA |
+| CASA | K | within_macro_eer | 290 | -7.129 | -8.749 | -5.246 | 30 | xlsr300m-linea | S1-lineA |
+| CASA | BADGE | pooled_eer | 290 | -2.526 | -4.819 | -0.2537 | 30 | xlsr300m-linea | S1-lineA |
+| CASA | BADGE | within_macro_eer | 290 | -3.73 | -9.775 | -1.153 | 30 | xlsr300m-linea | S1-lineA |
+
 
 ## W13 B10
 
@@ -161,5 +211,5 @@ NOT_RUN - `results/w21_addgp.csv` missing
 
 ## 5. Reproduction and commit
 
-- commit: `73c4b7f`
+- commit: `7a945d2`
 - environment: `scripts/w1_env.py`; queue: `queue.yaml`; criteria: `claims.yaml`
