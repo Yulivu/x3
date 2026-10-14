@@ -61,7 +61,8 @@ def decode_wav(blob: bytes, fast: bool = True) -> np.ndarray:
     return x.astype(np.float32)
 
 
-def load_audio(data_dir: Path, meta: pd.DataFrame) -> Tuple[List[np.ndarray], Dict[str, Any]]:
+def load_audio(data_dir: Path, meta: pd.DataFrame,
+               limit: int = 0) -> Tuple[List[np.ndarray], Dict[str, Any]]:
     """Decode every clip in manifest order and check the alignment while doing it."""
     import pyarrow.parquet as pq
 
@@ -75,21 +76,26 @@ def load_audio(data_dir: Path, meta: pd.DataFrame) -> Tuple[List[np.ndarray], Di
         table = pq.read_table(shard, columns=cols)
         d = table.to_pydict()
         for i in range(len(d["file"])):
+            if limit and len(waves) >= limit:
+                break
             blob = d["file"][i]["bytes"]
             waves.append(prepare_waveform(decode_wav(blob)))
             seen.append({
                 "speaker": d["speaker"][i], "language": d["language"][i],
                 "platform": d["platform"][i], "label": str(d["label"][i]).lower(),
             })
+        if limit and len(waves) >= limit:
+            break
     got = pd.DataFrame(seen)
     info: Dict[str, Any] = {"n_clips": len(got), "n_shards": len(shards)}
-    if len(got) != len(meta):
-        raise ValueError(f"audio has {len(got)} clips but the manifest has {len(meta)}")
+    expected = meta.iloc[:limit] if limit else meta
+    if len(got) != len(expected):
+        raise ValueError(f"audio has {len(got)} clips but the manifest has {len(expected)}")
     same = (
-        (got["speaker"].astype(str).values == meta["speaker"].astype(str).values)
-        & (got["platform"].astype(str).values == meta["platform"].astype(str).values)
-        & (got["language"].astype(str).values == meta["language"].astype(str).values)
-        & (got["label"].values == meta["label"].values)
+        (got["speaker"].astype(str).values == expected["speaker"].astype(str).values)
+        & (got["platform"].astype(str).values == expected["platform"].astype(str).values)
+        & (got["language"].astype(str).values == expected["language"].astype(str).values)
+        & (got["label"].values == expected["label"].values)
     )
     info["alignment_ok"] = bool(same.all())
     info["misaligned_rows"] = int((~same).sum())
@@ -197,7 +203,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     out_root = Path(args.out_root) if args.out_root else (data_dir / "x3" / "feats")
     name = args.name or Path(args.model_dir).name
     meta = load_mlitw(data_dir)
-    waves, align = load_audio(data_dir, meta if not args.limit else meta.iloc[:args.limit])
+    waves, align = load_audio(data_dir, meta, limit=args.limit)
     print(f"decoded {len(waves)} clips; alignment={align}")
     if args.limit:
         meta = meta.iloc[:args.limit].reset_index(drop=True)
