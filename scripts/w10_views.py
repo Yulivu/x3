@@ -219,7 +219,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         vdir = views_root / view
         audio = vdir / "view_audio.int16"
         if not args.extract_only or not audio.exists():
-            waves, _ = w2.load_audio(data_dir, dev)
+            # decode the WHOLE corpus so the parquet/manifest alignment assertion
+            # still runs against the full manifest, then keep only the dev rows
+            all_waves, align = w2.load_audio(data_dir, meta)
+            print(f"decoded {len(all_waves)} clips; alignment={align}")
+            waves = [all_waves[i] for i in np.where(keep)[0]]
             info = transcode_view(view, waves, dev["clip_id"].to_numpy(), vdir, jobs=args.jobs)
             print(f"{view}: {info}")
         out = extract_spec(args.backbone, view, audio, dev,
