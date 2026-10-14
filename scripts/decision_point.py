@@ -147,6 +147,20 @@ def _fmt(v: Any, nd: int = 2) -> str:
     return str(v)
 
 
+def _md_table(df: pd.DataFrame, max_rows: int = 20) -> str:
+    """A compact markdown table (this module must stay readable on one page)."""
+    if df is None or df.empty:
+        return "_(empty)_"
+    head = df.head(max_rows)
+    cols = [str(c) for c in head.columns]
+    lines = ["| " + " | ".join(cols) + " |", "|" + "|".join(["---"] * len(cols)) + "|"]
+    for _, row in head.iterrows():
+        lines.append("| " + " | ".join(_fmt(v) for v in row.tolist()) + " |")
+    if len(df) > max_rows:
+        lines.append(f"| _({len(df) - max_rows} more rows)_ |" + " |" * (len(cols) - 1))
+    return "\n".join(lines)
+
+
 def write_document(root: Path) -> str:
     cands = collect_candidates(root)
     intervals = interval_lookup(root)

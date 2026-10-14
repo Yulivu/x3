@@ -67,6 +67,24 @@ def test_document_states_the_verdicts_and_the_fact(tmp_path):
     assert "v2 dev (68 speakers) -> v3 dev (122 speakers)" in text
 
 
+def test_md_table_helper_is_used_for_the_u10_levers(tmp_path):
+    root = _root(tmp_path)
+    pd.DataFrame([{"variant": "mms-1b|S3", "mask": "seen", "pooled_eer": 8.9, "draw": 0},
+                  {"variant": "mms-1b|S3", "mask": "strict_draw", "pooled_eer": 13.5,
+                   "draw": 0}]).to_csv(root / "results" / "u10_variants.csv", index=False)
+    pd.DataFrame([{"mask": "seen", "method_a": "mms-1b|S5", "method_b": "xls-r-2b|S3",
+                   "delta": -1.31, "old_lo": -3.4, "old_hi": 0.47, "b_lo": -1.58,
+                   "b_hi": -1.08, "b_contains_zero": False, "n_draws": 100},
+                  {"mask": "seen", "method_a": "xls-r-2b|S5", "method_b": "xls-r-2b|S3",
+                   "delta": 0.0, "old_lo": -0.03, "old_hi": 0.03, "b_lo": -0.004,
+                   "b_hi": 0.005, "b_contains_zero": True, "n_draws": 100}]).to_csv(
+        root / "results" / "u10_intervals.csv", index=False)
+    text = dp.write_document(root)
+    assert "U10 levers" in text
+    assert "mms-1b|S5 - xls-r-2b|S3" in text
+    assert "| seen | -1.31 |" in text
+
+
 def test_document_reports_missing_inputs_instead_of_inventing_them(tmp_path):
     (tmp_path / "results").mkdir()
     text = dp.write_document(tmp_path)
