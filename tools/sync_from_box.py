@@ -98,8 +98,11 @@ def main(argv=None) -> int:
     with tempfile.TemporaryDirectory() as td:
         local = Path(td) / "x3_sync.bundle"
         sftp_get(host, port, user, pw, REMOTE_BUNDLE, local)
-        fetched = _run(["git", "fetch", str(local), f"{args.branch}:refs/remotes/box/{args.branch}"],
-                       REPO, check=False)
+        # --force is safe here: refs/remotes/box/* is our own mirror of the box
+        fetched = _run(
+            ["git", "fetch", "--force", str(local), f"{args.branch}:refs/remotes/box/{args.branch}"],
+            REPO, check=False,
+        )
         if fetched.returncode != 0:
             print(fetched.stdout + fetched.stderr, file=sys.stderr)
             return 1
