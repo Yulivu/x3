@@ -231,6 +231,30 @@ def _nt02_block(root: Path) -> List[str]:
     w8z = read_csv(root, "w8_zlabel.csv")
     lines.append("### Second backbone + Track Z (W17 / W8)")
     lines.append("")
+
+    w22k = read_csv(root, "w22_kcurve.csv")
+    w22s = read_csv(root, "w22_spec_sensitivity.csv")
+    if w22k is not None or w22s is not None:
+        lines.append("### W22 backlog: budget curve and spec sensitivity")
+        lines.append("")
+        if w22k is not None:
+            piv = (w22k.pivot_table(index=["method", "k_nominal"], columns="mask",
+                                    values="pooled_eer", aggfunc="mean").round(3)
+                   .reset_index())
+            lines.append("`results/w22_kcurve.csv` (pooled EER; rows are methods x "
+                         "nominal budget, 50 draws)")
+            lines.append("")
+            lines.append(_md_table(piv, max_rows=20))
+        if w22s is not None:
+            piv = (w22s.pivot_table(index=["spec", "method"], columns="mask",
+                                    values="pooled_eer", aggfunc="mean").round(3)
+                   .reset_index())
+            lines.append("")
+            lines.append("`results/w22_spec_sensitivity.csv` (same features, same "
+                         "draws, k=290, 30 draws)")
+            lines.append("")
+            lines.append(_md_table(piv, max_rows=20))
+        lines.append("")
     if w6b is None:
         lines.append("NOT_RUN - `results/w6_summary_v3_mms1b.csv` missing "
                      "(the second-backbone rerun of W6)")
