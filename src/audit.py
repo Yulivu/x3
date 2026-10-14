@@ -27,6 +27,7 @@ PERMUTED_EER_TOL = 3.0
 
 __all__ = [
     "permute_labels_within",
+    "permute_labels_global",
     "permute_cells",
     "nearest_neighbour_overlap",
     "metadata_only_scores",
@@ -53,6 +54,17 @@ def permute_cells(cell: Sequence[Any], seed: int) -> np.ndarray:
     rng = np.random.default_rng(int(seed))
     cell = np.asarray(cell)
     return cell[rng.permutation(len(cell))]
+
+
+def permute_labels_global(y: Sequence[float], seed: int) -> np.ndarray:
+    """Shuffle the labels across the whole pool.
+
+    This is the control that must land on ~50 EER.  ``permute_labels_within``
+    PRESERVES each platform's class mix, so the platform-prior shortcut survives
+    and the correct expectation there is the metadata-only level, not 50.
+    """
+    rng = np.random.default_rng(int(seed))
+    return rng.permutation(np.asarray(y))
 
 
 def nearest_neighbour_overlap(
