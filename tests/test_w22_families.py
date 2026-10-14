@@ -70,3 +70,30 @@ def test_the_family_list_matches_the_rendered_directories():
     assert w22f.FAMILIES[0] == "famA1"
     assert set(w22f.FAMILIES) == {"famA1", "famB1", "famB2", "famB3"}
     assert w22f.DEFAULT_SUFFIX == "_v3"                # never the frozen v2 dirs
+
+
+def test_collect_uses_the_family_worker_with_two_element_payloads():
+    """Regression: borrowing w22_backlog's worker raised on (d, mask) payloads."""
+    rng = np.random.default_rng(0)
+    n = 400
+    y = rng.integers(0, 2, size=n)
+    speaker = np.array([f"s{i // 8:02d}" for i in range(n)])
+    # several cells: the label draw is per cell, so a single-cell region cannot reach
+    # the driver's 20-label floor
+    plat = np.array([f"p{i % 4}" for i in range(n)])
+    cell = np.array([f"{p}|en" for p in plat])
+    z = rng.normal(size=(n, 5))
+    blocks = {"clean": z, "famA1": z + rng.normal(scale=0.1, size=z.shape)}
+    w22f._G.clear()
+    w22f._G.update({"y": y, "plat": plat, "cell": cell,
+                    "speaker": speaker, "backbone": "toy", "blocks": blocks,
+                    "masks": {d: w22f.w22.masks_for(d, z, y, cell, speaker)
+                              for d in range(3)}})
+    try:
+        rows = w22f.collect(1, [(d, mask) for mask in w22f.MASKS for d in range(3)])
+    finally:
+        w22f._G.clear()
+    assert rows, "the family sweep must produce rows"
+    assert {r["arm"] for r in rows} == set(blocks)
+    assert {r["mask"] for r in rows} == set(w22f.MASKS)
+    assert all(r["n_eval"] >= 50 for r in rows)

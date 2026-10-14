@@ -53,7 +53,40 @@ DEFAULT_SUFFIX = "_v3"
 
 _G: Dict[str, Any] = {}
 
-__all__ = ["view_dir", "load_view_specs", "run_one", "summarise", "main"]
+__all__ = ["view_dir", "load_view_specs", "run_one", "collect", "summarise", "main"]
+
+
+def collect(jobs: int, payloads: Sequence[Tuple[int, str]]) -> List[Dict[str, Any]]:
+    """Run the payloads through *this* module's worker.
+
+    ``w22_backlog._pooled`` takes ``(d, mask, k)`` payloads; the family sweep builds
+    ``(d, mask)``, so it needs its own loop rather than borrowing one.
+    """
+    rows: List[Dict[str, Any]] = []
+    errors: List[str] = []
+    if int(jobs) > 1:
+        import multiprocessing as mp
+
+        ctx = (mp.get_context("fork") if sys.platform != "win32"
+               else mp.get_context("spawn"))
+        with ctx.Pool(int(jobs)) as pool:
+            for _d, _m, res in pool.imap_unordered(_worker, payloads, chunksize=1):
+                for r in res:
+                    if "error" in r:
+                        errors.append(str(r["error"]))
+                    else:
+                        rows.append(r)
+    else:
+        for pl in payloads:
+            _d, _m, res = _worker(pl)
+            for r in res:
+                if "error" in r:
+                    errors.append(str(r["error"]))
+                else:
+                    rows.append(r)
+    if errors:
+        print(f"  {len(errors)} errors; first: {errors[:2]}")
+    return rows
 
 
 def view_dir(data_dir: Path, family: str, backbone: str, suffix: str = DEFAULT_SUFFIX
@@ -159,7 +192,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                          for d in range(int(args.draws))}})
     print(f"dev clips={len(sub)} arms={list(blocks)} draws={args.draws}", flush=True)
     payloads = [(d, mask) for mask in MASKS for d in range(int(args.draws))]
-    rows = w22._pooled([], int(args.jobs), payloads)
+    rows = collect(int(args.jobs), payloads)
     df = pd.DataFrame(rows)
     df.to_csv(root / "results" / "w22_families.csv", index=False)
     summary = summarise(df)
