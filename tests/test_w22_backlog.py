@@ -101,5 +101,6 @@ def test_the_curve_is_indexed_by_the_nominal_budget_not_the_achieved_count():
     df = pd.DataFrame(rows)
     piv = df.pivot_table(index=["method", "k_nominal"], columns="mask",
                          values="pooled_eer")
-    assert (290,) in {(m, k) for m, k in piv.index}
+    assert ("B1", 290) in set(piv.index)
+    assert {k for _m, k in piv.index} == {290}
     assert len(piv) == 2                      # one row per method, not per k drift
