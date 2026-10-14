@@ -25,8 +25,22 @@
     "why": "results/backbone_rank.csv missing"
   },
   "G4": {
-    "status": "NOT_RUN",
-    "why": "results/w6_summary.csv missing"
+    "best_baseline": "B1",
+    "pooled": {
+      "hi": 1.624438355145052,
+      "lo": -2.0050550005212973,
+      "mean": 0.4193162063089776,
+      "n": 100,
+      "wins": 22
+    },
+    "status": "C1_FAIL",
+    "within_macro": {
+      "hi": 1.6762109867883273,
+      "lo": -2.00602224338105,
+      "mean": 0.238687359266329,
+      "n": 100,
+      "wins": 25
+    }
   },
   "G5": {
     "n_extreme_cells": 500,
@@ -34,8 +48,19 @@
     "status": "PL_OK"
   },
   "G6": {
-    "status": "NOT_RUN",
-    "why": "results/w11_past.csv missing"
+    "pooled": {
+      "hi": 0.4497801191495499,
+      "lo": -2.189639062669814,
+      "mean": -0.6834185574628256,
+      "n": 50
+    },
+    "status": "PAST_FAIL",
+    "within_macro": {
+      "hi": 0.5326367174341783,
+      "lo": -1.725079264068852,
+      "mean": -0.605163674573326,
+      "n": 50
+    }
   },
   "G7": {
     "pooled": {

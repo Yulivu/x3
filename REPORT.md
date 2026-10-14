@@ -1,15 +1,15 @@
 # X3 report
 
 ```
-DECISION: G0=NOT_RUN G1=NOT_RUN G2=REPRODUCED G3=NOT_RUN G4=NOT_RUN G5=PL_OK G6=NOT_RUN G7=CASA_PASS G8=NOT_RUN G9=NOT_RUN G10=NOT_RUN G11=NOT_RUN
+DECISION: G0=NOT_RUN G1=NOT_RUN G2=REPRODUCED G3=NOT_RUN G4=C1_FAIL G5=PL_OK G6=PAST_FAIL G7=CASA_PASS G8=NOT_RUN G9=NOT_RUN G10=NOT_RUN G11=NOT_RUN
 ```
 
 ## 1. Summary
 
 - S-F (few-shot SOTA): NOT_RUN
 - S-Z (zero-label SOTA): NOT_RUN
-- N1 (MPP / C1): NOT_RUN
-- N2 (PAST): NOT_RUN
+- N1 (MPP / C1): C1_FAIL
+- N2 (PAST): PAST_FAIL
 - N3 (CASA): CASA_PASS
 - N4 (de-confounding): NOT_RUN
 - S-K (budget curve): see results/w7_curve.csv
@@ -57,26 +57,49 @@ NOT_RUN - `results/backbone_rank.csv` missing
 
 k=290, every baseline plus C1.
 
-| backbone | spec | method | mask | pooled_eer_mean | pooled_eer_std | within_macro_eer_mean | within_macro_eer_std | worst_platform_eer_mean | worst_platform_eer_std | auc_mean | auc_std |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| xlsr300m-linea | S1-lineA | B1 | clips | 12.99 | 1.759 | 14.56 | 2.385 | 26.84 | 8.662 | 0.9373 | 0.0132 |
-| xlsr300m-linea | S1-lineA | B1 | strict | 21.5 | 5.66 | 20.94 | 7.628 | 22.46 | 8.478 | 0.8596 | 0.05708 |
-| xlsr300m-linea | S1-lineA | B11 | clips | 26.01 | 1.772 | 26.97 | 1.889 | 39.15 | 5.215 | 0.8157 | 0.01874 |
-| xlsr300m-linea | S1-lineA | B11 | strict | 38.22 | 5.17 | 40.53 | 7.887 | 41.72 | 8.341 | 0.6634 | 0.06597 |
-| xlsr300m-linea | S1-lineA | B2 | clips | 18.72 | 3.825 | 15.87 | 2.426 | 26.5 | 8.869 | 0.8974 | 0.02636 |
-| xlsr300m-linea | S1-lineA | B2 | strict | 26.11 | 7.338 | 21.65 | 7.877 | 23.26 | 9.308 | 0.7984 | 0.08098 |
-| xlsr300m-linea | S1-lineA | B3 | clips | 13.92 | 2.228 | 14.56 | 2.385 | 26.84 | 8.662 | 0.9318 | 0.01586 |
-| xlsr300m-linea | S1-lineA | B3 | strict | 22.1 | 6.068 | 20.94 | 7.628 | 22.46 | 8.478 | 0.8483 | 0.06435 |
-| xlsr300m-linea | S1-lineA | B5 | clips | 18.96 | 1.955 | 20.29 | 2.196 | 33.39 | 7.848 | 0.8872 | 0.01495 |
-| xlsr300m-linea | S1-lineA | B5 | strict | 28.99 | 6.003 | 28.34 | 9.131 | 29.44 | 9.609 | 0.774 | 0.06865 |
-| xlsr300m-linea | S1-lineA | B6 | clips | 33.82 | 1.265 | 27.08 | 2.251 | 39.23 | 12.99 | 0.7291 | 0.01508 |
-| xlsr300m-linea | S1-lineA | B6 | strict | 36.08 | 7.506 | 32.29 | 8.599 | 34.57 | 9.371 | 0.6646 | 0.09555 |
-| xlsr300m-linea | S1-lineA | B7 | clips | 12.35 | 1.997 | 13.89 | 2.397 | 25.03 | 8.411 | 0.9406 | 0.0149 |
-| xlsr300m-linea | S1-lineA | B7 | strict | 21.28 | 6.054 | 21.07 | 8.05 | 22.66 | 9.039 | 0.8604 | 0.06132 |
-| xlsr300m-linea | S1-lineA | B9 | clips | 13.78 | 2.254 | 15.06 | 2.313 | 25.88 | 6.277 | 0.9202 | 0.01209 |
-| xlsr300m-linea | S1-lineA | B9 | strict | 33.73 | 9.37 | 33.58 | 13.16 | 36 | 16.16 | 0.6824 | 0.09138 |
-| xlsr300m-linea | S1-lineA | C1 | clips | 13.41 | 1.896 | 14.8 | 2.378 | 25.82 | 8.269 | 0.9339 | 0.01454 |
-| xlsr300m-linea | S1-lineA | C1 | strict | 22.61 | 5.861 | 21.89 | 7.882 | 23.57 | 9.031 | 0.8451 | 0.06097 |
+| backbone | spec | method | mask | metric | mean | std |
+|---|---|---|---|---|---|---|
+| xlsr300m-linea | S1-lineA | B1 | clips | pooled_eer | 12.99 | 1.759 |
+| xlsr300m-linea | S1-lineA | B1 | clips | within_macro_eer | 14.56 | 2.385 |
+| xlsr300m-linea | S1-lineA | B1 | clips | worst_platform_eer | 26.84 | 8.662 |
+| xlsr300m-linea | S1-lineA | B1 | clips | auc | 0.9373 | 0.0132 |
+| xlsr300m-linea | S1-lineA | B1 | strict | pooled_eer | 21.5 | 5.66 |
+| xlsr300m-linea | S1-lineA | B1 | strict | within_macro_eer | 20.94 | 7.628 |
+| xlsr300m-linea | S1-lineA | B1 | strict | worst_platform_eer | 22.46 | 8.478 |
+| xlsr300m-linea | S1-lineA | B1 | strict | auc | 0.8596 | 0.05708 |
+| xlsr300m-linea | S1-lineA | B11 | clips | pooled_eer | 26.01 | 1.772 |
+| xlsr300m-linea | S1-lineA | B11 | clips | within_macro_eer | 26.97 | 1.889 |
+| xlsr300m-linea | S1-lineA | B11 | clips | worst_platform_eer | 39.15 | 5.215 |
+| xlsr300m-linea | S1-lineA | B11 | clips | auc | 0.8157 | 0.01874 |
+| xlsr300m-linea | S1-lineA | B11 | strict | pooled_eer | 38.22 | 5.17 |
+| xlsr300m-linea | S1-lineA | B11 | strict | within_macro_eer | 40.53 | 7.887 |
+| xlsr300m-linea | S1-lineA | B11 | strict | worst_platform_eer | 41.72 | 8.341 |
+| xlsr300m-linea | S1-lineA | B11 | strict | auc | 0.6634 | 0.06597 |
+| xlsr300m-linea | S1-lineA | B2 | clips | pooled_eer | 18.72 | 3.825 |
+| xlsr300m-linea | S1-lineA | B2 | clips | within_macro_eer | 15.87 | 2.426 |
+| xlsr300m-linea | S1-lineA | B2 | clips | worst_platform_eer | 26.5 | 8.869 |
+| xlsr300m-linea | S1-lineA | B2 | clips | auc | 0.8974 | 0.02636 |
+| xlsr300m-linea | S1-lineA | B2 | strict | pooled_eer | 26.11 | 7.338 |
+| xlsr300m-linea | S1-lineA | B2 | strict | within_macro_eer | 21.65 | 7.877 |
+| xlsr300m-linea | S1-lineA | B2 | strict | worst_platform_eer | 23.26 | 9.308 |
+| xlsr300m-linea | S1-lineA | B2 | strict | auc | 0.7984 | 0.08098 |
+| xlsr300m-linea | S1-lineA | B3 | clips | pooled_eer | 13.92 | 2.228 |
+| xlsr300m-linea | S1-lineA | B3 | clips | within_macro_eer | 14.56 | 2.385 |
+| xlsr300m-linea | S1-lineA | B3 | clips | worst_platform_eer | 26.84 | 8.662 |
+| xlsr300m-linea | S1-lineA | B3 | clips | auc | 0.9318 | 0.01586 |
+| xlsr300m-linea | S1-lineA | B3 | strict | pooled_eer | 22.1 | 6.068 |
+| xlsr300m-linea | S1-lineA | B3 | strict | within_macro_eer | 20.94 | 7.628 |
+| xlsr300m-linea | S1-lineA | B3 | strict | worst_platform_eer | 22.46 | 8.478 |
+| xlsr300m-linea | S1-lineA | B3 | strict | auc | 0.8483 | 0.06435 |
+| xlsr300m-linea | S1-lineA | B5 | clips | pooled_eer | 18.96 | 1.955 |
+| xlsr300m-linea | S1-lineA | B5 | clips | within_macro_eer | 20.29 | 2.196 |
+| xlsr300m-linea | S1-lineA | B5 | clips | worst_platform_eer | 33.39 | 7.848 |
+| xlsr300m-linea | S1-lineA | B5 | clips | auc | 0.8872 | 0.01495 |
+| xlsr300m-linea | S1-lineA | B5 | strict | pooled_eer | 28.99 | 6.003 |
+| xlsr300m-linea | S1-lineA | B5 | strict | within_macro_eer | 28.34 | 9.131 |
+| xlsr300m-linea | S1-lineA | B5 | strict | worst_platform_eer | 29.44 | 9.609 |
+| xlsr300m-linea | S1-lineA | B5 | strict | auc | 0.774 | 0.06865 |
+| _(32 more rows in the CSV)_ | | | | | | |
 
 
 ## W6 paired
@@ -135,7 +158,21 @@ Leakage and negative controls.
 
 ## W11 PAST
 
-NOT_RUN - `results/w11_past.csv` missing
+PAST and its ablations.
+
+| method | other | metric | mean | lo | hi | n | backbone | spec |
+|---|---|---|---|---|---|---|---|---|
+| PAST | C1 | pooled_eer | -0.6834 | -2.19 | 0.4498 | 50 | xlsr300m-linea | S1-lineA |
+| PAST | C1 | within_macro_eer | -0.6052 | -1.725 | 0.5326 | 50 | xlsr300m-linea | S1-lineA |
+| PAST | B7 | pooled_eer | 0.3469 | -1.572 | 1.675 | 50 | xlsr300m-linea | S1-lineA |
+| PAST | B7 | within_macro_eer | 0.3184 | -0.898 | 1.608 | 50 | xlsr300m-linea | S1-lineA |
+| PAST | PAST-noEM | pooled_eer | -0.3267 | -3.1 | 1.675 | 50 | xlsr300m-linea | S1-lineA |
+| PAST | PAST-noEM | within_macro_eer | -0.1299 | -1.112 | 1.222 | 50 | xlsr300m-linea | S1-lineA |
+| PAST | PAST-noQuota | pooled_eer | -0.5209 | -1.986 | 0.682 | 50 | xlsr300m-linea | S1-lineA |
+| PAST | PAST-noQuota | within_macro_eer | -0.5729 | -1.604 | 0.5823 | 50 | xlsr300m-linea | S1-lineA |
+| PAST | PAST-1round | pooled_eer | -0.5613 | -1.839 | 0.4276 | 50 | xlsr300m-linea | S1-lineA |
+| PAST | PAST-1round | within_macro_eer | -0.542 | -1.381 | 0.5233 | 50 | xlsr300m-linea | S1-lineA |
+
 
 ## W12 CASA
 
@@ -211,5 +248,5 @@ NOT_RUN - `results/w21_addgp.csv` missing
 
 ## 5. Reproduction and commit
 
-- commit: `7a945d2`
+- commit: `f0bec98`
 - environment: `scripts/w1_env.py`; queue: `queue.yaml`; criteria: `claims.yaml`
