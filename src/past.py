@@ -137,6 +137,8 @@ class PAST:
         sigma_gamma: float = 0.5,
         lam: float = 1.0,
         cv_select: bool = False,
+        use_em: bool = True,
+        use_quota: bool = True,
         seed: int = 20261015,
     ) -> None:
         self.__dict__.update(
@@ -144,6 +146,7 @@ class PAST:
             weight_view=weight_view, quota_r0=quota_r0, quota_step=quota_step,
             tau0=tau0, tau_step=tau_step, min_unlab=min_unlab, sigma_p=sigma_p,
             sigma_gamma=sigma_gamma, lam=lam, cv_select=cv_select, seed=seed,
+            use_em=use_em, use_quota=use_quota,
         )
         self.history_: List[Dict[str, Any]] = []
 
@@ -172,10 +175,19 @@ class PAST:
             T = self._fit_temperature(d_l, y_lab)
             d_u_cal = d_u / T - logit(pi_global, eps=1e-3)
 
-            pi, pi_plat, _ = estimate_cell_prior_em(
-                d_u_cal, cell_unlab, plat_unlab, y_lab, cell_lab, plat_lab, kappa=self.kappa
-            )
-            sel, hard = self._quota_select(d_u_cal, cell_unlab, pi, r)
+            if self.use_em:
+                pi, pi_plat, _ = estimate_cell_prior_em(
+                    d_u_cal, cell_unlab, plat_unlab, y_lab, cell_lab, plat_lab, kappa=self.kappa
+                )
+            else:
+                # ablation: no EM, the cell prior is just the labelled cell rate
+                cell_lab_arr = np.asarray(cell_lab)
+                pi = {}
+                for c in np.unique(np.asarray(cell_unlab)):
+                    m = cell_lab_arr == c
+                    pi[c] = float(np.clip(y_lab[m].mean(), X3_LO, X3_HI)) if m.sum() >= 3 \
+                        else float(np.clip(pi_global, X3_LO, X3_HI))
+            sel, hard = self._quota_select(d_u_cal, cell_unlab, pi, r, use_quota=self.use_quota)
             if len(sel) == 0 and not views:
                 break
 
@@ -252,14 +264,24 @@ class PAST:
 
         return float(np.exp(minimize_scalar(nll, bounds=(-3, 6), method="bounded").x))
 
-    def _quota_select(self, d_u, cell_u, pi, r) -> Tuple[np.ndarray, np.ndarray]:
-        """Quota pseudo-labels per cell, split by ``(pi_c, 1 - pi_c)``."""
+    def _quota_select(self, d_u, cell_u, pi, r, use_quota: bool = True) -> Tuple[np.ndarray, np.ndarray]:
+        """Quota pseudo-labels per cell, split by ``(pi_c, 1 - pi_c)``.
+
+        ``use_quota=False`` is the ablation that drops the prior-aware quota and
+        falls back to a global confidence threshold, i.e. what B7 does.
+        """
         cell_u = np.asarray(cell_u)
         d_u = np.asarray(d_u, float)
         rho = min(1.0, self.quota_r0 * r)
         tau = self.tau0 + self.tau_step * r
         keep: List[int] = []
         hard: List[int] = []
+        if not use_quota:
+            q = _sigmoid(d_u)
+            for j in np.where((q >= tau) | (q <= 1 - tau))[0]:
+                keep.append(int(j))
+                hard.append(int(q[j] >= 0.5))
+            return np.asarray(keep, int), np.asarray(hard, int)
         for c in np.unique(cell_u):
             idx = np.where(cell_u == c)[0]
             if idx.size < self.min_unlab:
