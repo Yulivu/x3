@@ -53,16 +53,19 @@ def _fake_fairseq_sd(n_layers=2, hidden=8, conv_dim=(4, 4)):
 
 def test_remap_covers_every_needed_tensor_and_drops_pretraining_heads():
     enc, extra = remap_state_dict(_fake_fairseq_sd())
-    assert "wav2vec2.feature_extractor.conv_layers.0.conv.weight" in enc
-    assert "wav2vec2.feature_extractor.conv_layers.1.layer_norm.weight" in enc
-    assert "wav2vec2.feature_projection.projection.weight" in enc
-    assert "wav2vec2.feature_projection.layer_norm.weight" in enc
-    assert "wav2vec2.encoder.pos_conv_embed.conv.weight_g" in enc
-    assert "wav2vec2.encoder.layers.0.attention.k_proj.weight" in enc
-    assert "wav2vec2.encoder.layers.0.attention_layer_norm.weight" in enc
-    assert "wav2vec2.encoder.layers.0.feed_forward.intermediate_dense.weight" in enc
-    assert "wav2vec2.encoder.layers.0.feed_forward.output_dense.weight" in enc
-    assert "wav2vec2.encoder.layers.1.final_layer_norm.bias" in enc
+    # Wav2Vec2Model wants these WITHOUT a "wav2vec2." prefix (that prefix belongs to
+    # the ForPreTraining / ForCTC wrappers)
+    assert "feature_extractor.conv_layers.0.conv.weight" in enc
+    assert "feature_extractor.conv_layers.1.layer_norm.weight" in enc
+    assert "feature_projection.projection.weight" in enc
+    assert "feature_projection.layer_norm.weight" in enc
+    assert "encoder.pos_conv_embed.conv.weight_g" in enc
+    assert "encoder.layers.0.attention.k_proj.weight" in enc
+    assert "encoder.layers.0.attention_layer_norm.weight" in enc
+    assert "encoder.layers.0.feed_forward.intermediate_dense.weight" in enc
+    assert "encoder.layers.0.feed_forward.output_dense.weight" in enc
+    assert "encoder.layers.1.final_layer_norm.bias" in enc
+    assert not any(k.startswith("wav2vec2.") for k in enc)
     # nothing fairseq-shaped survives, and no pre-training head leaks through
     assert not any(k.startswith(MODEL_PREFIX) for k in enc)
     assert not any("quantizer" in k or "project_q" in k or "mask_emb" in k

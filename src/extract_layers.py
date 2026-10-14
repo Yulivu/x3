@@ -43,7 +43,12 @@ STD_LAYER_FRACTIONS = (0.25, 0.5, 0.625, 0.75, 0.875)
 
 
 def _remap_one(key: str) -> Optional[str]:
-    """fairseq name -> transformers name, or None for a pre-training-only tensor."""
+    """fairseq name -> ``Wav2Vec2Model`` name, or None for a pre-training-only tensor.
+
+    ``Wav2Vec2Model`` itself wants ``feature_extractor...`` / ``encoder...`` with NO
+    ``wav2vec2.`` prefix - that prefix only exists when the encoder is nested inside
+    ``Wav2Vec2ForPreTraining`` / ``Wav2Vec2ForCTC``.
+    """
     if not key.startswith(MODEL_PREFIX):
         return None                     # proj_fc lives outside the SSL model
     k = key[len(MODEL_PREFIX):]
@@ -51,18 +56,18 @@ def _remap_one(key: str) -> Optional[str]:
         parts = k.split(".")
         layer, rest = parts[2], parts[3:]
         if rest[0] == "0":              # conv
-            return f"wav2vec2.feature_extractor.conv_layers.{layer}.conv.{rest[-1]}"
+            return f"feature_extractor.conv_layers.{layer}.conv.{rest[-1]}"
         if rest[0] == "2":              # layer norm (present from layer 1 on)
-            return f"wav2vec2.feature_extractor.conv_layers.{layer}.layer_norm.{rest[-1]}"
+            return f"feature_extractor.conv_layers.{layer}.layer_norm.{rest[-1]}"
         return None
     if k.startswith("post_extract_proj."):
-        return "wav2vec2.feature_projection.projection." + k.split(".")[-1]
+        return "feature_projection.projection." + k.split(".")[-1]
     if k.startswith("layer_norm."):
-        return "wav2vec2.feature_projection.layer_norm." + k.split(".")[-1]
+        return "feature_projection.layer_norm." + k.split(".")[-1]
     if k.startswith("encoder.pos_conv.0."):
-        return "wav2vec2.encoder.pos_conv_embed.conv." + k.split(".")[-1]
+        return "encoder.pos_conv_embed.conv." + k.split(".")[-1]
     if k.startswith("encoder.layer_norm."):
-        return "wav2vec2.encoder.layer_norm." + k.split(".")[-1]
+        return "encoder.layer_norm." + k.split(".")[-1]
     if k.startswith("encoder.layers."):
         parts = k.split(".")
         layer, rest = parts[2], ".".join(parts[3:])
@@ -70,7 +75,7 @@ def _remap_one(key: str) -> Optional[str]:
         rest = rest.replace("self_attn.", "attention.")
         rest = rest.replace("fc1.", "feed_forward.intermediate_dense.")
         rest = rest.replace("fc2.", "feed_forward.output_dense.")
-        return f"wav2vec2.encoder.layers.{layer}.{rest}"
+        return f"encoder.layers.{layer}.{rest}"
     # quantizer / project_q / mask_emb / final_proj: pre-training heads, unused
     return None
 
@@ -149,6 +154,9 @@ class AntiDeepfakeExtractor:
         import torch
 
         self.torch = torch
+        if isinstance(dtype, str):
+            dtype = {"float32": torch.float32, "float16": torch.float16,
+                     "bfloat16": torch.bfloat16}[dtype]
         self.model, self.cfg, self.head, self.info = load_antideepfake(model_dir, device, dtype)
         self.device = device
         self.dtype = dtype
