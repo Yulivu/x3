@@ -70,6 +70,19 @@ def test_run_selector_returns_k_distinct_pool_clips():
     assert typi.size == 60
 
 
+def test_the_smallest_budget_still_fills_the_whole_budget():
+    """k=30 is in the pre-registered curve, so it must not fall back to the warm start."""
+    Z, y, cell, plat, speaker = _toy()
+    graph = knn_graph(Z, k=15)
+    pool, _ev = u4.pool_and_eval(0, "clips", Z, y, cell, speaker)
+    cfg = (10, 0.9, 1.0, 0.5)
+    for selector in ("U", "full", "SC-DWU"):
+        picked = u4.run_selector(selector, Z, y, cell, speaker, pool, 30, graph, cfg,
+                                 "clips", seed=0)
+        assert picked.size == 30, (selector, picked.size)
+        assert len(set(picked.tolist())) == 30
+
+
 def test_speaker_coverage_variant_touches_more_speakers_than_cell_coverage():
     Z, y, cell, plat, speaker = _toy()
     graph = knn_graph(Z, k=15)

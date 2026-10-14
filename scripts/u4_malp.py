@@ -102,10 +102,12 @@ def run_selector(name: str, Z, y, cell, speaker, pool: np.ndarray, k: int,
     k = int(min(k, pool.size))
     if name == "TypiClust":                       # one shot: cluster + typical clip
         return pool[heat_start(Z[pool], n0=k, seed=seed)]
-    n0 = int(min(N0, k))
+    # the warm start has to leave room for the acquisition rounds, including at the
+    # smallest budget (k=30 is in the pre-registered curve)
+    n0 = int(min(N0, max(1, k // 2)))
     picked = list(pool[heat_start(Z[pool], n0=n0, seed=seed)])
-    batches = int(BATCHES) if k > n0 else 0
-    batch = max(1, (k - len(picked)) // max(batches, 1)) if batches else 0
+    batches = int(BATCHES) if k > len(picked) else 0
+    batch = (max(1, (k - len(picked)) // batches) if batches else 0)
     rng = np.random.default_rng(seed)
     for _ in range(batches):
         if len(picked) >= k:
@@ -136,6 +138,11 @@ def run_selector(name: str, Z, y, cell, speaker, pool: np.ndarray, k: int,
             break
         picked.extend(new.tolist())
         picked = list(dict.fromkeys(picked))
+    picked = list(dict.fromkeys(picked))
+    if len(picked) < k:                            # top up if a round came back short
+        rest = pool[~np.isin(pool, picked)]
+        rng.shuffle(rest)
+        picked.extend(rest[: k - len(picked)].tolist())
     return np.asarray(picked[:k], int)
 
 
@@ -175,7 +182,7 @@ def run_one(payload) -> Tuple[int, str, int, List[Dict[str, Any]]]:
     for selector in SELECTORS:
         picked = run_selector(selector, Z, y, cell, speaker, pool, k, graph, cfg,
                               mask, seed=d)
-        if picked.size < 50:
+        if picked.size < 20:                       # k=30 is the smallest budget
             continue
         for learner in LEARNERS:
             sc = learn(learner, Z, y, graph, picked, cfg)
