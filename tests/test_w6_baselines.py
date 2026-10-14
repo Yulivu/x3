@@ -13,6 +13,13 @@ if str(ROOT / "scripts") not in sys.path:
 import w6_baselines  # noqa: E402
 
 
+def test_load_spec_sentinel_is_not_the_mutable_global(monkeypatch):
+    """main() rebinds BACKBONE, so the Line A sentinel must be its own constant."""
+    assert w6_baselines.BACKBONE_LINEA == "xlsr300m-linea"
+    monkeypatch.setattr(w6_baselines, "BACKBONE", "xls-r-2b")
+    assert w6_baselines.BACKBONE_LINEA != w6_baselines.BACKBONE
+
+
 def _pool(seed=0, d=16, n_cells=6, per=90):
     rng = np.random.default_rng(seed)
     Z, y, plat, lang, cell, spk = [], [], [], [], [], []

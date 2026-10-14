@@ -54,6 +54,9 @@ from src.past import PAST  # noqa: E402
 LINEA_LAYERS = (8, 12, 16, 18, 20)
 SPEC = "S1-lineA"
 BACKBONE = "xlsr300m-linea"
+# The Line A block's own name, captured once: ``BACKBONE`` is rebound by main()
+# when the run targets a new backbone, so it must never be used as the sentinel.
+BACKBONE_LINEA = "xlsr300m-linea"
 K_PER_CELL = 10
 N_DRAWS = 100
 PCA_DIM = 256
@@ -83,7 +86,7 @@ def load_spec(root: Path, data_dir: Path, backbone: str, spec: str):
     ``backbone == BACKBONE_LINEA`` reads the frozen Line A block; anything else
     reads ``$DATA/x3/feats/<backbone>/`` and rebuilds the W5 spec menu.
     """
-    if backbone == BACKBONE:
+    if backbone == BACKBONE_LINEA:
         return load_dev(root, data_dir)
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
     import w5_backbones as w5
