@@ -312,6 +312,13 @@ def verdicts(df: pd.DataFrame, iv: pd.DataFrame, k: int = 290) -> Dict[str, Any]
         flags["B9_minus_B1_unseen_ci_b"] = [float(r["b_lo"]), float(r["b_hi"])]
         flags["B9_minus_B1_unseen_ci_old"] = [float(r["old_lo"]), float(r["old_hi"])]
         flags["LP_GAIN_IS_SPEAKER_LOCAL"] = bool(not (r["b_hi"] < 0.0))
+        # the frozen novelty rule needs BOTH a clear (b) interval and >= 2.0 points,
+        # so "a real effect that is too small to resolve" gets its own flag instead of
+        # being folded into "not speaker-local"
+        flags["LP_GAIN_UNSEEN_MEETS_2PT_BAR"] = bool(r["b_hi"] < 0.0
+                                                     and abs(float(r["delta"])) >= 2.0)
+        flags["LP_GAIN_UNSEEN_BELOW_RESOLUTION"] = bool(
+            r["b_hi"] < 0.0 and abs(float(r["delta"])) < 2.0)
     row = iv[(iv["method_a"] == "C1") & (iv["method_b"] == "B1")
              & (iv["mask"] == "strict_draw") & (iv["k"] == 290)]
     if not row.empty:
@@ -335,12 +342,23 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--budgets", default="290,100")
     parser.add_argument("--interval-jobs", type=int, default=16)
     parser.add_argument("--intervals-only", action="store_true")
+    parser.add_argument("--verdicts-only", action="store_true",
+                        help="recompute the flags from the two CSVs already on disk")
     args = parser.parse_args(argv)
 
     root = Path(args.root).resolve()
     budgets = [int(x) for x in str(args.budgets).split(",") if x.strip()]
     draw_root = root / "results" / "u1p_draws"
     out_csv = root / "results" / "u1p_speaker_split_v3.csv"
+
+    if args.verdicts_only:
+        df = pd.read_csv(out_csv)
+        iv = pd.read_csv(root / "results" / "u1p_intervals.csv")
+        flags = verdicts(df, iv)
+        with open(root / "results" / "u1p_verdicts.json", "w", encoding="utf-8") as fh:
+            json.dump(flags, fh, indent=2, sort_keys=True)
+        print(json.dumps(flags, indent=2, sort_keys=True))
+        return 0
 
     if not args.intervals_only:
         data_dir = data_root(args.data)

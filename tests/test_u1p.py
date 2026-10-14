@@ -150,3 +150,22 @@ def test_verdicts_read_the_b_interval_and_the_speaker_ratio():
     assert flags["LP_GAIN_IS_SPEAKER_LOCAL"] is False
     assert flags["G4_C1_minus_B1_strict_draw"]["C1_beats_B1"] is False
     assert json.dumps(flags)                       # the flags must be serialisable
+
+
+def test_verdicts_separate_a_real_but_small_gain_from_a_resolved_one():
+    df = pd.DataFrame({"method": ["B1"] * 2 + ["B9"] * 2,
+                       "mask": ["seen", "unseen"] * 2,
+                       "pooled_eer": [7.0, 13.0, 6.0, 12.4], "k": [290] * 4})
+    small = pd.DataFrame([{"k": 290, "mask": "unseen", "method_a": "B9",
+                           "method_b": "B1", "delta": -0.6, "old_lo": -4.0,
+                           "old_hi": 2.8, "b_lo": -1.2, "b_hi": -0.1,
+                           "b_contains_zero": False}])
+    flags = u1p.verdicts(df, small)
+    assert flags["LP_GAIN_UNSEEN_BELOW_RESOLUTION"] is True
+    assert flags["LP_GAIN_UNSEEN_MEETS_2PT_BAR"] is False
+    big = small.copy()
+    big.loc[0, "delta"] = -3.0
+    big.loc[0, "b_hi"] = -2.2
+    flags = u1p.verdicts(df, big)
+    assert flags["LP_GAIN_UNSEEN_MEETS_2PT_BAR"] is True
+    assert flags["LP_GAIN_UNSEEN_BELOW_RESOLUTION"] is False
