@@ -178,6 +178,11 @@ def gate_g2(root: Path) -> Dict[str, Any]:
     stab = read_csv(root, "w4_stability.csv")
     if rec is None or "diff" not in rec.columns:
         return {"status": NOT_RUN, "stability": NOT_RUN, "why": "results/reconciliation.csv missing"}
+    # The stored reference is a mean over 24 (seed, rep) cells, so the 100-draw row
+    # is the like-for-like comparison; the 3-draw prefix stays in the file as a
+    # diagnostic but is far too noisy to gate on.
+    if "scope" in rec.columns and (rec["scope"] == "100draw").any():
+        rec = rec[rec["scope"] == "100draw"]
     worst = float(np.nanmax(np.abs(rec["diff"].astype(float))))
     repro = "REPRODUCED" if worst <= REPRO_TOLERANCE else "NOT_REPRODUCED"
     if stab is None or "diff" not in stab.columns:

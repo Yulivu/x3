@@ -85,6 +85,21 @@ def test_gate_g4_needs_a_one_point_pooled_win_with_a_clean_interval(tmp_path):
     assert pipeline.gate_g4(tmp_path)["status"] == "C1_FAIL"
 
 
+def test_gate_g2_uses_the_like_for_like_scope(tmp_path):
+    """The stored reference is a 24-cell mean, so the 100-draw row is the gate input."""
+    _write_csv(tmp_path, "reconciliation.csv", [
+        {"scope": "3draw", "metric": "pooled_eer", "headline": 24.65, "rerun": 30.0, "diff": 5.35},
+        {"scope": "100draw", "metric": "pooled_eer", "headline": 24.65, "rerun": 25.0, "diff": 0.35},
+    ])
+    g2 = pipeline.gate_g2(tmp_path)
+    assert g2["status"] == "REPRODUCED", "the noisy 3-draw prefix must not gate"
+    assert g2["worst_reproduction_gap"] == pytest.approx(0.35)
+    _write_csv(tmp_path, "reconciliation.csv", [
+        {"scope": "100draw", "metric": "pooled_eer", "headline": 24.65, "rerun": 26.5, "diff": 1.85},
+    ])
+    assert pipeline.gate_g2(tmp_path)["status"] == "NOT_REPRODUCED"
+
+
 def test_gate_g5_collapse_share():
     root = Path("/tmp") / "x3_never"  # unused
     import tempfile

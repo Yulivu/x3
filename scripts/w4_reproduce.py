@@ -137,9 +137,10 @@ def mechanism_table(draws: pd.DataFrame) -> pd.DataFrame:
 
 def reconciliation(draws: pd.DataFrame, n_head: int = 3) -> pd.DataFrame:
     rows = []
+    clips_only = draws[draws["mask"] == "clips"]
     for scope, sel in (
-        ("3draw", draws[draws["draw"] < n_head]),
-        ("100draw", draws),
+        ("3draw", clips_only[clips_only["draw"] < n_head]),
+        ("100draw", clips_only),
     ):
         for metric, headline in STORED_FSCVAR.items():
             sub = sel[sel["method"] == "M2"]

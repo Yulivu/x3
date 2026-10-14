@@ -66,6 +66,8 @@ def test_mechanism_reconciliation_and_mask_tables():
     assert set(rec["metric"]) == set(w4_reproduce.STORED_FSCVAR)
     assert np.allclose(rec["diff"], rec["rerun"] - rec["headline"])
     assert set(rec["reference"]) == {"fsc_var_results.csv (bb, k=10)"}
+    # the two masks must never be averaged together
+    assert set(rec["mask"]) == {"clips"}
 
     ident = w4_reproduce.mask_identity(draws)
     assert {"method", "n_draws", "n_identical", "share_identical"}.issubset(ident.columns)
