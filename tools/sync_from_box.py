@@ -83,6 +83,9 @@ def main(argv=None) -> int:
         "git config user.email x3@autodl.local; }\n"
         "git add -A\n"
         f"git commit -q -m {msg!r} >/dev/null 2>&1 || echo 'nothing to commit'\n"
+        "git fetch -q origin " + args.branch + " >/dev/null 2>&1 || echo 'fetch failed'\n"
+        "git rebase origin/" + args.branch + " >/dev/null 2>&1 || "
+        "{ git rebase --abort >/dev/null 2>&1; echo 'REBASE_FAILED'; }\n"
         f"git bundle create {REMOTE_BUNDLE} {args.branch} >/dev/null 2>&1 && echo BUNDLE_OK\n"
         f"git log --oneline -1"
     )
