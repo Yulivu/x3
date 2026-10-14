@@ -109,6 +109,8 @@ def test_w12_can_target_a_backbone_and_a_suffix(monkeypatch, tmp_path):
     assert rc == 0
     assert called == {"backbone": "mms-1b", "spec": "S3",
                       "split": "speaker_split_v3.json"}
+    # the rows must record the backbone the run actually used
+    assert w12.w6.BACKBONE == "mms-1b" and w12.w6.SPEC == "S3"
     out = tmp_path / "results"
     assert (out / "w12_draws_mms1b.csv").exists()
     assert (out / "w12_casa_mms1b.csv").exists()

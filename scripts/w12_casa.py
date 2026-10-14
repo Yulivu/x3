@@ -120,6 +120,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     sub, F = w6.load_spec(root, data_root(args.data), args.backbone, args.spec,
                           split_name=args.split)
+    # the per-draw rows record the backbone from w6's module globals, so they have to
+    # follow the CLI (this is exactly what w6's own main does)
+    w6.BACKBONE, w6.SPEC = args.backbone, args.spec
     Z = w6.preprocess(F)
     y = sub["y"].to_numpy()
     plat = sub["platform"].to_numpy()
