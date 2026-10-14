@@ -287,9 +287,10 @@ def _interval_row(job) -> Optional[Dict[str, Any]]:
     }
 
 
-def verdicts(df: pd.DataFrame, iv: pd.DataFrame) -> Dict[str, Any]:
-    """The U1 verdicts, recomputed under the (b) rule."""
+def verdicts(df: pd.DataFrame, iv: pd.DataFrame, k: int = 290) -> Dict[str, Any]:
+    """The U1 verdicts, recomputed under the (b) rule at the headline budget."""
     flags: Dict[str, Any] = {}
+    df = df[df["k"] == int(k)]
     tab = df.groupby(["method", "mask"])["pooled_eer"].mean().to_dict()
     for method in sorted(df["method"].unique()):
         if (method, "seen") not in tab or (method, "unseen") not in tab:
@@ -300,6 +301,7 @@ def verdicts(df: pd.DataFrame, iv: pd.DataFrame) -> Dict[str, Any]:
             "seen": seen, "unseen": unseen, "ratio": unseen / max(seen, 1e-9)}
     flags["SPEAKER_GAP"] = bool(any(v["ratio"] >= 1.5
                                     for v in flags.get("speaker_ratio", {}).values()))
+    flags["k"] = int(k)
     flags["SPEAKER_GAP_methods"] = sorted(
         m for m, v in flags.get("speaker_ratio", {}).items() if v["ratio"] >= 1.5)
     row = iv[(iv["method_a"] == "B9") & (iv["method_b"] == "B1")

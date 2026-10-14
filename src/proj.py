@@ -53,17 +53,26 @@ def lda_directions(X: np.ndarray, groups: Sequence[object], n_components: int
 
 
 def orthonormalise(W: np.ndarray) -> np.ndarray:
-    """Orthonormal basis of the row space of ``W`` (keeping the original order)."""
+    """Orthonormal basis of the row space of ``W``, **in the input order**.
+
+    Ordered Gram-Schmidt, not SVD: the caller slices a prefix (``first m_s speaker
+    directions``), so the row order has to be the LDA importance order.  An SVD
+    would rotate within the row space and make "the first m" meaningless.
+    """
     W = np.atleast_2d(np.asarray(W, float))
     if W.size == 0:
         return W.reshape(0, W.shape[1] if W.ndim == 2 else 0)
-    # SVD, not QR: the rows can be more numerous than the dimension (a speaker LDA
-    # with 60 classes in a 256-d space), and only the rank matters.
-    _, S, Vt = np.linalg.svd(W, full_matrices=False)
-    if S.size == 0:                                     # pragma: no cover
+    out: list = []
+    for row in W:
+        v = row.copy()
+        for u in out:
+            v -= float(v @ u) * u
+        n = float(np.linalg.norm(v))
+        if n > 1e-10 * max(1.0, float(np.linalg.norm(row))):
+            out.append(v / n)
+    if not out:                                         # pragma: no cover
         return np.zeros((0, W.shape[1]))
-    keep = S > max(1e-10, float(S[0]) * 1e-10)
-    return np.ascontiguousarray(Vt[keep])
+    return np.ascontiguousarray(np.asarray(out))
 
 
 def orthogonalise_against(W: np.ndarray, basis: Optional[np.ndarray]) -> np.ndarray:
