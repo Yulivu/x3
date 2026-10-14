@@ -137,7 +137,10 @@ def audit(root: Path, data_dir: Path, n_draws: int = N_DRAWS,
         rows.append({"check": "cell-permutation", "method": m, "mask": "clips",
                      "eer": c, "reference_eer": b, "n_draws": len(cell_perm[m]),
                      "flag": bool(np.isfinite(c) and np.isfinite(b) and m == "C1" and b < c - 0.5),
-                     "expectation": "C1's gain over the permuted-cell run disappears"})
+                     "expectation": (
+                         "C1 must lose its advantage when the cell ids are scrambled"
+                         if m == "C1" else
+                         "control: this method never reads the cell id, so the row is informational")})
         rows.append({"check": "clips-vs-strict-baseline", "method": m, "mask": "clips",
                      "eer": b, "reference_eer": float("nan"), "n_draws": len(baseline[m]),
                      "flag": False, "expectation": "baseline (no expectation)"})
