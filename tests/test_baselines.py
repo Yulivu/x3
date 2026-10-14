@@ -110,6 +110,11 @@ def test_b5_b6_b8_b9_b11_produce_finite_scores():
     s5, i5 = b5_knn_prototype(Z, y)
     assert s5.shape == (len(y),) and np.isfinite(s5).all()
     assert i5["k"] == 15
+    # with evaluation clips in the pool the labelled-only version must be used,
+    # otherwise the neighbours hand over their true labels
+    s5l, i5l = b5_knn_prototype(Z, y, labeled_mask=lab)
+    assert i5l["labeled_only_neighbours"] is True
+    assert s5l.shape == (len(y),) and np.isfinite(s5l).all()
 
     zs = Z[:, 0] * 1.5
     s6, i6 = b6_zeroshot_em(zs, cell, plat, lab, y)

@@ -220,26 +220,46 @@ def b4_gp(Z, y, n_pca: int = 64, restarts: int = 0) -> Tuple[np.ndarray, np.ndar
 
 
 def b5_knn_prototype(
-    Z: np.ndarray, y: np.ndarray, k: int = KNN_K, calibrate: bool = True
+    Z: np.ndarray, y: np.ndarray, k: int = KNN_K, calibrate: bool = True,
+    labeled_mask: Optional[Sequence[bool]] = None,
 ) -> Tuple[np.ndarray, Dict[str, Any]]:
-    """B5: cosine k-NN distance-weighted vote, Platt-calibrated inside ``L``."""
+    """B5: cosine k-NN distance-weighted vote, Platt-calibrated inside ``L``.
+
+    ``labeled_mask`` must be supplied whenever ``Z`` contains evaluation clips:
+    without it every neighbour contributes its TRUE label and the "baseline"
+    reads the answer key.  With it, only labelled neighbours vote (an unlabelled
+    neighbour contributes nothing), which is the transductive version W9 audits.
+    """
     Z = np.asarray(Z, float)
     y = np.asarray(y)
     unit = Z / (np.linalg.norm(Z, axis=1, keepdims=True) + 1e-9)
     sim = unit @ unit.T
+    if labeled_mask is not None:
+        lm = np.asarray(labeled_mask, bool)
+        if not lm.any():
+            raise ValueError("labeled_mask selects no clips")
+        sim = sim.copy()
+        sim[:, ~lm] = -np.inf          # unlabelled neighbours cannot vote
     np.fill_diagonal(sim, -np.inf)
     kk = int(min(k, max(1, len(Z) - 1)))
     idx = np.argsort(-sim, axis=1)[:, :kk]
     w = np.take_along_axis(sim, idx, axis=1)
+    w = np.where(np.isfinite(w), w, 0.0)
     lab = y[idx]
     vote = (w * (2 * lab - 1)).sum(1) / (np.abs(w).sum(1) + 1e-9)
     if calibrate:
-        a, b = _platt(vote, y)
+        fit_rows = np.asarray(labeled_mask, bool) if labeled_mask is not None else np.ones(len(Z), bool)
+        if len(np.unique(y[fit_rows])) < 2:
+            a = 1.0
+            b = 0.0
+        else:
+            a, b = _platt(vote[fit_rows], y[fit_rows])
         score = a * vote + b
     else:
         score = vote
         a = b = None
-    return score, {"k": kk, "calibrate": calibrate, "platt": (a, b)}
+    return score, {"k": kk, "calibrate": calibrate, "platt": (a, b),
+                   "labeled_only_neighbours": labeled_mask is not None}
 
 
 def _platt(score: Sequence[float], y: Sequence[float]) -> Tuple[float, float]:

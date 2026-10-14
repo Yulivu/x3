@@ -130,7 +130,7 @@ def run_one_draw(args) -> List[Dict[str, Any]]:
                 sc, i = b3_platform_offset(base, plat, lab, y, sigma=1.0)
                 scores["B3"] = sc; infos["B3"] = i
     if "B5" in methods:
-        s, i = b5_knn_prototype(Z, y, k=15)
+        s, i = b5_knn_prototype(Z, y, k=15, labeled_mask=lab)
         scores["B5"] = s; infos["B5"] = i
     if "B6" in methods:
         s, i = b6_zeroshot_em(zero, cell, plat, lab, y)
