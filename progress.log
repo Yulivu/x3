@@ -3,3 +3,4 @@
 2026-10-14T21:51:09Z  HB  commit=0e5a853  done=U1p,v2v3,U8,U9,U10,DP  pending=-  tmux=-  note=batch closed: reports regenerated
 2026-10-14T22:27:48Z  HB  commit=1040657  done=U1p,v2v3,U8,U9,U10,DP  pending=-  tmux=-  note=U4 M-ALP + U5 noise + U7 gates done
 2026-10-14T22:28:44Z  HB  commit=9419fe4  done=U1p,v2v3,U8,U9,U10,DP  pending=-  tmux=-  note=U2 flag wired into the decision line
+2026-10-14T22:33:58Z  HB  commit=d1e2ca5  done=U1p,v2v3,U8,U9,U10,DP  pending=-  tmux=-  note=W8 Track Z done; Z5 label-free 16.17 pooled

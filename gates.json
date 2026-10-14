@@ -516,8 +516,10 @@
     "status": "CASA_PASS"
   },
   "G8": {
-    "status": "NOT_RUN",
-    "why": "results/w8_zlabel.csv missing"
+    "best_zero_shot_pooled": 20.208649644316065,
+    "method": "Z2",
+    "pooled": 22.18267016979426,
+    "status": "Z_FAIL"
   },
   "G9": {
     "status": "NOT_RUN",

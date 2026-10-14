@@ -1,7 +1,7 @@
 # X3 checkpoint report
 
 ```
-DECISION: G0=pass G1=HEADROOM_OK G2=REPRODUCED G3=xls-r-2b|S3 G4=C1_FAIL G5=PL_OK G6=PAST_FAIL G7=CASA_PASS G8=NOT_RUN G9=NOT_RUN G10=DECONF_NOT_SHOWN G11=SOTA_F_DEV_NO G12=MALP_INFO G13=SEL_FAIL G14=SPEAKER_COVERAGE_FAIL G15=LABEL_EFFICIENCY_PASS G16=SOTA_F2_DEV_NO G17=ESN_FAIL G18=PROJ_FAIL
+DECISION: G0=pass G1=HEADROOM_OK G2=REPRODUCED G3=xls-r-2b|S3 G4=C1_FAIL G5=PL_OK G6=PAST_FAIL G7=CASA_PASS G8=Z_FAIL G9=NOT_RUN G10=DECONF_NOT_SHOWN G11=SOTA_F_DEV_NO G12=MALP_INFO G13=SEL_FAIL G14=SPEAKER_COVERAGE_FAIL G15=LABEL_EFFICIENCY_PASS G16=SOTA_F2_DEV_NO G17=ESN_FAIL G18=PROJ_FAIL
 ```
 FLAGS: SPEAKER_GAP=False LP_GAIN_IS_SPEAKER_LOCAL=False B11_BROKEN=True IDENTITY_OVERLAP_FLAG=False
 
@@ -517,6 +517,14 @@ _(empty)_
 
 ### W8 Track Z
 
-NOT_RUN - `results/w8_zlabel.csv` missing
+`results/w8_zlabel.csv`
 
-commit: `9419fe4`
+| pooled_eer | within_macro_eer | worst_platform | worst_platform_eer | auc | hter_pooled | n_eval | n_pos | eer_bilibili | eer_douyin | eer_facebook | eer_rednote | eer_tiktok | eer_x | eer_youtube | protocol | region | backbone | spec | method | k | mask | n_labeled | mu0 | mu1 | sig0 | sig1 | pi_global | loglik | seed_score |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 20.86 | 21.54 | tiktok | 30.03 | 0.8573 | nan | 15002 | 3990 | 17.2 | 18.34 | 25.2 | 21.42 | 30.03 | 17.84 | 20.8 | track_z_v3_dev | dev | xls-r-2b | S3 | Z0 | 0 | clips | 0 | nan | nan | nan | nan | nan | nan | nan |
+| 25.62 | 21.54 | tiktok | 30.03 | 0.8127 | nan | 15002 | 3990 | 17.2 | 18.34 | 25.2 | 21.42 | 30.03 | 17.84 | 20.8 | track_z_v3_dev | dev | xls-r-2b | S3 | Z1 | 0 | clips | 0 | nan | nan | nan | nan | nan | nan | nan |
+| 22.18 | 23.33 | tiktok | 33.25 | 0.8373 | nan | 15002 | 3990 | 17.2 | 18.34 | 27.17 | 26.24 | 33.25 | 18.04 | 23.08 | track_z_v3_dev | dev | xls-r-2b | S3 | Z2 | 0 | clips | 0 | -105.3 | 0.3661 | 12.2 | 74.7 | 0.2642 | -4.777 | nan |
+| 16.16 | 18.41 | tiktok | 36.73 | 0.8941 | nan | 15002 | 3990 | 17.14 | 10.92 | 13.57 | 20.07 | 36.73 | 14.56 | 15.9 | track_z_v3_dev | dev | xls-r-2b | S3 | Z5 | 0 | clips | 0 | nan | nan | nan | nan | nan | nan | Z2 |
+| 23.74 | 21.04 | tiktok | 31.02 | 0.8508 | nan | 15002 | 3990 | 20.8 | 14.82 | 29.57 | 15.66 | 31.02 | 16.17 | 19.19 | track_z_v3_dev | dev | xls-r-2b | S3 | Z5-z1 | 0 | clips | 0 | nan | nan | nan | nan | nan | nan | Z1 |
+
+commit: `d1e2ca5`

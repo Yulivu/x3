@@ -1,0 +1,38 @@
+{
+  "Z2": {
+    "beats_zero_by_margin": false,
+    "below_threshold": true,
+    "macro_not_worse": false,
+    "margin_points": -1.3270735866181944,
+    "method": "Z2",
+    "passes": false,
+    "pooled": 22.18267016979426,
+    "within_macro": 23.330186015551067
+  },
+  "best_method": "Z2",
+  "best_zero_shot": 20.855596583176066,
+  "best_zero_shot_macro": 21.54489664956107,
+  "margin": 2.0,
+  "other_label_free_methods": {
+    "Z5": {
+      "beats_zero_by_margin": true,
+      "below_threshold": true,
+      "macro_not_worse": true,
+      "margin_points": 4.69079755327294,
+      "pooled": 16.164799029903126,
+      "satisfies_g8_conditions": true,
+      "within_macro": 18.41339615204089
+    },
+    "Z5-z1": {
+      "beats_zero_by_margin": false,
+      "below_threshold": true,
+      "macro_not_worse": true,
+      "margin_points": -2.8849821611784634,
+      "pooled": 23.74057874435453,
+      "satisfies_g8_conditions": false,
+      "within_macro": 21.03576781140395
+    }
+  },
+  "threshold": 24.65,
+  "verdict": "Z_FAIL"
+}
