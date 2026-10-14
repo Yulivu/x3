@@ -223,28 +223,44 @@ def _worker(payload):
 
 
 def intervals_table(draw_root: Path, ms: Sequence[int] = M_LIST,
-                    masks: Sequence[str] = MASKS) -> pd.DataFrame:
+                    masks: Sequence[str] = MASKS, jobs: int = 1) -> pd.DataFrame:
+    todo = [(str(draw_root), int(m), str(mask), a, b)
+            for m in ms for mask in masks
+            for a in ("ESN", "ESN-P") for b in CONTROLS]
     rows: List[Dict[str, Any]] = []
-    for m in ms:
-        for mask in masks:
-            for a in ("ESN", "ESN-P"):
-                for b in CONTROLS:
-                    per = load_draw_scores(draw_root / f"m{m}" / mask, a, b)
-                    if len(per) < 5:
-                        continue
-                    got = two_intervals(per)
-                    rows.append({
-                        "m": int(m), "mask": mask, "method_a": a, "method_b": b,
-                        "n_draws": got["n_draws"], "delta": got["mean"],
-                        "old_lo": got["old_lo"], "old_hi": got["old_hi"],
-                        "a_lo": got["a_lo"], "a_hi": got["a_hi"],
-                        "b_lo": got["b_lo"], "b_hi": got["b_hi"],
-                        "b_contains_zero": got["b_contains_zero"],
-                        "effect_points": abs(got["mean"]),
-                        "meets_2pt_rule": bool(abs(got["mean"]) >= 2.0
-                                               and got["b_excludes_zero"]),
-                    })
+    if jobs and int(jobs) > 1:
+        import multiprocessing as mp
+
+        ctx = (mp.get_context("fork") if sys.platform != "win32"
+               else mp.get_context("spawn"))
+        with ctx.Pool(int(jobs)) as pool:
+            for r in pool.imap_unordered(_interval_row, todo, chunksize=1):
+                if r is not None:
+                    rows.append(r)
+    else:
+        for job in todo:
+            r = _interval_row(job)
+            if r is not None:
+                rows.append(r)
     return pd.DataFrame(rows)
+
+
+def _interval_row(job) -> Optional[Dict[str, Any]]:
+    draw_root, m, mask, a, b = job
+    per = load_draw_scores(Path(draw_root) / f"m{m}" / mask, a, b)
+    if len(per) < 5:
+        return None
+    got = two_intervals(per)
+    return {
+        "m": int(m), "mask": mask, "method_a": a, "method_b": b,
+        "n_draws": got["n_draws"], "delta": got["mean"],
+        "old_lo": got["old_lo"], "old_hi": got["old_hi"],
+        "a_lo": got["a_lo"], "a_hi": got["a_hi"],
+        "b_lo": got["b_lo"], "b_hi": got["b_hi"],
+        "b_contains_zero": got["b_contains_zero"],
+        "effect_points": abs(got["mean"]),
+        "meets_2pt_rule": bool(abs(got["mean"]) >= 2.0 and got["b_excludes_zero"]),
+    }
 
 
 def gate_g17(df: pd.DataFrame, iv: pd.DataFrame, m_gate: int = GATE_M,
@@ -291,6 +307,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--draws", type=int, default=N_DRAWS)
     parser.add_argument("--jobs", type=int, default=32)
     parser.add_argument("--ms", default=",".join(map(str, M_LIST)))
+    parser.add_argument("--interval-jobs", type=int, default=16)
     parser.add_argument("--intervals-only", action="store_true")
     args = parser.parse_args(argv)
 
@@ -346,7 +363,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     piv = df[df["population"] == "all"].pivot_table(
         index=["mask", "method"], columns="m", values="pooled_eer", aggfunc="mean")
     print("\npooled EER, all clips\n" + piv.round(3).to_string())
-    iv = intervals_table(draw_root, ms)
+    iv = intervals_table(draw_root, ms, jobs=args.interval_jobs)
     iv.to_csv(root / "results" / "u8_intervals.csv", index=False)
     print("\nintervals (delta = a - b; negative means a is better)\n"
           + iv.round(3).to_string(index=False))

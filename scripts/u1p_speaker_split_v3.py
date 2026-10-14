@@ -245,29 +245,46 @@ def _worker(payload):
 # ------------------------------------------------------------------- reporting
 def intervals_table(draw_root: Path, budgets: Sequence[int] = tuple(BUDGETS),
                     pairs: Sequence[Tuple[str, str]] = PAIRS,
-                    masks: Sequence[str] = MASKS) -> pd.DataFrame:
+                    masks: Sequence[str] = MASKS, jobs: int = 1) -> pd.DataFrame:
     """Old rule vs (a) vs (b) for every pair, mask and budget."""
+    todo = [(str(draw_root), int(k), str(mask), str(a), str(b))
+            for k in budgets for mask in masks for a, b in pairs]
     rows: List[Dict[str, Any]] = []
-    for k in budgets:
-        for mask in masks:
-            for a, b in pairs:
-                per = load_draw_scores(draw_root / f"k{k}" / mask, a, b)
-                if len(per) < 5:
-                    continue
-                got = two_intervals(per)
-                rows.append({
-                    "k": int(k), "mask": mask, "method_a": a, "method_b": b,
-                    "n_draws": got["n_draws"], "delta": got["mean"],
-                    "old_lo": got["old_lo"], "old_hi": got["old_hi"],
-                    "old_contains_zero": got["old_contains_zero"],
-                    "a_lo": got["a_lo"], "a_hi": got["a_hi"],
-                    "b_lo": got["b_lo"], "b_hi": got["b_hi"],
-                    "b_contains_zero": got["b_contains_zero"],
-                    "effect_points": abs(got["mean"]),
-                    "meets_2pt_rule": bool(abs(got["mean"]) >= 2.0
-                                           and got["b_excludes_zero"]),
-                })
+    if jobs and int(jobs) > 1:
+        import multiprocessing as mp
+
+        ctx = (mp.get_context("fork") if sys.platform != "win32"
+               else mp.get_context("spawn"))
+        with ctx.Pool(int(jobs)) as pool:
+            for r in pool.imap_unordered(_interval_row, todo, chunksize=1):
+                if r is not None:
+                    rows.append(r)
+    else:
+        for job in todo:
+            r = _interval_row(job)
+            if r is not None:
+                rows.append(r)
     return pd.DataFrame(rows)
+
+
+def _interval_row(job) -> Optional[Dict[str, Any]]:
+    """One (budget, mask, pair) cell.  A module-level function so it can be pooled."""
+    draw_root, k, mask, a, b = job
+    per = load_draw_scores(Path(draw_root) / f"k{k}" / mask, a, b)
+    if len(per) < 5:
+        return None
+    got = two_intervals(per)
+    return {
+        "k": int(k), "mask": mask, "method_a": a, "method_b": b,
+        "n_draws": got["n_draws"], "delta": got["mean"],
+        "old_lo": got["old_lo"], "old_hi": got["old_hi"],
+        "old_contains_zero": got["old_contains_zero"],
+        "a_lo": got["a_lo"], "a_hi": got["a_hi"],
+        "b_lo": got["b_lo"], "b_hi": got["b_hi"],
+        "b_contains_zero": got["b_contains_zero"],
+        "effect_points": abs(got["mean"]),
+        "meets_2pt_rule": bool(abs(got["mean"]) >= 2.0 and got["b_excludes_zero"]),
+    }
 
 
 def verdicts(df: pd.DataFrame, iv: pd.DataFrame) -> Dict[str, Any]:
@@ -314,6 +331,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--draws", type=int, default=N_DRAWS)
     parser.add_argument("--jobs", type=int, default=32)
     parser.add_argument("--budgets", default="290,100")
+    parser.add_argument("--interval-jobs", type=int, default=16)
     parser.add_argument("--intervals-only", action="store_true")
     args = parser.parse_args(argv)
 
@@ -376,7 +394,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     df = pd.read_csv(out_csv)
     piv = df.groupby(["k", "method", "mask"])["pooled_eer"].mean().unstack()
     print("\npooled EER (mean over draws)\n" + piv.round(3).to_string())
-    iv = intervals_table(draw_root, budgets)
+    iv = intervals_table(draw_root, budgets, jobs=args.interval_jobs)
     iv.to_csv(root / "results" / "u1p_intervals.csv", index=False)
     print("\nintervals (delta = a - b; negative means a is better)\n"
           + iv.round(3).to_string(index=False))
