@@ -182,11 +182,13 @@ def _worker(payload):
 
 def summarize_draws(rows: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     main = rows[rows["mask"].isin(["clips", "strict"])].copy()
-    summary = (main.groupby(["backbone", "spec", "method", "mask"])
-               [["pooled_eer", "within_macro_eer", "worst_platform_eer", "auc"]]
-               .agg(["mean", "std"]))
-    summary.columns = [f"{a}_{b}" for a, b in summary.columns]
-    summary = summary.reset_index()
+    # LONG format on purpose: decide.py's gates read (method, metric, mean), so a
+    # wide table silently makes every gate report NOT_RUN.
+    metrics = ["pooled_eer", "within_macro_eer", "worst_platform_eer", "auc"]
+    agg = main.groupby(["backbone", "spec", "method", "mask"])[metrics].agg(["mean", "std"])
+    long = agg.stack(level=0, future_stack=True).reset_index()
+    long = long.rename(columns={"level_4": "metric"})
+    long = long[["backbone", "spec", "method", "mask", "metric", "mean", "std"]]
 
     def paired(a: str, b: str, metric: str) -> Optional[Dict[str, Any]]:
         wa = main[main["method"] == a].set_index("draw")[metric]
@@ -212,7 +214,7 @@ def summarize_draws(rows: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame, pd.
                     p.update({"backbone": BACKBONE, "spec": SPEC})
                     rows_paired.append(p)
     collapse = rows[rows["mask"] == "collapse"].copy()
-    return summary, pd.DataFrame(rows_paired), collapse
+    return long, pd.DataFrame(rows_paired), collapse
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:

@@ -85,6 +85,29 @@ def test_gate_g4_needs_a_one_point_pooled_win_with_a_clean_interval(tmp_path):
     assert pipeline.gate_g4(tmp_path)["status"] == "C1_FAIL"
 
 
+def test_w6_summary_must_be_long_format_for_the_gates():
+    """A wide summary silently turns every gate into NOT_RUN - pin the contract."""
+    import warnings
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        rows = pd.DataFrame([
+            {"backbone": "b", "spec": "s", "method": "B1", "mask": "clips", "draw": 0, "k": 290,
+             "pooled_eer": 20.0, "within_macro_eer": 25.0, "worst_platform_eer": 30.0, "auc": 0.8},
+            {"backbone": "b", "spec": "s", "method": "C1", "mask": "clips", "draw": 0, "k": 290,
+             "pooled_eer": 18.0, "within_macro_eer": 23.0, "worst_platform_eer": 28.0, "auc": 0.85},
+        ])
+    long, _, _ = pipeline_w6_summary(rows)
+    assert {"backbone", "spec", "method", "mask", "metric", "mean", "std"} == set(long.columns)
+    assert set(long["metric"]) == {"pooled_eer", "within_macro_eer", "worst_platform_eer", "auc"}
+
+
+def pipeline_w6_summary(rows):
+    import w6_baselines
+
+    return w6_baselines.summarize_draws(rows)
+
+
 def test_gate_g2_uses_the_like_for_like_scope(tmp_path):
     """The stored reference is a 24-cell mean, so the 100-draw row is the gate input."""
     _write_csv(tmp_path, "reconciliation.csv", [

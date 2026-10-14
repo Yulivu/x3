@@ -250,8 +250,10 @@ def gate_g4(root: Path, region: str = "dev", chosen: Optional[Dict[str, Any]] = 
     if best is None:
         return {"status": NOT_RUN, "why": "no C1 candidate rows in w6_summary.csv"}
     draws = load_draws(root)
-    p_pool = paired_diff(draws, "C1", best, "pooled_eer", region=region)
-    p_macro = paired_diff(draws, "C1", best, "within_macro_eer", region=region)
+    # mask="clips" throughout: averaging the clips and strict masks would mix two
+    # different evaluation populations into one number
+    p_pool = paired_diff(draws, "C1", best, "pooled_eer", region=region, mask="clips")
+    p_macro = paired_diff(draws, "C1", best, "within_macro_eer", region=region, mask="clips")
     pool_ok = _ci_excludes_zero(p_pool) and p_pool["mean"] <= -C_F_POOL_GAIN
     macro_ok = _ci_excludes_zero(p_macro) and p_macro["mean"] <= -C_F_MACRO_GAIN
     if p_pool is None and p_macro is None:

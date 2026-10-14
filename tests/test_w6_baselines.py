@@ -73,7 +73,9 @@ def test_summarize_draws_builds_summary_paired_and_collapse_tables():
                                            ("B1", "C1", "B7"), 10))
     df = pd.DataFrame(rows)
     summary, paired_tbl, collapse = w6_baselines.summarize_draws(df)
-    assert {"backbone", "spec", "method", "mask", "pooled_eer_mean"}.issubset(summary.columns)
+    # long format on purpose: decide.py's gates read (method, metric, mean)
+    assert {"backbone", "spec", "method", "mask", "metric", "mean", "std"}.issubset(summary.columns)
+    assert set(summary["metric"]) == {"pooled_eer", "within_macro_eer", "worst_platform_eer", "auc"}
     assert set(summary["method"]) == {"B1", "C1", "B7"}
     assert not paired_tbl.empty
     assert set(paired_tbl["other"]) == {"B1"}
