@@ -133,6 +133,79 @@ class MLPProbe:
             return self.net_(X).squeeze(-1).numpy().astype(float)
 
 
+class LineAProbe:
+    """Line A's frozen probe recipe (``wx2/scripts/train_corpus.py::Probe``).
+
+    ``LayerNorm(flat) -> Linear(flat, 512) -> GELU -> Dropout(0.3) -> Linear(512, 1)``
+    trained with AdamW(lr 1e-3, wd 1e-4), batch 256, 25 epochs and early stopping on
+    an internal validation EER.  This is the "290 labels train a head directly route"
+    (``docs/COMPARISON.md`` line 42) and the recipe behind Line A's 13.64 headline.
+    """
+
+    def __init__(self, hidden: int = 512, dropout: float = 0.3, lr: float = 1e-3,
+                 weight_decay: float = 1e-4, epochs: int = 25, batch: int = 256,
+                 val_frac: float = 0.2, seed: int = 20261015) -> None:
+        self.__dict__.update(hidden=hidden, dropout=dropout, lr=lr, weight_decay=weight_decay,
+                             epochs=epochs, batch=batch, val_frac=val_frac, seed=seed)
+        self.net_ = None
+        self.best_eer_ = float("nan")
+
+    def fit(self, X, y) -> "LineAProbe":
+        import torch
+        import torch.nn as nn
+
+        from .metrics3 import eer
+
+        torch.manual_seed(self.seed)
+        X = np.asarray(X, np.float32)
+        y = np.asarray(y, np.float32)
+        rng = np.random.default_rng(self.seed)
+        n = len(y)
+        perm = rng.permutation(n)
+        n_val = max(1, int(round(self.val_frac * n)))
+        val_idx, tr_idx = perm[:n_val], perm[n_val:]
+        net = nn.Sequential(
+            nn.LayerNorm(X.shape[1]),
+            nn.Linear(X.shape[1], self.hidden), nn.GELU(),
+            nn.Dropout(self.dropout), nn.Linear(self.hidden, 1),
+        )
+        opt = torch.optim.AdamW(net.parameters(), lr=self.lr, weight_decay=self.weight_decay)
+        lossf = nn.BCEWithLogitsLoss()
+        Xt = torch.from_numpy(X)
+        yt = torch.from_numpy(y)
+        best_state, best_eer = None, float("inf")
+        for _ in range(int(self.epochs)):
+            net.train()
+            order = rng.permutation(len(tr_idx))
+            for i in range(0, len(order), int(self.batch)):
+                j = tr_idx[order[i:i + int(self.batch)]]
+                opt.zero_grad()
+                loss = lossf(net(Xt[j]).squeeze(-1), yt[j])
+                loss.backward()
+                opt.step()
+            net.eval()
+            with torch.no_grad():
+                s = net(Xt[val_idx]).squeeze(-1).numpy()
+            e = float(eer(y[val_idx], s))
+            if e < best_eer:
+                best_eer = e
+                best_state = {k: v.detach().clone() for k, v in net.state_dict().items()}
+        if best_state is not None:
+            net.load_state_dict(best_state)
+        self.net_ = net
+        self.best_eer_ = best_eer
+        return self
+
+    def logit(self, X) -> np.ndarray:
+        import torch
+
+        if self.net_ is None:
+            raise RuntimeError("LineAProbe.logit called before fit()")
+        self.net_.eval()
+        with torch.no_grad():
+            return self.net_(torch.from_numpy(np.asarray(X, np.float32))).squeeze(-1).numpy().astype(float)
+
+
 def b11_mlp(Z, y, **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:
     probe = MLPProbe(**kwargs).fit(Z, y)
     return probe.logit(Z), {"hidden": probe.hidden, "dropout": probe.dropout}
