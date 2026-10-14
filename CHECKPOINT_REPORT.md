@@ -1,8 +1,9 @@
 # X3 checkpoint report
 
 ```
-DECISION: G0=pass G1=HEADROOM_OK G2=REPRODUCED G3=xls-r-2b|S3 G4=C1_FAIL G5=PL_OK G6=PAST_FAIL G7=CASA_PASS G8=NOT_RUN G9=NOT_RUN G10=DECONF_NOT_SHOWN G11=SOTA_F_DEV_NO G12=NOT_RUN G13=NOT_RUN G14=NOT_RUN G15=NOT_RUN G16=NOT_RUN G17=ESN_FAIL G18=PROJ_FAIL
+DECISION: G0=pass G1=HEADROOM_OK G2=REPRODUCED G3=xls-r-2b|S3 G4=C1_FAIL G5=PL_OK G6=PAST_FAIL G7=CASA_PASS G8=NOT_RUN G9=NOT_RUN G10=DECONF_NOT_SHOWN G11=SOTA_F_DEV_NO G12=MALP_INFO G13=SEL_FAIL G14=SPEAKER_COVERAGE_FAIL G15=LABEL_EFFICIENCY_PASS G16=SOTA_F2_DEV_NO G17=ESN_FAIL G18=PROJ_FAIL
 ```
+FLAGS: SPEAKER_GAP=False LP_GAIN_IS_SPEAKER_LOCAL=False B11_BROKEN=True IDENTITY_OVERLAP_FLAG=False
 
 ## NEW_TASKS 02 (v3 protocol, priority over U4)
 
@@ -138,6 +139,26 @@ U8 intervals (delta = method - control; negative = method better)
 
 ### U9 projection - packaged view
 
+### U5 label-noise robustness
+
+`results/u5_noise.csv` (pooled EER, clips mask)
+
+| method | k | 0.0 | 0.05 | 0.1 | 0.2 |
+|---|---|---|---|---|---|
+| B1 | 30 | 16.86 | 18.49 | 21.13 | 28.84 |
+| B1 | 100 | 13.52 | 14.8 | 16.17 | 19.25 |
+| B1 | 290 | 10.95 | 12.48 | 13.07 | 15.61 |
+| B9 | 30 | 17.47 | 19.5 | 22.14 | 33.32 |
+| B9 | 100 | 11.66 | 14.73 | 16.58 | 22.37 |
+| B9 | 290 | 8.074 | 9.749 | 11.97 | 17.14 |
+| C1 | 30 | 17.55 | 19.74 | 23.11 | 32.1 |
+| C1 | 100 | 13.95 | 16.69 | 20.56 | 26.14 |
+| C1 | 290 | 11.4 | 16.09 | 20.71 | 29.19 |
+| M-ALP | 30 | 16.17 | 17.86 | 20.57 | 28.77 |
+| M-ALP | 100 | 12.14 | 13.47 | 14.99 | 19 |
+| M-ALP | 290 | 8.868 | 9.87 | 11.2 | 14.61 |
+
+
 `results/u9_projection.csv` (CV-selected variant per draw)
 
 | method | seen | strict_draw | unseen |
@@ -244,6 +265,72 @@ U8 intervals (delta = method - control; negative = method better)
   "seen_within_tolerance": true,
   "strict_draw": 14.467374819087011,
   "verdict": "PROJ_FAIL"
+}
+```
+
+### G12-G16 (U4 / M-ALP)
+
+```json
+{
+  "G12": {
+    "b1_unseen_reference": 11.96,
+    "best_selector_lr_lp_strict_draw_k290": 12.469497909007828,
+    "rule": "N1' is informational after \u8ffd\u52a0 02; the 0.5-point rule is no longer a novelty gate",
+    "status": "MALP_INFO"
+  },
+  "G13": {
+    "best_other": "E",
+    "gain_vs_best_other": null,
+    "gain_vs_uniform": 1.2946247304802752,
+    "interval_vs_best_other": null,
+    "interval_vs_uniform": [
+      -1.7600999721144461,
+      -0.7091938393260055
+    ],
+    "k": 100,
+    "malp": 13.66069160340539,
+    "mask": "strict_draw",
+    "others": {
+      "E": 13.277315350923827,
+      "K": 14.70625124378702,
+      "TypiClust": 13.899041337614628
+    },
+    "status": "SEL_FAIL",
+    "uniform": 14.955316333885664
+  },
+  "G14": {
+    "cc": 13.449528021703127,
+    "delta_sc_minus_cc": 0.5806852138160487,
+    "interval": [
+      0.07186872520276137,
+      1.4024332409723443
+    ],
+    "sc": 14.030213235519177,
+    "status": "SPEAKER_COVERAGE_FAIL"
+  },
+  "G15": {
+    "b1u_k290": 14.88380972129316,
+    "difference": -1.2231181178877701,
+    "malp_k100": 13.66069160340539,
+    "status": "LABEL_EFFICIENCY_PASS"
+  },
+  "G16": {
+    "baselines": {
+      "E": 12.534758324422466,
+      "K": 14.02398558420758,
+      "TypiClust": 13.501778737556043,
+      "U": 14.88380972129316
+    },
+    "beats": {
+      "E": false,
+      "K": true,
+      "TypiClust": true,
+      "U": true
+    },
+    "malp_k290": 13.079254037337861,
+    "reason": "S-F' needs every BASE_F' baseline on both masks and two backbones; this run covers the selector comparators on one backbone, so the gate stays negative by rule",
+    "status": "SOTA_F2_DEV_NO"
+  }
 }
 ```
 
@@ -432,4 +519,4 @@ _(empty)_
 
 NOT_RUN - `results/w8_zlabel.csv` missing
 
-commit: `0e5a853`
+commit: `9419fe4`

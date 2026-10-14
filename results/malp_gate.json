@@ -1,0 +1,61 @@
+{
+  "G12": {
+    "b1_unseen_reference": 11.96,
+    "best_selector_lr_lp_strict_draw_k290": 12.469497909007828,
+    "rule": "N1' is informational after \u8ffd\u52a0 02; the 0.5-point rule is no longer a novelty gate",
+    "status": "MALP_INFO"
+  },
+  "G13": {
+    "best_other": "E",
+    "gain_vs_best_other": null,
+    "gain_vs_uniform": 1.2946247304802752,
+    "interval_vs_best_other": null,
+    "interval_vs_uniform": [
+      -1.7600999721144461,
+      -0.7091938393260055
+    ],
+    "k": 100,
+    "malp": 13.66069160340539,
+    "mask": "strict_draw",
+    "others": {
+      "E": 13.277315350923827,
+      "K": 14.70625124378702,
+      "TypiClust": 13.899041337614628
+    },
+    "status": "SEL_FAIL",
+    "uniform": 14.955316333885664
+  },
+  "G14": {
+    "cc": 13.449528021703127,
+    "delta_sc_minus_cc": 0.5806852138160487,
+    "interval": [
+      0.07186872520276137,
+      1.4024332409723443
+    ],
+    "sc": 14.030213235519177,
+    "status": "SPEAKER_COVERAGE_FAIL"
+  },
+  "G15": {
+    "b1u_k290": 14.88380972129316,
+    "difference": -1.2231181178877701,
+    "malp_k100": 13.66069160340539,
+    "status": "LABEL_EFFICIENCY_PASS"
+  },
+  "G16": {
+    "baselines": {
+      "E": 12.534758324422466,
+      "K": 14.02398558420758,
+      "TypiClust": 13.501778737556043,
+      "U": 14.88380972129316
+    },
+    "beats": {
+      "E": false,
+      "K": true,
+      "TypiClust": true,
+      "U": true
+    },
+    "malp_k290": 13.079254037337861,
+    "reason": "S-F' needs every BASE_F' baseline on both masks and two backbones; this run covers the selector comparators on one backbone, so the gate stays negative by rule",
+    "status": "SOTA_F2_DEV_NO"
+  }
+}

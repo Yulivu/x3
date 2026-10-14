@@ -46,6 +46,57 @@ Tracked flags (U1', v3): `SPEAKER_GAP` = False for []; `LP_GAIN_IS_SPEAKER_LOCAL
 
 Reading: the zero-shot column (S5) is worth ~0.00 points everywhere; swapping the feature block from `xls-r-2b` to `mms-1b` is worth more than any method in this batch, and the 3-backbone ensemble only reproduces the best single member.
 
+### U4 / M-ALP (active label propagation, revised masks)
+
+| mask | k | selector | LP | LR | LR+LP |
+|---|---|---|---|---|---|
+| clips | 30 | CASA | 15.49 | 14.60 | 13.84 |
+| clips | 30 | CC-DWU | 16.62 | 13.73 | 13.12 |
+| clips | 30 | DWU | 16.41 | 13.54 | 13.16 |
+| clips | 30 | E | 13.69 | 13.98 | 13.08 |
+| clips | 30 | K | 15.47 | 15.47 | 14.70 |
+| clips | 30 | SC-DWU | 17.95 | 14.27 | 13.64 |
+| clips | 30 | TypiClust | 16.37 | 15.14 | 14.37 |
+| clips | 30 | U | 14.47 | 14.70 | 13.95 |
+| clips | 30 | full | 16.45 | 14.29 | 13.82 |
+| clips | 100 | CASA | 9.54 | 8.82 | 8.11 |
+| clips | 100 | CC-DWU | 9.46 | 9.56 | 8.77 |
+| clips | 100 | DWU | 11.96 | 9.33 | 9.09 |
+| clips | 100 | E | 8.99 | 9.16 | 8.30 |
+| clips | 100 | K | 10.04 | 11.68 | 10.86 |
+| clips | 100 | SC-DWU | 15.77 | 11.54 | 11.10 |
+| clips | 100 | TypiClust | 10.51 | 10.97 | 10.16 |
+| clips | 100 | U | 10.84 | 12.17 | 11.46 |
+| clips | 100 | full | 10.07 | 9.95 | 9.26 |
+| clips | 290 | CASA | 6.22 | 6.24 | 5.37 |
+| clips | 290 | CC-DWU | 6.93 | 7.45 | 6.36 |
+| clips | 290 | DWU | 10.24 | 7.29 | 6.68 |
+| clips | 290 | E | 6.31 | 6.18 | 5.34 |
+| clips | 290 | K | 8.49 | 9.85 | 8.85 |
+| clips | 290 | SC-DWU | 8.86 | 8.70 | 7.36 |
+| _(48 more rows)_ | | | | | |
+
+Largest factor effects (negative = better than its reference; selector vs `U`, learner vs `LR`):
+
+| mask | k | factor | level | reference | effect |
+|---|---|---|---|---|---|
+| strict_draw | 600 | learner | LP | LR | 19.21 |
+| strict_draw | 600 | selector | DWU | U | 16.38 |
+| strict_draw | 290 | learner | LP | LR | 15.02 |
+| strict_draw | 600 | learner | LP | LR | 14.56 |
+| strict_draw | 600 | learner | LP | LR | 13.54 |
+| strict_draw | 600 | learner | LP | LR | 12.77 |
+| strict_draw | 600 | selector | full | U | 11.69 |
+| strict_draw | 290 | selector | DWU | U | 11.40 |
+
+| gate | verdict | key numbers |
+|---|---|---|
+| G12 | MALP_INFO | {"b1_unseen_reference": 11.96, "best_selector_lr_lp_strict_draw_k290": 12.469497909007828} |
+| G13 | SEL_FAIL | {"best_other": "E", "gain_vs_best_other": null, "gain_vs_uniform": 1.2946247304802752, "interval_vs_best_other": null, "interval_vs_uniform": [-1.7600999721144461, -0.7091938393260055], "k": 100, "malp": 13.6606916034053 |
+| G14 | SPEAKER_COVERAGE_FAIL | {"cc": 13.449528021703127, "delta_sc_minus_cc": 0.5806852138160487, "sc": 14.030213235519177} |
+| G15 | LABEL_EFFICIENCY_PASS | {"b1u_k290": 14.88380972129316, "difference": -1.2231181178877701, "malp_k100": 13.66069160340539} |
+| G16 | SOTA_F2_DEV_NO | {"malp_k290": 13.079254037337861} |
+
 ## 3. U1' v2 -> v3
 
 pooled EER, v2 dev (68 speakers) -> v3 dev (122 speakers):

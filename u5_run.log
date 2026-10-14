@@ -1,0 +1,55 @@
+v3 dev: clips=15002 speakers=122
+/root/miniconda3/lib/python3.12/site-packages/sklearn/model_selection/_split.py:811: UserWarning: The least populated class in y has only 4 members, which is less than n_splits=5.
+  warnings.warn(
+/root/miniconda3/lib/python3.12/site-packages/sklearn/model_selection/_split.py:811: UserWarning: The least populated class in y has only 4 members, which is less than n_splits=5.
+  warnings.warn(
+  25/360 units (100 rows, 0 errors)
+/root/miniconda3/lib/python3.12/site-packages/sklearn/model_selection/_split.py:811: UserWarning: The least populated class in y has only 4 members, which is less than n_splits=5.
+  warnings.warn(
+  50/360 units (200 rows, 0 errors)
+/root/miniconda3/lib/python3.12/site-packages/sklearn/model_selection/_split.py:811: UserWarning: The least populated class in y has only 1 members, which is less than n_splits=5.
+  warnings.warn(
+  75/360 units (300 rows, 0 errors)
+  100/360 units (400 rows, 0 errors)
+  125/360 units (500 rows, 0 errors)
+  150/360 units (600 rows, 0 errors)
+  175/360 units (700 rows, 0 errors)
+  200/360 units (800 rows, 0 errors)
+  225/360 units (900 rows, 0 errors)
+  250/360 units (1000 rows, 0 errors)
+  275/360 units (1100 rows, 0 errors)
+  300/360 units (1200 rows, 0 errors)
+  325/360 units (1300 rows, 0 errors)
+  350/360 units (1400 rows, 0 errors)
+
+pooled EER by noise level
+noise_rate    0.00    0.05    0.10    0.20
+method k                                  
+B1     30   16.861  18.490  21.126  28.838
+       100  13.520  14.805  16.169  19.247
+       290  10.953  12.477  13.070  15.614
+B9     30   17.471  19.505  22.142  33.322
+       100  11.656  14.735  16.576  22.370
+       290   8.074   9.749  11.966  17.142
+C1     30   17.546  19.739  23.107  32.103
+       100  13.947  16.692  20.556  26.141
+       290  11.398  16.086  20.713  29.190
+M-ALP  30   16.169  17.856  20.566  28.769
+       100  12.137  13.472  14.988  18.998
+       290   8.868   9.870  11.197  14.606
+
+degradation vs the clean row
+noise_rate  0.00   0.05   0.10    0.20
+method k                              
+B1     30    0.0  1.628  4.265  11.977
+       100   0.0  1.285  2.649   5.727
+       290   0.0  1.524  2.117   4.661
+B9     30    0.0  2.034  4.670  15.850
+       100   0.0  3.080  4.920  10.714
+       290   0.0  1.675  3.892   9.068
+C1     30    0.0  2.194  5.561  14.557
+       100   0.0  2.744  6.608  12.194
+       290   0.0  4.688  9.315  17.792
+M-ALP  30    0.0  1.687  4.397  12.600
+       100   0.0  1.334  2.851   6.860
+       290   0.0  1.002  2.328   5.738
