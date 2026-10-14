@@ -266,7 +266,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                      args.draws, args.jobs)
         kdf.to_csv(root / "results" / "w22_kcurve.csv", index=False)
         if not kdf.empty:
-            print(kdf.pivot_table(index=["method", "k"], columns="mask",
+            # ``k`` is the achieved label count and varies a little per draw; the
+            # budget is ``k_nominal``, so that is what the curve is indexed by.
+            print(kdf.pivot_table(index=["method", "k_nominal"], columns="mask",
                                   values="pooled_eer").round(3).to_string())
     if not args.kcurve_only:
         print("\nbacklog item 4: spec / layer sensitivity", flush=True)

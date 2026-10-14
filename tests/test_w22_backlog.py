@@ -87,3 +87,19 @@ def test_delegation_uses_a_suffix_so_nothing_is_overwritten():
     cmd = captured["cmd"]
     assert "--suffix" in cmd and "_d200" in cmd
     assert cmd[cmd.index("--draws") + 1] == "200"
+
+
+def test_the_curve_is_indexed_by_the_nominal_budget_not_the_achieved_count():
+    """Every draw must land in its own budget row even though k drifts by a clip or two."""
+    rows = []
+    for d in range(10):
+        for method in ("B1", "B9"):
+            for mask in ("clips", "strict_draw"):
+                rows.append({"method": method, "mask": mask, "draw": d,
+                             "k": 290 + (d % 3), "k_nominal": 290,
+                             "pooled_eer": 10.0 + (d % 3)})
+    df = pd.DataFrame(rows)
+    piv = df.pivot_table(index=["method", "k_nominal"], columns="mask",
+                         values="pooled_eer")
+    assert (290,) in {(m, k) for m, k in piv.index}
+    assert len(piv) == 2                      # one row per method, not per k drift
