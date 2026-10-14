@@ -70,8 +70,9 @@ def load_dev(root: Path, data_dir: Path, layers: Sequence[int] = LINEA_LAYERS):
     keep = meta["speaker"].isin(dev_speakers).to_numpy()
     feats = np.load(data_dir / "mlitw_feats.npy", mmap_mode="r")[:, list(layers), :]
     sub = meta.loc[keep].reset_index(drop=True)
-    F = np.asarray(feats[keep], dtype=np.float32).mean(axis=2)   # (n, L) mean over layers
-    F = F.reshape(len(sub), -1)
+    # each selected layer is ALREADY mean-pooled over time by extract_ssl.py;
+    # flattening the layers is what Line A's probe consumed (5 x 1024 = 5120 dims)
+    F = np.asarray(feats[keep], dtype=np.float32).reshape(len(sub), -1)
     return sub, F
 
 
@@ -105,11 +106,17 @@ def run_one_draw(args) -> List[Dict[str, Any]]:
     Zu = Z[~lab]
 
     if "B1" in methods:
-        s, i = b1_logreg(Zl, yl, folds=folds)
-        scores["B1"] = np.zeros(len(y)); scores["B1"][lab] = s; infos["B1"] = i
+        from src.baselines import fit_logreg_cv
+
+        model, i = fit_logreg_cv(Zl, yl, folds=folds)
+        scores["B1"] = model.decision_function(Z)   # every clip, not just L
+        infos["B1"] = i
     if "B11" in methods:
-        s, i = b11_mlp(Zl, yl, steps=100)
-        scores["B11"] = np.zeros(len(y)); scores["B11"][lab] = s; infos["B11"] = i
+        from src.baselines import MLPProbe
+
+        probe = MLPProbe(steps=100).fit(Zl, yl)
+        scores["B11"] = probe.logit(Z)
+        infos["B11"] = {"hidden": probe.hidden}
     if "C1" in methods:
         m = MPP(sigma_p=0.5, sigma_gamma=0.5, lam=1.0).fit(Zl, yl, pl, ll, cl)
         scores["C1"] = m.predict_logit(Z, plat, lang, cell); infos["C1"] = {"sigma": 0.5}

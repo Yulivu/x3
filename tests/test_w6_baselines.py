@@ -45,6 +45,12 @@ def test_one_draw_produces_both_masks_and_the_documented_schema():
     assert main["n_labeled"].iloc[0] == 60
     assert main["protocol"].unique().tolist() == ["dev_v2"]
     assert main["spec"].unique().tolist() == ["S1-lineA"]
+    # regression: an inductive probe must score EVERY clip, not only the labelled
+    # rows (scoring only L makes the evaluation set constant and EER exactly 50)
+    for method in ("B1", "B11"):
+        sub = main[(main["method"] == method) & (main["mask"] == "clips")]
+        if not sub.empty:
+            assert sub["auc"].iloc[0] > 0.55, f"{method} scored a constant on the evaluation set"
 
 
 def test_collapse_rows_are_emitted_for_b7():
