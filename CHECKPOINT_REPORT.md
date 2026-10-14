@@ -1,7 +1,7 @@
 # X3 checkpoint report
 
 ```
-DECISION: G0=NOT_RUN G1=NOT_RUN G2=REPRODUCED G3=NOT_RUN G4=C1_FAIL G5=PL_OK G6=PAST_FAIL G7=CASA_PASS G8=NOT_RUN G9=NOT_RUN G10=NOT_RUN G11=NOT_RUN
+DECISION: G0=NOT_RUN G1=NOT_RUN G2=REPRODUCED G3=NOT_RUN G4=C1_FAIL G5=PL_OK G6=PAST_FAIL G7=CASA_PASS G8=NOT_RUN G9=NOT_RUN G10=DECONF_NOT_SHOWN G11=NOT_RUN
 ```
 
 ## Work packages
@@ -83,10 +83,26 @@ NOT_RUN - `results/backbone_rank.csv` missing
 
 ### W7 budget curve
 
-NOT_RUN - `results/w7_curve.csv` missing
+`results/w7_curve.csv`
+
+| method | k | pooled_eer_mean | pooled_eer_std | within_macro_eer_mean | within_macro_eer_std | worst_platform_eer_mean | worst_platform_eer_std | auc_mean | auc_std | n_labeled_mean | n_labeled_std |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| B1 | 29 | 28.13 | 5.14 | 31.03 | 3.514 | 56.18 | 7.51 | 0.7899 | 0.05305 | 21 | 0 |
+| B1 | 87 | 20.1 | 3.474 | 22.91 | 3.372 | 44.36 | 11.7 | 0.8764 | 0.0306 | 63 | 0 |
+| B1 | 290 | 13.02 | 1.805 | 14.7 | 2.327 | 27.02 | 8.571 | 0.9379 | 0.01275 | 204 | 0 |
+| B1 | 580 | 10.37 | 1.508 | 11.62 | 1.512 | 20.03 | 4.074 | 0.9564 | 0.009554 | 401 | 0 |
+| B1 | 1160 | 8.094 | 1.037 | 9.396 | 0.907 | 16.77 | 2.838 | 0.9704 | 0.005342 | 724 | 0 |
+| B11 | 29 | 41.78 | 1.334 | 42.58 | 1.596 | 51.64 | 4.005 | 0.6204 | 0.01734 | 21 | 0 |
+| B11 | 87 | 35.53 | 1.851 | 36.69 | 2.192 | 47.17 | 5.027 | 0.7014 | 0.02268 | 63 | 0 |
+| B11 | 290 | 25.56 | 1.779 | 26.67 | 1.757 | 38.86 | 4.79 | 0.8206 | 0.01861 | 204 | 0 |
+| B11 | 580 | 19.12 | 1.617 | 20.15 | 1.431 | 30.44 | 5.181 | 0.8874 | 0.01483 | 401 | 0 |
+| B11 | 1160 | 12.92 | 1.734 | 13.91 | 1.648 | 22.07 | 4.466 | 0.9408 | 0.01184 | 724 | 0 |
+| B2 | 29 | 28.13 | 5.14 | 31.03 | 3.514 | 56.18 | 7.51 | 0.7899 | 0.05305 | 21 | 0 |
+| B2 | 87 | 26.08 | 4.149 | 24.24 | 3.541 | 43.85 | 12.08 | 0.8254 | 0.03705 | 63 | 0 |
+| _(18 more rows in the CSV)_ | | | | | | | | | | | |
 
 ### W8 Track Z
 
 NOT_RUN - `results/w8_zlabel.csv` missing
 
-commit: `f0bec98`
+commit: `25d6768`
