@@ -33,7 +33,7 @@ import numpy as np
 import pandas as pd
 
 NOT_RUN = "NOT_RUN"
-DECISION_ORDER = tuple(f"G{i}" for i in range(12))
+DECISION_ORDER = tuple(f"G{i}" for i in range(19))     # G0-G11 plus the NEW_TASKS 02 gates
 BASE_F_DEFAULT = ("B1", "B2", "B3", "B4", "B7", "B8", "B9", "B10", "B11")
 C1_CANDIDATES = ("B1", "B2", "B3", "B11")
 VIEWS = ("pooled_eer", "within_macro_eer", "worst_platform_eer")

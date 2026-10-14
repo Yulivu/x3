@@ -60,6 +60,11 @@ M_LIST = (0, 3, 5, 10)
 M_CELL = 10                                # k=290, the U1'/W6 budget
 METHODS = ("B1", "B1+enroll", "OC", "OC+B1", "ESN", "ESN-P")
 CONTROLS = ("B1", "B1+enroll", "OC+B1")
+INTERVAL_PAIRS = (
+    ("ESN", "B1"), ("ESN", "B1+enroll"), ("ESN", "OC+B1"),
+    ("ESN-P", "B1"), ("ESN-P", "B1+enroll"), ("ESN-P", "OC+B1"),
+    ("OC", "B1"), ("OC+B1", "B1"), ("B1+enroll", "B1"),
+)
 MASKS = ("seen", "unseen", "strict_draw")
 FUSE_WEIGHTS = (-2.0, -1.0, -0.5, 0.0, 0.5, 1.0, 2.0)
 STRICT_SEED = 777000
@@ -225,8 +230,7 @@ def _worker(payload):
 def intervals_table(draw_root: Path, ms: Sequence[int] = M_LIST,
                     masks: Sequence[str] = MASKS, jobs: int = 1) -> pd.DataFrame:
     todo = [(str(draw_root), int(m), str(mask), a, b)
-            for m in ms for mask in masks
-            for a in ("ESN", "ESN-P") for b in CONTROLS]
+            for m in ms for mask in masks for a, b in INTERVAL_PAIRS]
     rows: List[Dict[str, Any]] = []
     if jobs and int(jobs) > 1:
         import multiprocessing as mp

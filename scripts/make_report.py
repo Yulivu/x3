@@ -144,6 +144,111 @@ def _deviations(root: Path) -> List[str]:
     return [f"- {row.to_dict()}" for _, row in df.iterrows()]
 
 
+def _nt02_block(root: Path) -> List[str]:
+    """The NEW_TASKS 02 headline tables: U1' (v3 dev), U8 (ESN) and U9 (projection).
+
+    These go at the TOP of the checkpoint report: they are what the corrections in
+    NEW_TASKS 02 asked to be read first.
+    """
+    lines: List[str] = []
+    lines.append("## NEW_TASKS 02 (v3 protocol, priority over U4)")
+    lines.append("")
+
+    u1p = read_csv(root, "u1p_speaker_split_v3.csv")
+    lines.append("### U1' main table - pooled EER on the v3 dev region (100 draws)")
+    lines.append("")
+    if u1p is None:
+        lines.append("NOT_RUN - `results/u1p_speaker_split_v3.csv` missing")
+    else:
+        piv = (u1p.groupby(["k", "mask", "method"])["pooled_eer"].mean()
+               .unstack("method").round(3))
+        lines.append("`results/u1p_speaker_split_v3.csv` (rows: budget x mask)")
+        lines.append("")
+        lines.append(_md_table(piv.reset_index(), max_rows=10))
+        iv = read_csv(root, "u1p_intervals.csv")
+        if iv is not None:
+            sel = iv[(iv["k"] == 290)][["mask", "method_a", "method_b", "delta",
+                                        "old_lo", "old_hi", "b_lo", "b_hi",
+                                        "b_contains_zero"]].round(3)
+            lines.append("Intervals at k=290: old rule (2.5/97.5 of the per-draw "
+                         "differences) vs the speaker-clustered (b) interval")
+            lines.append("")
+            lines.append(_md_table(sel, max_rows=20))
+    lines.append("")
+
+    v23 = read_csv(root, "u1p_v2v3.csv")
+    lines.append("### U1' v2 -> v3 (same protocol, bigger dev region)")
+    lines.append("")
+    lines.append("`results/u1p_v2v3.csv`" if v23 is not None
+                 else "NOT_RUN - `results/u1p_v2v3.csv` missing")
+    lines.append("")
+    if v23 is not None:
+        lines.append(_md_table(v23.round(3), max_rows=20))
+    rule = read_csv(root, "u1p_v2_rule_compare.csv")
+    if rule is not None:
+        lines.append("")
+        lines.append("Same v2 draws under both rules (`rules_disagree` = the old rule "
+                     "keeps 0 inside while (a) excludes it):")
+        lines.append("")
+        lines.append(_md_table(rule[["mask", "method_a", "method_b", "delta",
+                                     "old_lo", "old_hi", "a_lo", "a_hi",
+                                     "rules_disagree"]].round(3), max_rows=12))
+    lines.append("")
+
+    u8 = read_csv(root, "u8_esn.csv")
+    lines.append("### U8 ESN - pooled EER by enrolment size m (all clips)")
+    lines.append("")
+    if u8 is None:
+        lines.append("NOT_RUN - `results/u8_esn.csv` missing")
+    else:
+        piv = (u8[u8["population"] == "all"]
+               .groupby(["mask", "method", "m"])["pooled_eer"].mean()
+               .unstack("m").round(3))
+        lines.append("`results/u8_esn.csv`")
+        lines.append("")
+        lines.append(_md_table(piv.reset_index(), max_rows=20))
+        iv8 = read_csv(root, "u8_intervals.csv")
+        if iv8 is not None:
+            lines.append("")
+            lines.append("U8 intervals (delta = method - control; negative = method better)")
+            lines.append("")
+            lines.append(_md_table(iv8[["m", "mask", "method_a", "method_b", "delta",
+                                        "old_lo", "old_hi", "b_lo", "b_hi",
+                                        "meets_2pt_rule"]].round(3), max_rows=16))
+    lines.append("")
+
+    u9 = read_csv(root, "u9_projection.csv")
+    lines.append("### U9 projection - packaged view")
+    lines.append("")
+    if u9 is None:
+        lines.append("NOT_RUN - `results/u9_projection.csv` missing")
+    else:
+        piv = (u9.groupby(["method", "mask"])["pooled_eer"].mean().unstack().round(3))
+        lines.append("`results/u9_projection.csv` (CV-selected variant per draw)")
+        lines.append("")
+        lines.append(_md_table(piv.reset_index(), max_rows=12))
+    lines.append("")
+
+    for label, fname in (("G17 (N5, ESN)", "u8_gate.json"),
+                         ("G18 (N6, projection)", "u9_gate.json"),
+                         ("U1' verdicts", "u1p_verdicts.json")):
+        path = root / "results" / fname
+        lines.append(f"### {label}")
+        lines.append("")
+        if not path.exists():
+            lines.append(f"NOT_RUN - `results/{fname}` missing")
+        else:
+            try:
+                blob = json.loads(path.read_text(encoding="utf-8"))
+                lines.append("```json")
+                lines.append(json.dumps(blob, indent=2, sort_keys=True)[:3000])
+                lines.append("```")
+            except json.JSONDecodeError as exc:            # pragma: no cover
+                lines.append(f"unreadable: {exc}")
+        lines.append("")
+    return lines
+
+
 def _git_commit(root: Path) -> str:
     try:
         out = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=str(root),
@@ -164,6 +269,7 @@ def build_report(root: Path, checkpoint: bool = False) -> str:
     lines.append("```")
     lines.append("")
     if checkpoint:
+        lines.extend(_nt02_block(root))
         lines.append("## Work packages")
         lines.append("")
         lines.append(_md_table(_wp_status(root)))
@@ -185,6 +291,7 @@ def build_report(root: Path, checkpoint: bool = False) -> str:
     lines.append("")
     lines.extend(_claim_status(gates))
     lines.append("")
+    lines.extend(_nt02_block(root))
     lines.extend(_deviations(root))
     lines.append("")
     for title, fname, caption in TABLES:

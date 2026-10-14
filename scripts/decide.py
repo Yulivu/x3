@@ -61,7 +61,44 @@ def decide(root: Path, region: str = "dev", select: bool = False) -> Dict[str, A
     gates["G9"] = gate_g9(root)
     gates["G10"] = gate_g10(root, region=region, chosen=chosen)
     gates["G11"] = gate_g11(root, region=region, chosen=chosen)
+    # NEW_TASKS 02 gates live in their own files (they are computed by scripts that
+    # also own their tables); missing files stay NOT_RUN, never guessed.
+    gates.update(_new_task_gates(root))
     return gates
+
+
+NEW_TASK_GATES = (
+    ("G12", ("malp_gate.json",)),
+    ("G13", ("malp_gate.json",)),
+    ("G14", ("malp_gate.json",)),
+    ("G15", ("malp_gate.json",)),
+    ("G16", ("malp_gate.json",)),
+    ("G17", ("u8_gate.json",)),
+    ("G18", ("u9_gate.json",)),
+)
+
+
+def _new_task_gates(root: Path) -> Dict[str, Any]:
+    """Read the verdict of a NEW_TASKS gate from the file its script writes."""
+    out: Dict[str, Any] = {}
+    cache: Dict[str, Any] = {}
+    for gate, (fname,) in NEW_TASK_GATES:
+        path = root / "results" / fname
+        if fname not in cache:
+            try:
+                cache[fname] = json.loads(path.read_text(encoding="utf-8"))
+            except Exception:
+                cache[fname] = None
+        blob = cache[fname]
+        if not isinstance(blob, dict):
+            continue
+        status = blob.get(gate) or blob.get("verdict") or blob.get("status")
+        if status is None:
+            continue
+        out[gate] = {"status": str(status), "source": f"results/{fname}",
+                     "detail": {k: v for k, v in blob.items()
+                                if k not in ("best_grid_cells",)}}
+    return out
 
 
 def decision_line(gates: Dict[str, Any]) -> str:
