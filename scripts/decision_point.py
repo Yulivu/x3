@@ -214,6 +214,34 @@ def write_document(root: Path) -> str:
                  f"old {verdicts.get('B9_minus_B1_unseen_ci_old')}).")
     lines.append("")
 
+    # the U10 levers: the feature block itself, and what an ensemble adds on top
+    u10v = _read(root, "u10_variants.csv")
+    u10i = _read(root, "u10_intervals.csv")
+    if u10v is not None and u10i is not None:
+        lines.append("### U10 levers (backbone and fusion, no method change)")
+        lines.append("")
+        means = (u10v.pivot_table(index="variant", columns="mask", values="pooled_eer",
+                                  aggfunc="mean").round(3))
+        lines.append(_md_table(means.reset_index(), max_rows=12))
+        lines.append("")
+        keys = [("mms-1b|S5", "xls-r-2b|S3"), ("ENS3-S3", "xls-r-2b|S3"),
+                ("ENS3-S3", "mms-1b|S3"), ("xls-r-2b|S5", "xls-r-2b|S3")]
+        sel = u10i[u10i.apply(lambda r: (r["method_a"], r["method_b"]) in keys, axis=1)]
+        if not sel.empty:
+            lines.append("| contrast | mask | delta | (b) interval | clear of 0 |")
+            lines.append("|---|---|---|---|---|")
+            for _, r in sel.iterrows():
+                lines.append(f"| {r['method_a']} - {r['method_b']} | {r['mask']} | "
+                             f"{_fmt(r['delta'])} | [{_fmt(r['b_lo'])}, "
+                             f"{_fmt(r['b_hi'])}] | "
+                             f"{'yes' if not bool(r['b_contains_zero']) else 'no'} |")
+        lines.append("")
+        lines.append("Reading: the zero-shot column (S5) is worth ~0.00 points everywhere; "
+                     "swapping the feature block from `xls-r-2b` to `mms-1b` is worth more "
+                     "than any method in this batch, and the 3-backbone ensemble only "
+                     "reproduces the best single member.")
+        lines.append("")
+
     lines.append("## 3. U1' v2 -> v3")
     lines.append("")
     if v23 is None:
