@@ -24,9 +24,11 @@ from typing import Any, Dict, List, Optional, Sequence
 import pandas as pd
 
 REPO = Path(__file__).resolve().parents[1]
-if str(REPO) not in sys.path:
-    sys.path.insert(0, str(REPO))
+for _p in (REPO, REPO / "scripts"):
+    if str(_p) not in sys.path:
+        sys.path.insert(0, str(_p))
 
+import decide as decide_mod  # noqa: E402
 from src.pipeline import DECISION_ORDER, NOT_RUN, read_csv  # noqa: E402
 
 MAX_ROWS = 40
@@ -231,6 +233,7 @@ def _nt02_block(root: Path) -> List[str]:
 
     for label, fname in (("G17 (N5, ESN)", "u8_gate.json"),
                          ("G18 (N6, projection)", "u9_gate.json"),
+                         ("G12-G16 (U4 / M-ALP)", "malp_gate.json"),
                          ("U1' verdicts", "u1p_verdicts.json")):
         path = root / "results" / fname
         lines.append(f"### {label}")
@@ -267,6 +270,7 @@ def build_report(root: Path, checkpoint: bool = False) -> str:
     lines.append("```")
     lines.append(_decision_line(gates))
     lines.append("```")
+    lines.append(decide_mod.flags_line(root))
     lines.append("")
     if checkpoint:
         lines.extend(_nt02_block(root))

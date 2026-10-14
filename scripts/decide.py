@@ -94,13 +94,48 @@ def _new_task_gates(root: Path) -> Dict[str, Any]:
         blob = cache[fname]
         if not isinstance(blob, dict):
             continue
-        status = blob.get(gate) or blob.get("verdict") or blob.get("status")
+        entry = blob.get(gate)
+        if entry is None:
+            entry = blob.get("verdict", blob.get("status"))
+        if isinstance(entry, dict):
+            status = entry.get("status")
+            detail = entry
+        else:
+            status = entry
+            detail = {k: v for k, v in blob.items() if k != "best_grid_cells"}
         if status is None:
             continue
         out[gate] = {"status": str(status), "source": f"results/{fname}",
-                     "detail": {k: v for k, v in blob.items()
-                                if k not in ("best_grid_cells",)}}
+                     "detail": detail}
     return out
+
+
+# the U1-U3 flags U7 asks to appear next to the gates: (flag, file, key)
+FLAG_SOURCES = (
+    ("SPEAKER_GAP", "u1p_verdicts.json", "SPEAKER_GAP"),
+    ("LP_GAIN_IS_SPEAKER_LOCAL", "u1p_verdicts.json", "LP_GAIN_IS_SPEAKER_LOCAL"),
+    ("B11_BROKEN", "u2_verdicts.json", "B11_BROKEN"),
+    ("IDENTITY_OVERLAP_FLAG", "u3_verdicts.json", "IDENTITY_OVERLAP_FLAG"),
+)
+
+
+def flags_line(root: Path) -> str:
+    """``FLAGS: NAME=value ...`` for every flag whose source file exists."""
+    parts = []
+    for name, fname, key in FLAG_SOURCES:
+        path = root / "results" / fname
+        value = "NOT_RUN"
+        if path.exists():
+            try:
+                blob = json.loads(path.read_text(encoding="utf-8"))
+                if key in blob:
+                    value = str(blob[key])
+                elif fname == "u2_verdicts.json":
+                    value = str(blob.get("flags", {}).get(key, "NOT_RUN"))
+            except json.JSONDecodeError:                # pragma: no cover
+                value = "UNREADABLE"
+        parts.append(f"{name}={value}")
+    return "FLAGS: " + " ".join(parts)
 
 
 def decision_line(gates: Dict[str, Any]) -> str:
@@ -128,8 +163,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     line = decision_line(gates)
     if not args.quiet:
         print(line)
+        print(flags_line(root))
     else:
-        (root / "DECISION.txt").write_text(line + "\n", encoding="utf-8")
+        (root / "DECISION.txt").write_text(line + "\n" + flags_line(root) + "\n",
+                                           encoding="utf-8")
     return 0
 
 
