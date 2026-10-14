@@ -42,42 +42,59 @@ __all__ = [
 STD_LAYER_FRACTIONS = (0.25, 0.5, 0.625, 0.75, 0.875)
 
 
-def _remap_one(key: str) -> Optional[str]:
-    """fairseq name -> ``Wav2Vec2Model`` name, or None for a pre-training-only tensor.
+def _remap_one(key: str) -> List[str]:
+    """fairseq name -> ``Wav2Vec2Model`` name(s), or ``[]`` for a pre-training tensor.
 
     ``Wav2Vec2Model`` itself wants ``feature_extractor...`` / ``encoder...`` with NO
     ``wav2vec2.`` prefix - that prefix only exists when the encoder is nested inside
     ``Wav2Vec2ForPreTraining`` / ``Wav2Vec2ForCTC``.
+
+    Two names changed across transformers versions, so both spellings are emitted and
+    ``load_state_dict`` picks whichever the installed version actually has:
+
+    * stable-LN per-layer norm: ``attention_layer_norm`` (older) vs ``layer_norm``;
+    * pos-conv weight parametrisation: ``weight_g/weight_v`` (older) vs
+      ``parametrizations.weight.original0/original1``.
     """
     if not key.startswith(MODEL_PREFIX):
-        return None                     # proj_fc lives outside the SSL model
+        return []                       # proj_fc lives outside the SSL model
     k = key[len(MODEL_PREFIX):]
     if k.startswith("feature_extractor.conv_layers."):
         parts = k.split(".")
         layer, rest = parts[2], parts[3:]
         if rest[0] == "0":              # conv
-            return f"feature_extractor.conv_layers.{layer}.conv.{rest[-1]}"
+            return [f"feature_extractor.conv_layers.{layer}.conv.{rest[-1]}"]
         if rest[0] == "2":              # layer norm (present from layer 1 on)
-            return f"feature_extractor.conv_layers.{layer}.layer_norm.{rest[-1]}"
-        return None
+            return [f"feature_extractor.conv_layers.{layer}.layer_norm.{rest[-1]}"]
+        return []
     if k.startswith("post_extract_proj."):
-        return "feature_projection.projection." + k.split(".")[-1]
+        return ["feature_projection.projection." + k.split(".")[-1]]
     if k.startswith("layer_norm."):
-        return "feature_projection.layer_norm." + k.split(".")[-1]
+        return ["feature_projection.layer_norm." + k.split(".")[-1]]
     if k.startswith("encoder.pos_conv.0."):
-        return "encoder.pos_conv_embed.conv." + k.split(".")[-1]
+        leaf = k.split(".")[-1]
+        if leaf == "weight_g":
+            return ["encoder.pos_conv_embed.conv.weight_g",
+                    "encoder.pos_conv_embed.conv.parametrizations.weight.original0"]
+        if leaf == "weight_v":
+            return ["encoder.pos_conv_embed.conv.weight_v",
+                    "encoder.pos_conv_embed.conv.parametrizations.weight.original1"]
+        return ["encoder.pos_conv_embed.conv." + leaf]
     if k.startswith("encoder.layer_norm."):
-        return "encoder.layer_norm." + k.split(".")[-1]
+        return ["encoder.layer_norm." + k.split(".")[-1]]
     if k.startswith("encoder.layers."):
         parts = k.split(".")
         layer, rest = parts[2], ".".join(parts[3:])
-        rest = rest.replace("self_attn_layer_norm.", "attention_layer_norm.")
+        if rest.startswith("self_attn_layer_norm."):
+            leaf = rest.split(".", 1)[1]
+            return [f"encoder.layers.{layer}.attention_layer_norm.{leaf}",
+                    f"encoder.layers.{layer}.layer_norm.{leaf}"]
         rest = rest.replace("self_attn.", "attention.")
         rest = rest.replace("fc1.", "feed_forward.intermediate_dense.")
         rest = rest.replace("fc2.", "feed_forward.output_dense.")
-        return f"encoder.layers.{layer}.{rest}"
+        return [f"encoder.layers.{layer}.{rest}"]
     # quantizer / project_q / mask_emb / final_proj: pre-training heads, unused
-    return None
+    return []
 
 
 def remap_state_dict(sd: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str, Any]]:
@@ -85,10 +102,10 @@ def remap_state_dict(sd: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str, Any]
     enc: Dict[str, Any] = {}
     extra: Dict[str, Any] = {}
     for k, v in sd.items():
-        new = _remap_one(k)
-        if new is None:
+        names = _remap_one(k)
+        if not names:
             extra[k] = v
-        else:
+        for new in names:
             enc[new] = v
     return enc, extra
 

@@ -66,6 +66,12 @@ def test_remap_covers_every_needed_tensor_and_drops_pretraining_heads():
     assert "encoder.layers.0.feed_forward.output_dense.weight" in enc
     assert "encoder.layers.1.final_layer_norm.bias" in enc
     assert not any(k.startswith("wav2vec2.") for k in enc)
+    # both spellings of the two version-dependent names are emitted
+    assert "encoder.layers.0.attention_layer_norm.weight" in enc
+    assert "encoder.layers.0.layer_norm.weight" in enc
+    assert "encoder.pos_conv_embed.conv.weight_g" in enc
+    assert "encoder.pos_conv_embed.conv.parametrizations.weight.original0" in enc
+    assert "encoder.pos_conv_embed.conv.parametrizations.weight.original1" in enc
     # nothing fairseq-shaped survives, and no pre-training head leaks through
     assert not any(k.startswith(MODEL_PREFIX) for k in enc)
     assert not any("quantizer" in k or "project_q" in k or "mask_emb" in k
