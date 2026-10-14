@@ -76,3 +76,31 @@ def test_transcode_view_writes_a_rectangular_memmap(tmp_path):
     assert len(params) == 3 and (params["view"] == "A1").all()
     md5 = pd.read_csv(tmp_path / "famA1" / "audio_md5.csv")
     assert md5["n_errors"].iloc[0] == 0 and len(md5["audio_md5"].iloc[0]) == 32
+
+
+@pytest.mark.skipif(not HAS_FFMPEG, reason="ffmpeg not installed locally")
+def test_transcode_runs_in_parallel_without_scratch_collisions(tmp_path):
+    """32 workers sharing one scratch dir silently fail; each must get its own."""
+    rng = np.random.default_rng(1)
+    waves = [rng.normal(0, 0.1, SAMPLE_RATE).astype(np.float32) for _ in range(12)]
+    info = w10_views.transcode_view("famA1", waves, list(range(12)),
+                                    tmp_path / "famA1", jobs=4)
+    assert info["n_errors"] == 0, info
+    arr = np.asarray(np.memmap(tmp_path / "famA1" / "view_audio.int16", dtype="<i2",
+                               mode="r", shape=(12, N_SAMPLES)))
+    assert np.abs(arr).max() > 0
+    # no all-zero rows, i.e. no clip silently turned into silence
+    assert (np.abs(arr).max(axis=1) > 0).all()
+
+
+def test_transcode_failure_is_loud(monkeypatch, tmp_path):
+    """A failed clip must abort the view, not leave a silent row behind."""
+    rng = np.random.default_rng(2)
+    waves = [rng.normal(0, 0.1, 1024).astype(np.float32) for _ in range(3)]
+
+    def boom(args):
+        return args[0], "synthetic failure", None
+
+    monkeypatch.setattr(w10_views, "_one", boom)
+    with pytest.raises(RuntimeError, match="failed to transcode"):
+        w10_views.transcode_view("famA1", waves, [0, 1, 2], tmp_path / "v", jobs=1)

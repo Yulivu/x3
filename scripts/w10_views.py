@@ -96,11 +96,20 @@ def _one(args) -> Tuple[int, Optional[str], Optional[bytes]]:
     try:
         from src.views import apply_view
 
-        y = apply_view(x, params, clip_id, tmpdir=tmp)
+        # EVERY worker needs its own scratch directory: sharing one makes all 32
+        # ffmpeg processes write the same cur.wav/hop0.ogg and silently fail
+        own = Path(tmp) / f"c{idx}"
+        own.mkdir(parents=True, exist_ok=True)
+        y = apply_view(x, params, clip_id, tmpdir=str(own))
         out = prepare_waveform(y)
         return idx, None, (np.clip(out, -1, 1) * 32767.0).astype("<i2").tobytes()
-    except Exception as exc:  # pragma: no cover
+    except Exception as exc:
         return idx, f"{type(exc).__name__}: {exc}", None
+    finally:
+        try:
+            shutil.rmtree(Path(tmp) / f"c{idx}", ignore_errors=True)
+        except Exception:
+            pass
 
 
 def transcode_view(view: str, waves: Sequence[np.ndarray], clip_ids: Sequence[Any],
@@ -145,6 +154,12 @@ def transcode_view(view: str, waves: Sequence[np.ndarray], clip_ids: Sequence[An
                    "audio_md5": h.hexdigest(), "seconds": round(time.time() - t0, 1)}]
                  ).to_csv(out_dir / "audio_md5.csv", index=False)
     del mm
+    if errors:
+        # a failed clip leaves an all-zero row, i.e. the features of silence. Never
+        # let that reach a downstream method: fail the view instead.
+        raise RuntimeError(
+            f"{view}: {len(errors)}/{n} clips failed to transcode; first: {errors[:3]}"
+        )
     return {"view": view, "n": n, "errors": errors[:5], "n_errors": len(errors),
             "md5": h.hexdigest()}
 
