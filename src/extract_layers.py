@@ -94,6 +94,10 @@ def load_antideepfake(model_dir, device: str = "cuda", dtype="float32"):
     from safetensors.torch import load_file
     from transformers import Wav2Vec2Config, Wav2Vec2Model
 
+    # .to("float32") is read as a DEVICE string; resolve the dtype properly
+    if isinstance(dtype, str):
+        dtype = {"float32": torch.float32, "float16": torch.float16,
+                 "bfloat16": torch.bfloat16}[dtype]
     model_dir = Path(model_dir)
     cfg = Wav2Vec2Config.from_pretrained(str(model_dir))
     cfg.layerdrop = 0.0                 # otherwise the encoder randomly drops layers
