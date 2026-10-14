@@ -104,3 +104,34 @@ def test_the_curve_is_indexed_by_the_nominal_budget_not_the_achieved_count():
     assert ("B1", 290) in set(piv.index)
     assert {k for _m, k in piv.index} == {290}
     assert len(piv) == 2                      # one row per method, not per k drift
+
+
+def test_every_spec_rebuilds_the_graph(monkeypatch, tmp_path):
+    """B9 runs on the kNN graph, so a spec sweep must not reuse the previous one."""
+    seen = []
+
+    def fake_knn(Z, k=15):
+        seen.append(id(Z))
+        return (np.zeros((len(Z), k), int), np.zeros((len(Z), k)))
+
+    calls = {"n": 0}
+
+    def fake_load_region(root, data_dir, backbone, spec, split):
+        calls["n"] += 1
+        n = 40
+        sub = pd.DataFrame({"y": np.tile([0, 1], n // 2),
+                            "platform": ["p"] * n, "language": ["en"] * n,
+                            "speaker": [f"s{i // 4:02d}" for i in range(n)]})
+        sub["cell"] = "p|en"
+        return sub, np.zeros((n, 8), np.float32)
+
+    monkeypatch.setattr(w22, "knn_graph", fake_knn)
+    monkeypatch.setattr(w22.R, "load_region", fake_load_region)
+    monkeypatch.setattr(w22, "fit_preprocess", getattr(w22, "fit_preprocess", None),
+                        raising=False)
+    monkeypatch.setattr(w22.w6, "fit_preprocess", lambda F: (None, F))
+    monkeypatch.setattr(w22, "_pooled", lambda rows, jobs, payloads: [])
+
+    w22.spec_sensitivity(tmp_path, tmp_path, "toy", "s.json", specs=("S1", "S2"),
+                         draws=2, jobs=1)
+    assert len(seen) == 2                     # one graph per spec, not one for all

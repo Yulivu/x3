@@ -181,6 +181,9 @@ def spec_sensitivity(root: Path, data_dir: Path, backbone: str, split: str,
         plat = sub["platform"].to_numpy()
         _G.update({"Z": Z, "y": y, "plat": plat, "lang": lang, "cell": cell,
                    "speaker": speaker, "backbone": backbone, "spec": spec,
+                   # the kNN graph depends on the feature block, so it must be
+                   # rebuilt for every spec (B9 lives on it)
+                   "graph": knn_graph(Z, k=15),
                    "masks": {d: masks_for(d, Z, y, cell, speaker)
                              for d in range(int(draws))}})
         payloads = [(d, mask, 290) for mask in MASKS for d in range(int(draws))]
