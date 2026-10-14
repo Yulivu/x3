@@ -135,3 +135,36 @@ def test_fam_b_chain_runs(tmp_path):
     dst = tmp_path / "fam_b.wav"
     info = run_view(str(src), str(dst), fam_b_params(11))
     assert info["ok"], info
+def test_fam_b_chains_are_distinct_and_deterministic():
+    """W22's extra families must differ structurally, not only in bitrate."""
+    from src.views import FAM_B, fam_b_params
+
+    assert {"B1", "B2", "B3"} <= set(FAM_B)
+    chains = {k: tuple(tuple(hop) for hop in FAM_B[k]["chain"]) for k in FAM_B}
+    assert len(set(chains.values())) == len(chains)       # no duplicate chain
+    lens = {k: len(v) for k, v in chains.items()}
+    assert max(lens.values()) > min(lens.values())        # a longer chain exists
+    bands = {k: FAM_B[k]["band_limit_hz"] for k in FAM_B}
+    assert len(set(bands.values())) == len(bands)         # distinct band limits
+    for key in FAM_B:
+        a = fam_b_params(7, view_key=key)
+        b = fam_b_params(7, view_key=key)
+        assert a == b and a["view"] == key
+        assert tuple(tuple(h) for h in a["chain"]) == chains[key]
+
+
+def test_fam_b_defaults_to_the_taskbook_chain():
+    from src.views import fam_b_params
+
+    assert fam_b_params(3)["view"] == "B1"
+
+
+def test_fam_b_rejects_an_unknown_chain():
+    from src.views import fam_b_params
+
+    try:
+        fam_b_params(1, view_key="B9")
+    except ValueError as exc:
+        assert "unknown Fam-B" in str(exc)
+    else:                                                 # pragma: no cover
+        raise AssertionError("an unknown Fam-B chain must raise")

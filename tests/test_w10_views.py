@@ -104,3 +104,32 @@ def test_transcode_failure_is_loud(monkeypatch, tmp_path):
     monkeypatch.setattr(w10_views, "_one", boom)
     with pytest.raises(RuntimeError, match="failed to transcode"):
         w10_views.transcode_view("famA1", waves, [0, 1, 2], tmp_path / "v", jobs=1)
+def test_view_job_separates_the_family_from_the_output_directory():
+    """A v3 rerun renders the same family into a suffixed directory."""
+    import w10_views as w10
+
+    assert w10.view_job("famB2", "_v3") == ("famB2", "famB2_v3")
+    assert w10.view_job("famA1") == ("famA1", "famA1")
+
+
+def test_params_for_dispatches_every_family_including_the_new_chains():
+    import w10_views as w10
+    from src.views import FAM_B
+
+    for family, key in (("famA1", "A1"), ("famA2", "A2"), ("famB1", "B1"),
+                        ("famB2", "B2"), ("famB3", "B3")):
+        p = w10.params_for(family, 11)
+        assert p["view"] == key, family
+        assert p == w10.params_for(family, 11)            # deterministic
+    assert len(w10.params_for("famB2", 11)["chain"]) == len(FAM_B["B2"]["chain"])
+
+
+def test_params_for_rejects_an_unknown_view():
+    import w10_views as w10
+
+    try:
+        w10.params_for("famB9", 1)
+    except ValueError as exc:
+        assert "unknown view" in str(exc)
+    else:                                                 # pragma: no cover
+        raise AssertionError("an unknown view must raise")

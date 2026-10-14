@@ -50,9 +50,20 @@ from src.data import data_root, load_mlitw  # noqa: E402
 from src.extract_layers import N_SAMPLES, SAMPLE_RATE, prepare_waveform  # noqa: E402
 from src.views import fam_a_params, fam_b_params, ffmpeg_cmd  # noqa: E402
 
-VIEWS = ("famA1", "famA2", "famB1")
+VIEWS = ("famA1", "famA2", "famB1", "famB2", "famB3")
 
-__all__ = ["params_for", "write_wav", "read_wav", "transcode_view", "extract_spec", "main"]
+__all__ = ["params_for", "view_job", "write_wav", "read_wav", "transcode_view",
+           "extract_spec", "main"]
+
+
+def view_job(view: str, suffix: str = "") -> Tuple[str, str]:
+    """``(family, directory name)`` for one view.
+
+    The family decides the transcode parameters; the suffix only decides *where* the
+    result is written.  That split is what lets a later protocol (v3) regenerate the
+    views into ``views/<family>_v3/`` without touching the frozen v2 directories.
+    """
+    return str(view), f"{view}{suffix}"
 
 
 def params_for(view: str, clip_id: Any) -> Dict[str, Any]:
@@ -68,6 +79,8 @@ def params_for(view: str, clip_id: Any) -> Dict[str, Any]:
         return fam_a_params(clip_id, view_key="A2")
     if view == "famB1":
         return fam_b_params(clip_id)
+    if view in ("famB2", "famB3"):
+        return fam_b_params(clip_id, view_key=view[3:])   # "famB2" -> "B2"
     raise ValueError(f"unknown view {view!r}")
 
 
@@ -209,19 +222,24 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--backbone", required=True)
     parser.add_argument("--spec", default="S3")
     parser.add_argument("--views", default=",".join(VIEWS))
+    parser.add_argument("--split", default="speaker_split_v2.json",
+                        help="frozen split that defines the dev rows to render")
+    parser.add_argument("--out-suffix", default="",
+                        help="write into views/<family><suffix>/ (never overwrites)")
     parser.add_argument("--jobs", type=int, default=16)
     parser.add_argument("--extract-only", action="store_true")
     args = parser.parse_args(argv)
     data_dir = data_root(args.data)
     meta = load_mlitw(data_dir)
     root = REPO
-    split = json.loads((root / "splits" / "speaker_split_v2.json").read_text(encoding="utf-8"))
+    split = json.loads((root / "splits" / args.split).read_text(encoding="utf-8"))
     keep = meta["speaker"].isin(set(split["dev_speakers"])).to_numpy()
     dev = meta.loc[keep].reset_index(drop=True)
     views_root = data_dir / "x3" / "views"
     print(f"dev clips={len(dev)} views={args.views}")
-    for view in [v.strip() for v in args.views.split(",") if v.strip()]:
-        vdir = views_root / view
+    for raw in [v.strip() for v in args.views.split(",") if v.strip()]:
+        view, dir_name = view_job(raw, args.out_suffix)
+        vdir = views_root / dir_name
         audio = vdir / "view_audio.int16"
         if not args.extract_only or not audio.exists():
             # decode the WHOLE corpus so the parquet/manifest alignment assertion

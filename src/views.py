@@ -36,8 +36,16 @@ FAM_A_EXTRA = {
     "downsample_hz": 8000,
     "downsample_p": 0.3,
 }
+# Held-out chains.  B1 is the taskbook's family (Opus 24 -> MP3 64 with an optional
+# 8 kHz band limit); B2 and B3 are the W22 backlog's "more families": a longer
+# low-bitrate chain and a narrow-band chain, both structurally different from B1.
 FAM_B = {
-    "B1": {"chain": (("libopus", 24), ("libmp3lame", 64)), "band_limit_hz": 8000, "band_p": 0.5},
+    "B1": {"chain": (("libopus", 24), ("libmp3lame", 64)), "band_limit_hz": 8000,
+           "band_p": 0.5},
+    "B2": {"chain": (("aac", 32), ("libmp3lame", 32), ("libopus", 16)),
+           "band_limit_hz": 6000, "band_p": 0.5},
+    "B3": {"chain": (("libmp3lame", 48), ("libopus", 16)), "band_limit_hz": 4000,
+           "band_p": 0.5},
 }
 
 __all__ = [
@@ -91,13 +99,17 @@ def fam_a_params(clip_id: Any, view_key: Optional[str] = None) -> Dict[str, Any]
     }
 
 
-def fam_b_params(clip_id: Any) -> Dict[str, Any]:
+def fam_b_params(clip_id: Any, view_key: str = "B1") -> Dict[str, Any]:
+    """Fam-B parameters for one clip; ``view_key`` picks the held-out chain."""
+    if view_key not in FAM_B:
+        raise ValueError(f"unknown Fam-B view {view_key!r}; expected one of "
+                         f"{sorted(FAM_B)}")
     rng = np.random.default_rng(view_seed(clip_id))
-    cfg = FAM_B["B1"]
+    cfg = FAM_B[view_key]
     band = bool(rng.random() < cfg["band_p"])
     return {
         "family": "fam_b",
-        "view": "B1",
+        "view": view_key,
         "chain": [[c, b] for c, b in cfg["chain"]],
         "codec": cfg["chain"][0][0],
         "bitrate_kbps": cfg["chain"][0][1],
