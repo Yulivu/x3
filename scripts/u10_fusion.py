@@ -334,6 +334,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     for spec in specs:
         for b in backbones:
             pairs.append((f"ENS{len(backbones)}-{spec}", f"{b}|{spec}"))
+    # the backbone against backbone contrast: the cheapest possible "gain", and the
+    # one that decides whether G3 picked the right feature block at all
+    best_single = df.groupby("method")["pooled_eer"].mean().idxmin()
+    for b in backbones:
+        if f"{b}|S3" != best_single:
+            pairs.append((best_single, f"{b}|S3"))
     iv = intervals_table(draw_root, pairs, jobs=args.interval_jobs)
     iv.to_csv(root / "results" / "u10_intervals.csv", index=False)
     print("\nintervals (delta = a - b; negative means a is better)\n"
