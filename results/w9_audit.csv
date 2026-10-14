@@ -1,0 +1,19 @@
+check,method,mask,eer,reference_eer,n_draws,flag,expectation
+label-permutation-global,B1,clips,50.30411767584507,50.0,30,False,fully shuffled labels -> EER ~ 50 (+-3)
+label-permutation-within-platform,B1,clips,44.37591062168808,30.58874179313314,30,False,"the platform mix is preserved, so the correct floor is the metadata-only level; beating it by >3 means leakage"
+cell-permutation,B1,clips,10.803171426628035,13.275457581194367,30,False,C1's gain over the permuted-cell run disappears
+clips-vs-strict-baseline,B1,clips,13.275457581194367,,30,False,baseline (no expectation)
+label-permutation-global,B2,clips,50.12392121490642,50.0,30,False,fully shuffled labels -> EER ~ 50 (+-3)
+label-permutation-within-platform,B2,clips,40.45293404129436,30.58874179313314,30,False,"the platform mix is preserved, so the correct floor is the metadata-only level; beating it by >3 means leakage"
+cell-permutation,B2,clips,12.229771943052134,19.75848002976554,30,False,C1's gain over the permuted-cell run disappears
+clips-vs-strict-baseline,B2,clips,19.75848002976554,,30,False,baseline (no expectation)
+label-permutation-global,C1,clips,50.210557477444176,50.0,30,False,fully shuffled labels -> EER ~ 50 (+-3)
+label-permutation-within-platform,C1,clips,45.97139566836799,30.58874179313314,30,False,"the platform mix is preserved, so the correct floor is the metadata-only level; beating it by >3 means leakage"
+cell-permutation,C1,clips,10.793514508383542,13.673073735803419,30,False,C1's gain over the permuted-cell run disappears
+clips-vs-strict-baseline,C1,clips,13.673073735803419,,30,False,baseline (no expectation)
+label-permutation-global,B7,clips,50.18554426096583,50.0,30,False,fully shuffled labels -> EER ~ 50 (+-3)
+label-permutation-within-platform,B7,clips,45.60354362817266,30.58874179313314,30,False,"the platform mix is preserved, so the correct floor is the metadata-only level; beating it by >3 means leakage"
+cell-permutation,B7,clips,10.283588657430464,12.67240534429914,30,False,C1's gain over the permuted-cell run disappears
+clips-vs-strict-baseline,B7,clips,12.67240534429914,,30,False,baseline (no expectation)
+near-duplicate-share,-,clips,0.0001935840707964602,,30,False,share of eval clips with a labelled neighbour > cos 0.99 below 5%
+metadata-only,platform x language,clips,30.58874179313314,,1,False,shortcut level; any audio claim must beat this
