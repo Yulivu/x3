@@ -63,9 +63,22 @@ def test_mechanism_reconciliation_and_mask_tables():
 
     rec = w4_reproduce.reconciliation(draws)
     assert set(rec["scope"]) == {"3draw", "100draw"}
-    assert set(rec["metric"]) == set(w4_reproduce.HEADLINE)
+    assert set(rec["metric"]) == set(w4_reproduce.STORED_FSCVAR)
     assert np.allclose(rec["diff"], rec["rerun"] - rec["headline"])
+    assert set(rec["reference"]) == {"fsc_var_results.csv (bb, k=10)"}
 
     ident = w4_reproduce.mask_identity(draws)
     assert {"method", "n_draws", "n_identical", "share_identical"}.issubset(ident.columns)
     assert (ident["share_identical"] >= 0).all()
+
+
+def test_linea_routes_separates_the_two_methods():
+    routes = w4_reproduce.linea_routes()
+    assert set(routes["route"]) == {"A-adaptation", "B-prior-correction"}
+    adapt = routes[routes["route"] == "A-adaptation"].iloc[0]
+    prior = routes[routes["route"] == "B-prior-correction"].iloc[0]
+    assert adapt["prior_correction"] is False or adapt["prior_correction"] == False  # noqa: E712
+    assert prior["prior_correction"] is True or prior["prior_correction"] == True  # noqa: E712
+    # the adaptation route is the 13.x headline; the prior route is the 24.x one
+    assert abs(adapt["strict_pooled"] - 13.64) < 0.01
+    assert abs(prior["clips_pooled"] - 24.65) < 0.01

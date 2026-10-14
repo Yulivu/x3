@@ -42,8 +42,43 @@ SPEC = "p0cal-raw"
 REGION = "full"
 K_PER_CELL = 10
 N_DRAWS = 100
-# Line A's published headline (docs/COMPARISON.md E.5), clips mask, k=290.
-HEADLINE = {"pooled_eer": 13.64, "within_macro_eer": 14.56, "worst_platform_eer": 20.79}
+
+# The reference this protocol has to reproduce: Line A's own stored run of the
+# SAME protocol (frozen probe + BB cell prior, k=10 per cell), i.e.
+# $DATA/fsc_var_results.csv, variant "bb", k=10, mean over 24 (seed, rep) cells.
+STORED_FSCVAR = {"pooled_eer": 24.65, "within_macro_eer": 34.36}
+
+# The two Line A routes are NOT the same method.  Line A's 13.64 headline is the
+# *adaptation* route (train a head directly on the 290 labels on frozen features,
+# no prior correction), reported in the strict mask.  The prior-correction route
+# is the 22.99/24.65 family above.  TASKBOOK 1.2 attributes the 13.64 headline to
+# "probe + cell-prior correction", which the measurements here contradict.
+LINEA_ADAPT = {
+    "source": "wx2/docs/COMPARISON.md 0.0 line 42, line 128",
+    "method": "290 labels train a head directly (frozen XLS-R + LayerNorm/MLP), no prior correction",
+    "clips_pooled": 13.05,
+    "strict_pooled": 13.64,
+    "auc": 0.94,
+}
+DEVIATION_ROWS = (
+    {
+        "item": "TASKBOOK 1.2 headline attribution",
+        "what": (
+            "TASKBOOK says Line A's headline 13.64/14.56/20.79 comes from 'frozen XLS-R "
+            "features + a small probe trained on 290 labels, plus cell-prior correction'. "
+            "Measured on the box, that route gives 24.65 pooled (k=10, BB+EB), and even an "
+            "ORACLE cell prior only reaches 21.52 pooled on the p0cal scores. The 13.64 "
+            "number is COMPARISON.md's line A: 290 labels train a head directly with NO "
+            "prior correction (clips 13.05 / strict 13.64, AUC 0.94)."
+        ),
+        "impact": (
+            "S-F must be judged against the ADAPTATION route (BASE_F's B11 family), not only "
+            "against the prior-correction family; otherwise the SOTA bar is ~9 EER points "
+            "too low. The prior-correction family stays in BASE_F under its own name."
+        ),
+        "source": "W4 on the box, 2026-10-14; wx2/docs/COMPARISON.md 0.0 line 42",
+    },
+)
 
 __all__ = ["run_draws", "main"]
 
@@ -106,15 +141,28 @@ def reconciliation(draws: pd.DataFrame, n_head: int = 3) -> pd.DataFrame:
         ("3draw", draws[draws["draw"] < n_head]),
         ("100draw", draws),
     ):
-        for metric, headline in HEADLINE.items():
+        for metric, headline in STORED_FSCVAR.items():
             sub = sel[sel["method"] == "M2"]
             rerun = float(sub[metric].mean())
             rows.append({
                 "scope": scope, "metric": metric, "headline": float(headline),
                 "rerun": rerun, "diff": rerun - float(headline),
                 "mask": "clips", "n_draws": int(sub["draw"].nunique()),
+                "reference": "fsc_var_results.csv (bb, k=10)",
             })
     return pd.DataFrame(rows)
+
+
+def linea_routes() -> pd.DataFrame:
+    """Document Line A's two routes so nobody compares against the wrong one."""
+    return pd.DataFrame([
+        {"route": "A-adaptation", "clips_pooled": LINEA_ADAPT["clips_pooled"],
+         "strict_pooled": LINEA_ADAPT["strict_pooled"], "prior_correction": False,
+         "source": LINEA_ADAPT["source"]},
+        {"route": "B-prior-correction", "clips_pooled": STORED_FSCVAR["pooled_eer"],
+         "strict_pooled": float("nan"), "prior_correction": True,
+         "source": "fsc_var_results.csv (bb, k=10)"},
+    ])
 
 
 def mask_identity(draws: pd.DataFrame) -> pd.DataFrame:
@@ -158,6 +206,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     mech.to_csv(root / "results" / "w4_mechanism.csv", index=False)
     rec = reconciliation(draws)
     rec.to_csv(root / "results" / "reconciliation.csv", index=False)
+    linea_routes().to_csv(root / "results" / "reconciliation_lineA.csv", index=False)
+    pd.DataFrame(DEVIATION_ROWS).to_csv(root / "results" / "deviations.csv", index=False)
     ident = mask_identity(draws)
     ident.to_csv(root / "results" / "w4_mask_identity.csv", index=False)
     print(mech.to_string(index=False))
