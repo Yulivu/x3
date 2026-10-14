@@ -73,3 +73,16 @@ def test_run_one_and_paired_table():
     assert {"mean", "lo", "hi", "n", "metric"}.issubset(paired.columns)
     finite = paired.dropna(subset=["lo", "hi"])
     assert (finite["hi"] >= finite["lo"]).all()
+
+
+def test_run_one_consumes_installed_fam_a_tiles(monkeypatch):
+    """With the view tiles installed PAST must actually receive them."""
+    Z, y, plat, lang, cell, spk = _pool(seed=9)
+    monkeypatch.setattr(w11_past, "_VIEW_TILES",
+                        {"famA1": Z + 0.01, "famA2": Z - 0.01})
+    rows = w11_past.run_one((0, Z, y, plat, lang, cell, spk, 10))
+    assert rows
+    df = pd.DataFrame(rows)
+    assert set(df["method"]) == set(w11_past.VARIANTS)
+    paired = w11_past.paired_table(df.assign(backbone="b", spec="s"))
+    assert (paired["views"] == "famA1,famA2").all()

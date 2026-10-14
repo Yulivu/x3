@@ -39,6 +39,12 @@ from src.past import PAST  # noqa: E402
 N_DRAWS = 50
 K_PER_CELL = 10
 VARIANTS = ("C1", "B7", "PAST", "PAST-noEM", "PAST-noQuota", "PAST-1round")
+VIEW_NAMES = ("famA1", "famA2")
+
+# The Fam-A tiles are ~57 MB each; they are installed as a module global before the
+# pool is forked so the children inherit copy-on-write instead of shipping 114 MB
+# through the task queue on every draw.
+_VIEW_TILES: Dict[str, np.ndarray] = {}
 
 __all__ = ["run_one", "paired_table", "main"]
 
@@ -54,6 +60,7 @@ def run_one(payload) -> List[Dict[str, Any]]:
     strict = ev[strict_eval_mask(speaker, lab_pos, ev)]
     Zl, yl, pl, ll, cl = Z[lab], y[lab], plat[lab], lang[lab], cell[lab]
     Zu, pu, lu, cu = Z[~lab], plat[~lab], lang[~lab], cell[~lab]
+    views_unlab = [t[~lab] for t in _VIEW_TILES.values()] or None
 
     scores: Dict[str, np.ndarray] = {}
     scores["C1"] = MPP(sigma_p=0.5, sigma_gamma=0.5, lam=1.0).fit(
@@ -67,7 +74,7 @@ def run_one(payload) -> List[Dict[str, Any]]:
         ("PAST-noQuota", {"rounds": 3, "use_quota": False}),
         ("PAST-1round", {"rounds": 1}),
     ):
-        model = PAST(**kw).fit(Zl, yl, pl, ll, cl, Zu, pu, lu, cu)
+        model = PAST(**kw).fit(Zl, yl, pl, ll, cl, Zu, pu, lu, cu, views_unlab=views_unlab)
         scores[name] = model.predict_logit(Z, plat, lang, cell)
 
     rows: List[Dict[str, Any]] = []
@@ -108,7 +115,10 @@ def paired_table(draws: pd.DataFrame, variants: Sequence[str] = VARIANTS) -> pd.
             rows.append({"method": "PAST", "other": other, "metric": metric,
                          "mean": float(diff.mean()), "lo": float(np.percentile(diff, 2.5)),
                          "hi": float(np.percentile(diff, 97.5)), "n": int(diff.size),
-                         "backbone": w6.BACKBONE, "spec": w6.SPEC})
+                         "backbone": str(main["backbone"].iloc[0]) if "backbone" in main.columns
+                         else w6.BACKBONE,
+                         "spec": str(main["spec"].iloc[0]) if "spec" in main.columns else w6.SPEC,
+                         "views": ",".join(sorted(_VIEW_TILES)) or "none"})
     return pd.DataFrame(rows)
 
 
@@ -119,16 +129,33 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--draws", type=int, default=N_DRAWS)
     parser.add_argument("--jobs", type=int, default=16)
     parser.add_argument("--k-per-cell", type=int, default=K_PER_CELL)
+    parser.add_argument("--backbone", default=w6.BACKBONE)
+    parser.add_argument("--spec", default=w6.SPEC)
+    parser.add_argument("--views", default=",".join(VIEW_NAMES),
+                        help="Fam-A view families to feed PAST (empty string = the no-view variant)")
     args = parser.parse_args(argv)
     root = Path(args.root).resolve()
-    sub, F = w6.load_dev(root, data_root(args.data))
+    data_dir = data_root(args.data)
+    w6.BACKBONE, w6.SPEC = args.backbone, args.spec
+    sub, F = w6.load_spec(root, data_dir, args.backbone, args.spec)
     Z = w6.preprocess(F)
     y = sub["y"].to_numpy()
     plat = sub["platform"].to_numpy()
     lang = sub["language"].to_numpy()
     cell = sub["cell"].to_numpy()
     speaker = sub["speaker"].to_numpy()
-    print(f"dev clips={len(sub)} draws={args.draws} variants={VARIANTS} (views: none)")
+    _VIEW_TILES.clear()
+    used_views = []
+    for view in [v.strip() for v in args.views.split(",") if v.strip()]:
+        p = data_dir / "x3" / "views" / view / args.backbone / "spec_feats.npy"
+        if p.exists():
+            tile = np.load(p)
+            if tile.shape[0] != len(sub):
+                raise ValueError(f"{p} has {tile.shape[0]} rows, expected {len(sub)}")
+            _VIEW_TILES[view] = np.asarray(tile, np.float32)
+            used_views.append(view)
+    print(f"dev clips={len(sub)} draws={args.draws} variants={VARIANTS} "
+          f"views={used_views or 'none'}")
 
     payloads = [(d, Z, y, plat, lang, cell, speaker, args.k_per_cell) for d in range(args.draws)]
     rows: List[Dict[str, Any]] = []
@@ -158,6 +185,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print("errors:", errors[:5], "...", len(errors))
     df = pd.DataFrame(rows)
     (root / "results").mkdir(parents=True, exist_ok=True)
+    if not df.empty:
+        df["backbone"] = args.backbone
+        df["spec"] = args.spec
     df.to_csv(root / "results" / "w11_draws.csv", index=False)
     paired_tbl = paired_table(df)
     paired_tbl.to_csv(root / "results" / "w11_past.csv", index=False)
