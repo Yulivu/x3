@@ -20,6 +20,36 @@ def test_load_spec_sentinel_is_not_the_mutable_global(monkeypatch):
     assert w6_baselines.BACKBONE_LINEA != w6_baselines.BACKBONE
 
 
+def test_load_spec_reads_the_split_it_is_told_to(tmp_path, monkeypatch):
+    """The v3 rerun needs the same code path with a different frozen split."""
+    (tmp_path / "splits").mkdir()
+    (tmp_path / "splits" / "speaker_split_v3.json").write_text(
+        '{"dev_speakers": ["a"], "test_speakers": ["b"]}', encoding="utf-8")
+    meta = pd.DataFrame({"speaker": ["a", "b"], "platform": ["p", "p"],
+                         "language": ["en", "en"], "label": ["spoof", "bona fide"]})
+    meta["y"] = (meta["label"] == "spoof").astype(int)
+    monkeypatch.setattr(w6_baselines, "load_mlitw", lambda data_dir: meta)
+    feats = np.zeros((2, 25, 4), np.float32)
+    np.save(tmp_path / "mlitw_feats.npy", feats)
+    sub, F = w6_baselines.load_spec(tmp_path, tmp_path, w6_baselines.BACKBONE_LINEA,
+                                    "S1-lineA", split_name="speaker_split_v3.json")
+    assert sub["speaker"].tolist() == ["a"]
+
+
+def test_load_spec_defaults_to_the_v2_split(tmp_path, monkeypatch):
+    (tmp_path / "splits").mkdir()
+    (tmp_path / "splits" / "speaker_split_v2.json").write_text(
+        '{"dev_speakers": ["b"], "test_speakers": ["a"]}', encoding="utf-8")
+    meta = pd.DataFrame({"speaker": ["a", "b"], "platform": ["p", "p"],
+                         "language": ["en", "en"], "label": ["spoof", "bona fide"]})
+    meta["y"] = (meta["label"] == "spoof").astype(int)
+    monkeypatch.setattr(w6_baselines, "load_mlitw", lambda data_dir: meta)
+    np.save(tmp_path / "mlitw_feats.npy", np.zeros((2, 25, 4), np.float32))
+    sub, _F = w6_baselines.load_spec(tmp_path, tmp_path, w6_baselines.BACKBONE_LINEA,
+                                     "S1-lineA")
+    assert sub["speaker"].tolist() == ["b"]
+
+
 def _pool(seed=0, d=16, n_cells=6, per=90):
     rng = np.random.default_rng(seed)
     Z, y, plat, lang, cell, spk = [], [], [], [], [], []

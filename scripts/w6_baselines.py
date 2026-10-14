@@ -66,9 +66,10 @@ __all__ = ["load_dev", "preprocess", "run_one_draw", "summarize_draws", "main"]
 
 
 # ------------------------------------------------------------------ loading
-def load_dev(root: Path, data_dir: Path, layers: Sequence[int] = LINEA_LAYERS):
+def load_dev(root: Path, data_dir: Path, layers: Sequence[int] = LINEA_LAYERS,
+             split_name: str = "speaker_split_v2.json"):
     """Dev-region rows only: the split is frozen and nothing here reads test."""
-    split = json.loads((root / "splits" / "speaker_split_v2.json").read_text(encoding="utf-8"))
+    split = json.loads((root / "splits" / split_name).read_text(encoding="utf-8"))
     dev_speakers = set(split["dev_speakers"])
     meta = load_mlitw(data_dir)
     keep = meta["speaker"].isin(dev_speakers).to_numpy()
@@ -80,18 +81,19 @@ def load_dev(root: Path, data_dir: Path, layers: Sequence[int] = LINEA_LAYERS):
     return sub, F
 
 
-def load_spec(root: Path, data_dir: Path, backbone: str, spec: str):
+def load_spec(root: Path, data_dir: Path, backbone: str, spec: str,
+              split_name: str = "speaker_split_v2.json"):
     """Dev rows plus the feature block for ``(backbone, spec)``.
 
     ``backbone == BACKBONE_LINEA`` reads the frozen Line A block; anything else
     reads ``$DATA/x3/feats/<backbone>/`` and rebuilds the W5 spec menu.
     """
     if backbone == BACKBONE_LINEA:
-        return load_dev(root, data_dir)
+        return load_dev(root, data_dir, split_name=split_name)
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
     import w5_backbones as w5
 
-    split = json.loads((root / "splits" / "speaker_split_v2.json").read_text(encoding="utf-8"))
+    split = json.loads((root / "splits" / split_name).read_text(encoding="utf-8"))
     meta = load_mlitw(data_dir)
     keep = meta["speaker"].isin(set(split["dev_speakers"])).to_numpy()
     sub = meta.loc[keep].reset_index(drop=True)
@@ -293,6 +295,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                              "$DATA/x3/feats/<backbone>/")
     parser.add_argument("--spec", default=SPEC)
     parser.add_argument("--suffix", default="", help="suffix for the draws filename")
+    parser.add_argument("--split", default="speaker_split_v2.json",
+                        help="frozen split to read the dev region from")
     parser.add_argument("--summary-only", action="store_true",
                         help="rebuild the tables from an existing draws file")
     args = parser.parse_args(argv)
@@ -302,16 +306,17 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         src = root / "results" / f"w6_draws_{args.backbone}_{args.spec}{args.suffix}.csv"
         df = pd.read_csv(src)
         summary, paired_tbl, collapse = summarize_draws(df)
-        summary.to_csv(root / "results" / "w6_summary.csv", index=False)
+        summary.to_csv(root / "results" / f"w6_summary{args.suffix}.csv", index=False)
         if not paired_tbl.empty:
-            paired_tbl.to_csv(root / "results" / "w6_paired.csv", index=False)
+            paired_tbl.to_csv(root / "results" / f"w6_paired{args.suffix}.csv", index=False)
         if not collapse.empty:
-            collapse.to_csv(root / "results" / "w6_collapse.csv", index=False)
+            collapse.to_csv(root / "results" / f"w6_collapse{args.suffix}.csv", index=False)
         print(f"rebuilt the tables from {src} ({len(df)} rows)")
         return 0
     methods = tuple(m.strip() for m in args.methods.split(",") if m.strip())
 
-    sub, F = load_spec(root, data_dir, args.backbone, args.spec)
+    sub, F = load_spec(root, data_dir, args.backbone, args.spec,
+                       split_name=args.split)
     backbone, spec = args.backbone, args.spec
     BACKBONE, SPEC = backbone, spec
     Z = preprocess(F, dim=args.pca)
@@ -359,11 +364,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     (root / "results").mkdir(parents=True, exist_ok=True)
     df.to_csv(root / "results" / f"w6_draws_{backbone}_{spec}{args.suffix}.csv", index=False)
     summary, paired_tbl, collapse = summarize_draws(df)
-    summary.to_csv(root / "results" / "w6_summary.csv", index=False)
+    summary.to_csv(root / "results" / f"w6_summary{args.suffix}.csv", index=False)
     if not paired_tbl.empty:
-        paired_tbl.to_csv(root / "results" / "w6_paired.csv", index=False)
+        paired_tbl.to_csv(root / "results" / f"w6_paired{args.suffix}.csv", index=False)
     if not collapse.empty:
-        collapse.to_csv(root / "results" / "w6_collapse.csv", index=False)
+        collapse.to_csv(root / "results" / f"w6_collapse{args.suffix}.csv", index=False)
     print(summary.to_string(index=False))
     return 0
 
