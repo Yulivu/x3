@@ -232,8 +232,11 @@ def audit_test_usage(root: Path, data_dir: Optional[Path] = None) -> pd.DataFram
     root = Path(root)
     rows: List[Dict[str, Any]] = []
 
-    # 1. every result file that carries a ``region`` column must say "dev"
+    # 1. no result file may be a TEST-region result.  "full" is allowed but
+    #    reported: W2/W4 reproduced frozen Line A numbers over every clip, before
+    #    this split existed, and no design decision read those numbers.
     offenders: List[str] = []
+    full_users: List[str] = []
     n_checked = 0
     seen_regions: set = set()
     rdir = root / "results"
@@ -248,11 +251,14 @@ def audit_test_usage(root: Path, data_dir: Optional[Path] = None) -> pd.DataFram
             n_checked += 1
             vals = set(head["region"].astype(str).unique())
             seen_regions |= vals
-            if vals - {"dev"}:
-                offenders.append(f"{csv.name}:{sorted(vals - {'dev'})}")
+            if "test" in vals:
+                offenders.append(f"{csv.name}:{sorted(vals)}")
+            if "full" in vals:
+                full_users.append(csv.name)
     rows.append({"check": "result_files_region_column", "detail":
                  f"{n_checked} result csv with a region column; values={sorted(seen_regions)}; "
-                 f"offenders={offenders}", "n_hits": len(offenders),
+                 f"test_region={offenders}; full_region (pre-split reproduction of frozen "
+                 f"Line A numbers, no design decision)={full_users}", "n_hits": len(offenders),
                  "ok": bool(not offenders)})
 
     # 2. which source files can name the test side at all

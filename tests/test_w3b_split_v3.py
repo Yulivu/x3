@@ -122,10 +122,13 @@ def test_audit_flags_a_result_file_that_names_the_test_region(tmp_path):
     (tmp_path / "results").mkdir()
     pd.DataFrame({"region": ["dev", "dev"]}).to_csv(tmp_path / "results" / "ok.csv", index=False)
     pd.DataFrame({"region": ["test"]}).to_csv(tmp_path / "results" / "bad.csv", index=False)
+    pd.DataFrame({"region": ["full"]}).to_csv(tmp_path / "results" / "recon.csv", index=False)
     audit = w3b.audit_test_usage(tmp_path)
     row = audit[audit["check"] == "result_files_region_column"].iloc[0]
     assert row["ok"] is False or row["ok"] == False           # noqa: E712
     assert "bad.csv" in row["detail"]
+    assert "recon.csv" in row["detail"]                       # reported, not an offender
+    assert row["n_hits"] == 1
 
 
 def test_audit_passes_on_a_clean_tree(tmp_path):

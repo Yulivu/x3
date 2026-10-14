@@ -36,7 +36,7 @@ __all__ = [
     "LOGREG_CS", "B3_SIGMAS", "B7_TAUS", "B6_TAUS", "KNN_K",
     "MLPProbe", "fit_logreg_cv", "b1_logreg", "b2_line_a", "b3_platform_offset",
     "b4_gp", "b5_knn_prototype", "b6_zeroshot_em", "b7_naive_pseudo_label",
-    "b8_fixmatch_lite", "b9_label_propagation", "b11_mlp",
+    "b8_fixmatch_lite", "b9_label_propagation", "b11_mlp", "knn_graph",
 ]
 
 
@@ -489,26 +489,74 @@ def b8_fixmatch_lite(
 # --------------------------------------------------------------------- B9
 def b9_label_propagation(
     Z: np.ndarray, y_lab: np.ndarray, lab_mask: Sequence[bool], k: int = KNN_K,
-    alpha: float = 0.9, iters: int = 20,
+    alpha: float = 0.9, iters: int = 20, graph=None,
 ) -> Tuple[np.ndarray, Dict[str, Any]]:
-    """B9: symmetric kNN affinity ``exp(cos)`` graph, label propagation from ``L``."""
+    """B9: symmetric kNN affinity ``exp(cos)`` graph, label propagation from ``L``.
+
+    ``graph`` is the ``(idx, vals)`` pair from :func:`knn_graph`; passing it skips
+    the neighbour search, which is the only costly part when the same ``Z`` is
+    reused across draws.  Results are identical either way (pinned by a test).
+    """
     Z = np.asarray(Z, float)
     lab_mask = np.asarray(lab_mask, bool)
     y_lab = np.asarray(y_lab, float)
-    unit = Z / (np.linalg.norm(Z, axis=1, keepdims=True) + 1e-9)
-    sim = unit @ unit.T
-    np.fill_diagonal(sim, -np.inf)
     kk = int(min(k, max(1, len(Z) - 1)))
-    idx = np.argsort(-sim, axis=1)[:, :kk]
-    W = np.zeros_like(sim)
-    rows = np.repeat(np.arange(len(Z)), kk)
-    W[rows, idx.ravel()] = np.exp(np.take_along_axis(sim, idx, axis=1).ravel())
-    W = np.maximum(W, W.T)
-    d = W.sum(1) + 1e-12
-    S = W / d[:, None]
+    if graph is None:
+        unit = Z / (np.linalg.norm(Z, axis=1, keepdims=True) + 1e-9)
+        sim = unit @ unit.T
+        np.fill_diagonal(sim, -np.inf)
+        idx = np.argsort(-sim, axis=1)[:, :kk]
+        W = np.zeros_like(sim)
+        rows = np.repeat(np.arange(len(Z)), kk)
+        W[rows, idx.ravel()] = np.exp(np.take_along_axis(sim, idx, axis=1).ravel())
+        W = np.maximum(W, W.T)
+        d = W.sum(1) + 1e-12
+        S = W / d[:, None]
+    else:
+        from scipy.sparse import csr_matrix
+
+        nbr, val = graph
+        nbr = np.asarray(nbr)[:, :kk]
+        val = np.asarray(val, float)[:, :kk]
+        rows = np.repeat(np.arange(len(Z)), nbr.shape[1])
+        W = csr_matrix((np.exp(val.ravel()), (rows, nbr.ravel())),
+                       shape=(len(Z), len(Z)))
+        W = W.maximum(W.T).tocsr()
+        d = np.asarray(W.sum(1)).ravel() + 1e-12
+        S = W
     Y0 = np.zeros(len(Z))
     Y0[lab_mask] = 2 * y_lab - 1
     Y = Y0.copy()
     for _ in range(iters):
-        Y = alpha * (S @ Y) + (1 - alpha) * Y0
+        if graph is None:
+            Y = alpha * (S @ Y) + (1 - alpha) * Y0
+        else:
+            Y = alpha * ((S @ Y) / d) + (1 - alpha) * Y0
     return Y, {"k": kk, "alpha": alpha, "iters": iters, "transductive": True}
+
+
+def knn_graph(Z: np.ndarray, k: int = KNN_K, block: int = 4096
+              ) -> Tuple[np.ndarray, np.ndarray]:
+    """Top-``k`` cosine neighbours of every row: ``(idx, cos)``, both ``(n, k)``.
+
+    Computed in row blocks so the ``n x n`` similarity matrix never materialises
+    for a whole dev region, and reused across the 100 draws of U1'/U8/U9.
+    """
+    Z = np.asarray(Z, float)
+    n = len(Z)
+    if n < 2:
+        return np.zeros((n, 0), np.int32), np.zeros((n, 0), float)
+    kk = int(min(k, n - 1))
+    unit = Z / (np.linalg.norm(Z, axis=1, keepdims=True) + 1e-9)
+    idx = np.empty((n, kk), np.int32)
+    vals = np.empty((n, kk), float)
+    for a in range(0, n, int(block)):
+        b = min(n, a + int(block))
+        sim = unit[a:b] @ unit.T
+        sim[np.arange(b - a), np.arange(a, b)] = -np.inf
+        part = np.argpartition(-sim, kk - 1, axis=1)[:, :kk]
+        pv = np.take_along_axis(sim, part, axis=1)
+        order = np.argsort(-pv, axis=1)
+        idx[a:b] = np.take_along_axis(part, order, axis=1)
+        vals[a:b] = np.take_along_axis(pv, order, axis=1)
+    return idx, vals

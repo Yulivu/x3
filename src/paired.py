@@ -75,6 +75,8 @@ def two_intervals(
     # (a) bootstrap the mean over draws
     means = deltas[rng.integers(0, len(deltas), size=(int(B), len(deltas)))].mean(axis=1)
     a_lo, a_hi = (float(np.percentile(means, 2.5)), float(np.percentile(means, 97.5)))
+    # the v1 rule, kept so every report can show old vs new side by side
+    old_lo, old_hi = (float(np.percentile(deltas, 2.5)), float(np.percentile(deltas, 97.5)))
 
     # (b) speaker-clustered: replicate b uses the same resample recipe in every draw
     groups = [_speaker_indices(d["speaker"]) for d in per_draw]
@@ -96,6 +98,8 @@ def two_intervals(
         "mean": float(deltas.mean()),
         "sd": float(deltas.std()),
         "a_lo": a_lo, "a_hi": a_hi,
+        "old_lo": old_lo, "old_hi": old_hi,
+        "old_contains_zero": bool(old_lo <= 0.0 <= old_hi),
         "b_lo": b_lo, "b_hi": b_hi,
         # the gate reads (b) only; False means "the interval is clear of 0"
         "b_contains_zero": bool(b_lo <= 0.0 <= b_hi),
