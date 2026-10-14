@@ -1,0 +1,20 @@
+{
+  "local_dataset": null,
+  "probes": {
+    "huggingface": {
+      "reachable": false,
+      "reason": "HTTP 401 Unauthorized",
+      "status": 401,
+      "url": "https://huggingface.co/api/models/mueller91/In-The-Wild"
+    },
+    "mirror": {
+      "reachable": false,
+      "reason": "HTTP 401 Unauthorized",
+      "status": 401,
+      "url": "https://hf-mirror.com/api/models/mueller91/In-The-Wild"
+    }
+  },
+  "reason": "the dataset is not on the box and the public endpoints answer huggingface=401, mirror=401; TASKBOOK 1.2 says gated=false",
+  "taskbook_claim": "gated=false (TASKBOOK 1.2)",
+  "verdict": "ITW_UNAVAILABLE"
+}

@@ -6,3 +6,4 @@
 2026-10-14T22:33:58Z  HB  commit=d1e2ca5  done=U1p,v2v3,U8,U9,U10,DP  pending=-  tmux=-  note=W8 Track Z done; Z5 label-free 16.17 pooled
 2026-10-14T23:05:53Z  HB  commit=2f63f9e  done=U1p,v2v3,U8,U9,U10,DP  pending=-  tmux=-  note=second backbone (mms-1b) + xls-r-2b v3 baselines + W17 paired comparison
 2026-10-14T23:09:40Z  HB  commit=afd3e2b  done=U1p,v2v3,U8,U9,U10,DP  pending=-  tmux=-  note=B6 wiring fixed; second-backbone W6 done
+2026-10-14T23:14:23Z  HB  commit=d8f7f8e  done=U1p,v2v3,U8,U9,U10,DP  pending=-  tmux=-  note=W15 ITW_UNAVAILABLE (401), W21 ADDGP_UNAVAILABLE (no entry point)

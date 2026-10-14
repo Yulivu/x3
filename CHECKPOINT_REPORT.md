@@ -361,6 +361,65 @@ Track Z (k=0, v3 dev): `results/w8_zlabel.csv`
 }
 ```
 
+### W15 ITW availability
+
+```json
+{
+  "local_dataset": null,
+  "probes": {
+    "huggingface": {
+      "reachable": false,
+      "reason": "HTTP 401 Unauthorized",
+      "status": 401,
+      "url": "https://huggingface.co/api/models/mueller91/In-The-Wild"
+    },
+    "mirror": {
+      "reachable": false,
+      "reason": "HTTP 401 Unauthorized",
+      "status": 401,
+      "url": "https://hf-mirror.com/api/models/mueller91/In-The-Wild"
+    }
+  },
+  "reason": "the dataset is not on the box and the public endpoints answer huggingface=401, mirror=401; TASKBOOK 1.2 says gated=false",
+  "taskbook_claim": "gated=false (TASKBOOK 1.2)",
+  "verdict": "ITW_UNAVAILABLE"
+}
+```
+
+### W21 ADD-GP attempt
+
+```json
+{
+  "clone": {
+    "cloned": true,
+    "path": "/root/autodl-tmp/data/x3/vendor/ADD-GP",
+    "skipped": true
+  },
+  "readme_head": "# ADD-GP\n\n### Official implementation for Few-Shot Speech Deepfake Detection Adaptation with Gaussian Processes\n#### Interspeech 2025\nRecent advancements in Text-to-Speech (TTS) models, particularly in voice cloning, have intensified the demand for adaptable and efficient deepfake detection methods. As TTS systems continue to evolve, detection models must be able to efficiently adapt to previously unseen generation models with minimal data. This paper introduces ADD-GP, a few-shot adaptive framework based on a Gaussian Process (GP) classifier for Audio Deepfake Detection (ADD). We show how the",
+  "reason": "no recognisable entry point (looked for main.py, train.py, run.py, eval.py, addgp.py, demo.py, inference.py); the checkout holds 9 files and 7 python files: code/models/GP.py, code/models/__init__.py, code/tts_trainer.py, code/utils/__init__.py, code/utils/tts_dataset.py, code/utils/tts_personalized_dataset.py; no weights either",
+  "repo": {
+    "entry_points": [],
+    "exists": true,
+    "has_readme": true,
+    "n_files": 9,
+    "python_files": [
+      "code/models/GP.py",
+      "code/models/__init__.py",
+      "code/tts_trainer.py",
+      "code/utils/__init__.py",
+      "code/utils/tts_dataset.py",
+      "code/utils/tts_personalized_dataset.py",
+      "code/utils/utils.py"
+    ],
+    "requirements": [
+      "requirements.txt: # This file may be used to create an environment using: | # $ conda create --name <env> --file <this file> | # platform: linux-64 | _libgcc_mutex=0.1=main | _openmp_mutex=5.1=1_gnu | absl-py=2.1.0=pypi_0 | accelerate=0.31.0=pypi_0 | aiofiles=23.2.1=pypi_0 | aiohttp=3.9.5=pypi_0 | aiosignal=1.3.1=pypi_0 | altair=5.3.0=pypi_0 | annotated-types=0.7.0=pypi_0 | anyascii=0.3.2=pypi_0 | anyio=4.4.0=pypi_"
+    ],
+    "weights": []
+  },
+  "verdict": "ADDGP_UNAVAILABLE"
+}
+```
+
 ### U1' verdicts
 
 ```json
@@ -554,4 +613,4 @@ _(empty)_
 | 16.16 | 18.41 | tiktok | 36.73 | 0.8941 | nan | 15002 | 3990 | 17.14 | 10.92 | 13.57 | 20.07 | 36.73 | 14.56 | 15.9 | track_z_v3_dev | dev | xls-r-2b | S3 | Z5 | 0 | clips | 0 | nan | nan | nan | nan | nan | nan | Z2 |
 | 23.74 | 21.04 | tiktok | 31.02 | 0.8508 | nan | 15002 | 3990 | 20.8 | 14.82 | 29.57 | 15.66 | 31.02 | 16.17 | 19.19 | track_z_v3_dev | dev | xls-r-2b | S3 | Z5-z1 | 0 | clips | 0 | nan | nan | nan | nan | nan | nan | Z1 |
 
-commit: `afd3e2b`
+commit: `d8f7f8e`
