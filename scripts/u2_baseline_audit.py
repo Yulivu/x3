@@ -35,7 +35,12 @@ for _p in (REPO, REPO / "scripts"):
         sys.path.insert(0, str(_p))
 
 import w6_baselines as w6  # noqa: E402
-from src.baselines import LineAProbe, MLPProbe, fit_logreg_cv  # noqa: E402
+from src.baselines import (  # noqa: E402
+    LineAProbe,
+    MLPProbe,
+    b3_platform_offset,
+    fit_logreg_cv,
+)
 from src.data import data_root  # noqa: E402
 from src.draws import draw_labels, draw_seed  # noqa: E402
 from src.em_prior import estimate_pi, logit  # noqa: E402
@@ -43,7 +48,8 @@ from src.metrics3 import summarize  # noqa: E402
 
 N_DRAWS = 100
 K_PER_CELL = 10
-METHODS = ("B1", "B0-LineA-probe", "B11", "B11'", "B2", "B1+global-offset", "B2-oracle")
+METHODS = ("B1", "B0-LineA-probe", "B11", "B11'", "B3", "B2", "B2-oracle",
+           "B1+global-offset")
 
 __all__ = ["sklearn_mlp", "run_draw", "main"]
 
@@ -86,6 +92,13 @@ def run_draw(payload) -> List[Dict[str, Any]]:
     pi_cell, _n, _phi = estimate_pi(list(dict.fromkeys(cell.tolist())), cell, lab, y, plat,
                                     variant="bb")
     scores["B2"] = z + np.array([logit(pi_cell[c], eps=1e-3) for c in cell], float)
+    # CONTRAST DESIGN.  A global offset is rank-preserving, so it cannot move any
+    # ranking metric and is only kept as a control that proves the harness is sane.
+    # The informative contrast is B3 (a COARSE per-platform offset, which the probe
+    # barely needs) against B2 (a FINE per-cell offset, which is what doubles the
+    # prior the probe already carries).
+    s3, _ = b3_platform_offset(base, plat, lab, y, sigma=1.0)
+    scores["B3"] = s3
     pi_g = float(np.clip(yl.mean(), 0.02, 0.98))
     scores["B1+global-offset"] = z + logit(pi_g, eps=1e-3)
     pi_true = {c: float(y[cell == c].mean()) for c in np.unique(cell)}

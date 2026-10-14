@@ -72,6 +72,18 @@ def test_run_draw_covers_every_audit_method():
     assert {"val_eer", "n_cells"}.issubset(df.columns)
 
 
+def test_the_global_offset_control_is_rank_preserving():
+    """It exists to prove the harness is sane, not to test the hypothesis."""
+    Z, y, plat, lang, cell = _pool(seed=7)
+    df = pd.DataFrame(u2.run_draw((0, Z, y, plat, lang, cell, 10)))
+    b1 = df[df["method"] == "B1"].iloc[0]
+    g = df[df["method"] == "B1+global-offset"].iloc[0]
+    assert b1["pooled_eer"] == g["pooled_eer"]
+    assert b1["auc"] == g["auc"]
+    # and the informative contrast is present
+    assert "B3" in set(df["method"])
+
+
 def test_sklearn_mlp_is_configured_with_early_stopping():
     clf = u2.sklearn_mlp()
     assert clf.early_stopping is True
