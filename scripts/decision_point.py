@@ -327,6 +327,11 @@ def write_document(root: Path) -> str:
         p = root / ("results/" + name) if not name.startswith("splits/") else root / name
         lines.append(f"- `{'results/' if not name.startswith('splits/') else ''}{name}`"
                      + ("" if p.exists() else "  (missing)"))
+    lines.append("")
+    lines.append("The per-clip score archives behind the (b) intervals "
+                 "(`results/u1p_draws/`, `u8_draws/`, `u9_draws/`, `u10_draws/`, "
+                 "~0.9 GB) stay on the compute box and are excluded from git; the "
+                 "interval CSVs above are computed from them.")
     return "\n".join(lines) + "\n"
 
 

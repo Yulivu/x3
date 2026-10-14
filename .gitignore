@@ -11,3 +11,6 @@ scratch/
 *.orig
 *.rej
 progress.log.tmp
+# per-clip score archives: ~0.9 GB of npz that every script regenerates from the
+# cached feature blocks (kept on the compute box, not in git)
+results/*_draws/
