@@ -1,0 +1,8 @@
+# The run happens on Linux; force LF so shell/python scripts never break on CRLF.
+* text=auto eol=lf
+*.png binary
+*.npy binary
+*.npz binary
+*.pt binary
+*.ckpt binary
+*.safetensors binary
