@@ -141,6 +141,27 @@ def gate(df: pd.DataFrame) -> Dict[str, Any]:
             best = cand
     out["verdict"] = ("Z_PASS" if best and best["passes"] else "Z_FAIL")
     out["best_method"] = None if best is None else best["method"]
+    # The frozen G8 rule names Z2/Z3; Z5 arrived later (NEW_TASKS 01 U6) with no
+    # criterion of its own, so its numbers are reported against the SAME three
+    # conditions.  The verdict above is not changed by this block.
+    others: Dict[str, Any] = {}
+    for method in means.index:
+        if method in ("Z0", "Z1", "Z2", "Z3"):
+            continue
+        pooled = float(means.loc[method, "pooled_eer"])
+        macro = float(means.loc[method, "within_macro_eer"])
+        others[method] = {
+            "pooled": pooled, "within_macro": macro,
+            "below_threshold": bool(pooled <= G8_POOLED),
+            "margin_points": zero - pooled,
+            "beats_zero_by_margin": bool((zero - pooled) >= G8_MARGIN),
+            "macro_not_worse": bool(macro <= zero_macro),
+        }
+        others[method]["satisfies_g8_conditions"] = bool(
+            others[method]["below_threshold"]
+            and others[method]["beats_zero_by_margin"]
+            and others[method]["macro_not_worse"])
+    out["other_label_free_methods"] = others
     return out
 
 

@@ -60,6 +60,21 @@ def test_g8_fails_when_the_pooled_number_is_above_the_line_a_headline():
     assert gate["verdict"] == "Z_FAIL"
 
 
+def test_extra_label_free_methods_are_reported_against_the_same_conditions():
+    frame = _frame()
+    frame = pd.concat([frame, pd.DataFrame([{
+        "method": "Z5", "pooled_eer": 16.2, "within_macro_eer": 18.4}])],
+        ignore_index=True)
+    gate = w8.gate(frame)
+    assert gate["verdict"] == "Z_FAIL"                  # the frozen rule is unchanged
+    z5 = gate["other_label_free_methods"]["Z5"]
+    assert z5["beats_zero_by_margin"] is True
+    assert z5["below_threshold"] is True
+    assert z5["macro_not_worse"] is True
+    assert z5["satisfies_g8_conditions"] is True
+    assert z5["margin_points"] > 3.0
+
+
 def test_g8_verdict_is_serialisable_and_reports_what_it_compared():
     gate = w8.gate(_frame())
     assert json.dumps(gate, default=str)
