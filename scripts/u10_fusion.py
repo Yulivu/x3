@@ -103,7 +103,9 @@ def run_one(payload) -> Tuple[int, str, List[Dict[str, Any]]]:
     scores_all = model.decision_function(Z)
     scores = scores_all[ev]
     member = f"{_G['backbone']}|{_G['spec']}"
-    np.savez_compressed(_G["draw_root"] / member / mask_name / f"draw{d:04d}.npz",
+    out_path = _G["draw_root"] / member / mask_name / f"draw{d:04d}.npz"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    np.savez_compressed(out_path,
                         y=y[ev].astype(np.int8), speaker=np.asarray(speaker[ev]).astype(str),
                         plat=np.asarray(plat[ev]).astype(str),
                         s_eval=scores, s_lab=scores_all[lab_used],
@@ -307,7 +309,14 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         if args.members_only:
             return 0
 
-    df = pd.read_csv(root / "results" / "u10_fusion.csv")
+    try:
+        df = pd.read_csv(root / "results" / "u10_fusion.csv")
+    except pd.errors.EmptyDataError:
+        print("no member rows were produced; nothing to fuse", file=sys.stderr)
+        return 1
+    if df.empty:
+        print("no member rows were produced; nothing to fuse", file=sys.stderr)
+        return 1
     print("\nmember pooled EER\n"
           + df.pivot_table(index="method", columns="mask", values="pooled_eer",
                            aggfunc="mean").round(3).to_string())
