@@ -77,6 +77,21 @@ def test_verdicts_flag_a_speaker_local_method():
     assert v.attrs["flags"]["LP_GAIN_IS_SPEAKER_LOCAL"] is True   # 16 > 15
 
 
+def test_lp_gain_flag_fires_when_the_unseen_gap_interval_contains_zero():
+    """A 0.1-point B9 edge with draw noise is not evidence of anything."""
+    rng = np.random.default_rng(0)
+    rows = []
+    for d in range(20):
+        rows.append({"method": "B1", "mask": "seen", "draw": d, "pooled_eer": 8.0 + rng.normal(0, .2)})
+        rows.append({"method": "B1", "mask": "unseen", "draw": d, "pooled_eer": 8.0 + rng.normal(0, 5.0)})
+        rows.append({"method": "B9", "mask": "seen", "draw": d, "pooled_eer": 6.0 + rng.normal(0, .2)})
+        rows.append({"method": "B9", "mask": "unseen", "draw": d, "pooled_eer": 8.0 + rng.normal(0, 5.0)})
+    v = u1.verdicts(pd.DataFrame(rows))
+    lo, hi = v.attrs["flags"]["B9_minus_B1_unseen_ci"]
+    assert lo <= 0.0 <= hi
+    assert v.attrs["flags"]["LP_GAIN_IS_SPEAKER_LOCAL"] is True
+
+
 def test_verdicts_do_not_flag_a_speaker_robust_method():
     rows = []
     for d in range(10):

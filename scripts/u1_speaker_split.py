@@ -162,9 +162,25 @@ def verdicts(df: pd.DataFrame) -> pd.DataFrame:
         b1 = out[out["method"] == "B1"]
         b9 = out[out["method"] == "B9"]
         if not b1.empty and not b9.empty:
-            d = float(b9["unseen_pooled"].iloc[0] - b1["unseen_pooled"].iloc[0])
-            flags["LP_GAIN_IS_SPEAKER_LOCAL"] = bool(d >= -1e-9)
-            flags["B9_minus_B1_unseen"] = d
+            # paired on the same draws and judged by the INTERVAL: "B9 is not better
+            # than B1 on unseen" means the CI contains 0 or lies above it
+            a = clips[(clips["method"] == "B9") & (clips["mask"] == "unseen")].set_index("draw")["pooled_eer"]
+            b = clips[(clips["method"] == "B1") & (clips["mask"] == "unseen")].set_index("draw")["pooled_eer"]
+            common = a.index.intersection(b.index)
+            if len(common) >= 5:
+                d = (a.loc[common].astype(float) - b.loc[common].astype(float)).values
+                lo, hi = float(np.percentile(d, 2.5)), float(np.percentile(d, 97.5))
+                flags["B9_minus_B1_unseen"] = float(d.mean())
+                flags["B9_minus_B1_unseen_ci"] = [lo, hi]
+                flags["LP_GAIN_IS_SPEAKER_LOCAL"] = bool(lo <= 0.0 <= hi or lo > 0.0)
+                a2 = clips[(clips["method"] == "B9") & (clips["mask"] == "seen")].set_index("draw")["pooled_eer"]
+                b2 = clips[(clips["method"] == "B1") & (clips["mask"] == "seen")].set_index("draw")["pooled_eer"]
+                c2 = a2.index.intersection(b2.index)
+                if len(c2) >= 5:
+                    d2 = (a2.loc[c2].astype(float) - b2.loc[c2].astype(float)).values
+                    flags["B9_minus_B1_seen"] = float(d2.mean())
+                    flags["B9_minus_B1_seen_ci"] = [float(np.percentile(d2, 2.5)),
+                                                    float(np.percentile(d2, 97.5))]
     out.attrs["flags"] = flags
     return out
 
@@ -177,8 +193,20 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--spec", default="S3")
     parser.add_argument("--draws", type=int, default=N_DRAWS)
     parser.add_argument("--jobs", type=int, default=16)
+    parser.add_argument("--verdicts-only", action="store_true",
+                        help="recompute the verdicts from the existing results CSV")
     args = parser.parse_args(argv)
     root = Path(args.root).resolve()
+    if args.verdicts_only:
+        df = pd.read_csv(root / "results" / "u1_speaker_split.csv")
+        print(df.groupby(["method", "mask"])["pooled_eer"].mean().unstack().round(3).to_string())
+        v = verdicts(df)
+        print()
+        print(v.round(3).to_string(index=False))
+        with open(root / "results" / "u1_verdicts.json", "w", encoding="utf-8") as fh:
+            json.dump(v.attrs.get("flags", {}), fh, indent=2)
+        print(json.dumps(v.attrs.get("flags", {}), indent=2))
+        return 0
     data_dir = data_root(args.data)
     sub, F = w6.load_spec(root, data_dir, args.backbone, args.spec)
     transform, Z = w6.fit_preprocess(F)
