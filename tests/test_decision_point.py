@@ -56,6 +56,23 @@ def test_best_vs_b1_picks_the_lowest_eer_candidate(tmp_path):
     assert got["meets_bar"] is False or got["meets_bar"] == False      # noqa: E712
 
 
+def test_the_interval_is_the_one_for_that_mask(tmp_path):
+    """The same pair has a different interval on seen and on strict_draw."""
+    root = _root(tmp_path)
+    iv = pd.read_csv(root / "results" / "u1p_intervals.csv")
+    iv = pd.concat([iv, pd.DataFrame([{
+        "k": 290, "mask": "seen", "method_a": "B9", "method_b": "B1",
+        "delta": -0.25, "old_lo": -4.0, "old_hi": 3.0, "a_lo": -0.3, "a_hi": -0.2,
+        "b_lo": -0.4, "b_hi": -0.1, "b_contains_zero": False}])], ignore_index=True)
+    iv.to_csv(root / "results" / "u1p_intervals.csv", index=False)
+    lookup = dp.interval_lookup(root)
+    cands = dp.collect_candidates(root)
+    unseen = dp.best_vs_b1(cands, lookup, "unseen")
+    seen = dp.best_vs_b1(cands, lookup, "seen")
+    assert unseen["delta"] == -1.6
+    assert seen["delta"] == -0.25               # not the unseen interval
+
+
 def test_document_states_the_verdicts_and_the_fact(tmp_path):
     text = dp.write_document(_root(tmp_path))
     assert "DECISION POINT" in text

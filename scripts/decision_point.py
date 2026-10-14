@@ -93,9 +93,13 @@ def collect_candidates(root: Path) -> pd.DataFrame:
     return df
 
 
-def interval_lookup(root: Path) -> Dict[Tuple[str, int, str, str], Dict[str, Any]]:
-    """``(key, m, method_a, method_b) -> interval row`` for every stored comparison."""
-    out: Dict[Tuple[str, int, str, str], Dict[str, Any]] = {}
+def interval_lookup(root: Path) -> Dict[Tuple[str, int, str, str, str], Dict[str, Any]]:
+    """``(key, m, method_a, method_b, mask) -> interval row`` for every comparison.
+
+    The mask is part of the key: the same method pair has a different interval on
+    ``seen`` and on ``strict_draw`` because the evaluation sets differ.
+    """
+    out: Dict[Tuple[str, int, str, str, str], Dict[str, Any]] = {}
     for key, fname, mcol in (("u1p", "u1p_intervals.csv", "k"),
                              ("u8", "u8_intervals.csv", "m"),
                              ("u9", "u9_intervals.csv", None)):
@@ -104,11 +108,12 @@ def interval_lookup(root: Path) -> Dict[Tuple[str, int, str, str], Dict[str, Any
             continue
         for _, r in df.iterrows():
             m = int(r["k"]) if key == "u1p" else (int(r["m"]) if mcol else -1)
-            out[(key, m, str(r["method_a"]), str(r["method_b"]))] = r.to_dict()
+            out[(key, m, str(r["method_a"]), str(r["method_b"]), str(r["mask"]))] = \
+                r.to_dict()
     return out
 
 
-def best_vs_b1(cands: pd.DataFrame, intervals: Dict[Tuple[str, int, str, str],
+def best_vs_b1(cands: pd.DataFrame, intervals: Dict[Tuple[str, int, str, str, str],
                                                     Dict[str, Any]],
                mask: str) -> Optional[Dict[str, Any]]:
     """The lowest-EER candidate on ``mask`` and its interval against B1."""
@@ -118,7 +123,7 @@ def best_vs_b1(cands: pd.DataFrame, intervals: Dict[Tuple[str, int, str, str],
     if sel.empty:
         return None
     row = sel.sort_values("pooled_eer").iloc[0]
-    iv = intervals.get((row["interval_key"], int(row["m"]), row["method"], "B1"))
+    iv = intervals.get((row["interval_key"], int(row["m"]), row["method"], "B1", mask))
     out = {"mask": mask, "method": row["method"], "label": row["label"],
            "m": int(row["m"]), "mean": float(row["pooled_eer"]),
            "source": row["source"]}
