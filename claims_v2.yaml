@@ -1,0 +1,77 @@
+# X3 pre-registered criteria v2 (NEW_TASKS 01, hongyu).  FROZEN before U4-U6 run;
+# sha256 recorded in claims_v2.sha256.  The v1 claims and their verdicts
+# (C1_FAIL / PAST_FAIL / DECONF_NOT_SHOWN) stay in the report untouched.
+version: 2
+supersedes: claims.yaml
+seed_base: 20261015
+min_per_class: 30
+views: [pooled, within_macro, worst]
+base_f2: [B1, B2, B3, B4, B5, B7, B8, B9, B10, "B11'"]
+masks: [clips, unseen]
+backbones_required: 2
+
+claims:
+  N1p:
+    name: graph-propagation fusion
+    statement: >-
+      M-ALP's learner (LR + label-propagation fusion) beats max(B1, B9) at k=290 on
+      BOTH the clips and the unseen masks, on pooled OR within-macro, with the
+      draw-paired 95% interval clear of 0, on both backbones.
+    k: 290
+    margin_points: 0.5
+    paired_ci_level: 0.95
+    require_both_masks: true
+  N2p:
+    name: active selector
+    statement: >-
+      M-ALP's selector at k=100 beats uniform-per-cell by >=3.0 pooled AND beats the
+      strongest of {E, K, TypiClust-lite} by >=0.5 with the interval clear of 0.
+      Beating only uniform is recorded as SEL_ONLY_VS_UNIFORM and is not novelty.
+    k: 100
+    gain_vs_uniform_points: 3.0
+    gain_vs_best_other_points: 0.5
+  N3p:
+    name: speaker coverage
+    statement: >-
+      At the same budget k=100 the speaker-coverage selector (SC) beats the
+      cell-coverage selector (CC) by >=1.0 pooled on the clips mask; the unseen
+      mask is reported only.
+    k: 100
+    gain_points: 1.0
+  N4p:
+    name: label efficiency
+    statement: "M-ALP at k=100 is non-inferior to B1+U at k=290 within 0.3 pooled (a 2.9x label saving)."
+    small_k: 100
+    large_k: 290
+    non_inferiority_margin: 0.3
+  S-Fp:
+    name: few-shot SOTA v2
+    statement: >-
+      For k in {100, 290}, M-ALP beats EVERY baseline in BASE_F' on at least two of
+      the three views with the paired interval clear of 0 and is no worse than +0.3
+      on the third, on BOTH the clips and unseen masks, on two backbones.
+    k: [100, 290]
+    margin_tolerance_points: 0.3
+    masks: [clips, unseen]
+  S-Z:
+    statement: unchanged from v1
+  S-R:
+    statement: unchanged from v1
+
+gates:
+  G12: {name: N1p, rule: "MALP_PASS / MALP_FAIL"}
+  G13: {name: N2p, rule: "SEL_PASS / SEL_ONLY_VS_UNIFORM / SEL_FAIL"}
+  G14: {name: N3p, rule: "SPEAKER_COVERAGE_PASS / SPEAKER_COVERAGE_FAIL (+ the unseen difference)"}
+  G15: {name: N4p, rule: "LABEL_EFFICIENCY_PASS / LABEL_EFFICIENCY_FAIL"}
+  G16: {name: S-Fp, rule: "SOTA_F2_DEV_YES / SOTA_F2_DEV_NO"}
+
+flags:
+  U1: [SPEAKER_GAP, LP_GAIN_IS_SPEAKER_LOCAL]
+  U2: [B11_BROKEN]
+  U3: [IDENTITY_OVERLAP_FLAG]
+
+rules:
+  - "design decisions use the dev region only; no test evaluation without x3/FREEZE_OK"
+  - "hyper-parameter parity: every method gets <=16 configurations, selected inside L"
+  - "transductive methods (B6, B7, B8, B9, M-ALP, Track Z) are labelled as such in the report"
+  - "never move a threshold because a gate failed"
