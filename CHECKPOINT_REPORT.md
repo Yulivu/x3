@@ -273,35 +273,36 @@ U8 intervals (delta = method - control; negative = method better)
     ]
   },
   "LP_GAIN_IS_SPEAKER_LOCAL": false,
-  "SPEAKER_GAP": true,
-  "SPEAKER_GAP_methods": [
-    "B9"
-  ],
+  "LP_GAIN_UNSEEN_BELOW_RESOLUTION": true,
+  "LP_GAIN_UNSEEN_MEETS_2PT_BAR": false,
+  "SPEAKER_GAP": false,
+  "SPEAKER_GAP_methods": [],
+  "k": 290,
   "speaker_ratio": {
     "B1": {
-      "ratio": 1.2349172452632216,
-      "seen": 10.969883181399412,
-      "unseen": 13.546897919233107
+      "ratio": 1.1736674215270884,
+      "seen": 10.193662061010695,
+      "unseen": 11.963969067064927
     },
     "B3": {
-      "ratio": 1.4776927439001106,
-      "seen": 12.240035240260932,
-      "unseen": 18.087011259615227
+      "ratio": 1.4710586877781557,
+      "seen": 11.804579056338861,
+      "unseen": 17.365228576391345
     },
     "B7": {
-      "ratio": 1.3927719886694243,
-      "seen": 10.579761515315873,
-      "unseen": 14.73519548533473
+      "ratio": 1.4300157780168998,
+      "seen": 9.704528843502585,
+      "unseen": 13.877629364428794
     },
     "B9": {
-      "ratio": 1.5583716290505585,
-      "seen": 8.716335978261684,
-      "unseen": 13.583290697795654
+      "ratio": 1.485933688556856,
+      "seen": 7.249412313549381,
+      "unseen": 10.772145978941921
     },
     "C1": {
-      "ratio": 1.450041737315278,
-      "seen": 10.920889159737367,
-      "unseen": 15.835745090213159
+      "ratio": 1.4659161284098254,
+      "seen": 10.12611518787006,
+      "unseen": 14.84403557203441
     }
   }
 }
@@ -431,4 +432,4 @@ _(empty)_
 
 NOT_RUN - `results/w8_zlabel.csv` missing
 
-commit: `f3b6cfe`
+commit: `0e5a853`

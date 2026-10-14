@@ -17,7 +17,7 @@ negative delta = the method is better than B1 (EER is an error rate).
 - **G17 (N5, ESN)**: `ESN_FAIL` - ESN-LR at m=5 13.27 vs the best control OC+B1 7.76 (delta 5.51, (b) interval [4.231945025882896, 6.794665527272493]).
 - **G18 (N6, projection)**: `PROJ_FAIL` - PROJ-ind strict_draw 14.47 vs B1 14.45 (delta 0.02, (b) interval [-0.018825364972594124, 0.06187870655338064], seen delta 0.07).
 
-Tracked flags (U1', v3): `SPEAKER_GAP` = True for ['B9']; `LP_GAIN_IS_SPEAKER_LOCAL` = False (B9 minus B1 on unseen = -1.19, (b) [-2.1206788684265963, -0.2320875955407337], old [-10.264579860558005, 4.670090701425648]).
+Tracked flags (U1', v3): `SPEAKER_GAP` = False for []; `LP_GAIN_IS_SPEAKER_LOCAL` = False (B9 minus B1 on unseen = -1.19, (b) [-2.1206788684265963, -0.2320875955407337], old [-10.264579860558005, 4.670090701425648]).
 
 ### U10 levers (backbone and fusion, no method change)
 
@@ -80,3 +80,5 @@ On `strict_draw` the best method is OC+B1@m=10: delta -8.60 points, (b) interval
 - `results/u9_gate.json`
 - `results/split_v3_audit.csv`
 - `splits/speaker_split_v3.json`
+
+The per-clip score archives behind the (b) intervals (`results/u1p_draws/`, `u8_draws/`, `u9_draws/`, `u10_draws/`, ~0.9 GB) stay on the compute box and are excluded from git; the interval CSVs above are computed from them.

@@ -1,2 +1,3 @@
 2026-10-14T21:46:19Z  HB  commit=f3b6cfe  done=U1p,v2v3,U8,U9,U10  pending=DP  tmux=-  note=NEW_TASKS02 batch: v3 protocol + U1p + U8 + U9 + U10 done; writing reports
 2026-10-14T21:46:44Z  HB  commit=6907f56  done=U1p,v2v3,U8,U9,U10,DP  pending=-  tmux=-  note=DECISION_POINT.md written
+2026-10-14T21:51:09Z  HB  commit=0e5a853  done=U1p,v2v3,U8,U9,U10,DP  pending=-  tmux=-  note=batch closed: reports regenerated
