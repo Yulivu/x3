@@ -15,13 +15,16 @@ from src.views import (
     FAM_B,
     MAX_DURATION_DRIFT_S,
     SAMPLE_RATE,
+    codec_hops,
     duration_s,
+    encode_cmd,
     fam_a_params,
     fam_b_params,
     ffmpeg_cmd,
     params_table,
     run_view,
     view_seed,
+    waveform_ops,
 )
 
 HAS_FFMPEG = shutil.which("ffmpeg") is not None
@@ -74,10 +77,28 @@ def test_fam_b_is_deterministic_and_single_chain():
 def test_ffmpeg_cmd_carries_codec_bitrate_and_band_limit():
     a = ffmpeg_cmd("in.wav", "out.wav", fam_a_params(1))
     assert "-c:a" in a and any(t.endswith("k") for t in a)
-    b = ffmpeg_cmd("in.wav", "out.wav", fam_b_params(1))
-    assert "libopus" in b and "libmp3lame" in b and "-b:a" in b
+    # walk the whole chain, not just the first hop
+    hops = codec_hops(fam_b_params(1))
+    assert [h[0] for h in hops] == ["libopus", "libmp3lame"]
+    first = encode_cmd("in.wav", "hop0.ogg", *hops[0])
+    assert "libopus" in first and "-b:a" in first and first[-1].endswith(".ogg")
+    second = encode_cmd("hop0.wav", "hop1.mp3", *hops[1])
+    assert "libmp3lame" in second and second[-1].endswith(".mp3")
     banded = ffmpeg_cmd("in.wav", "out.wav", {"band_limit_hz": 8000})
     assert any("lowpass" in t for t in banded)
+
+
+def test_waveform_ops_apply_gain_noise_and_downsample_deterministically():
+    x = np.sin(2 * np.pi * 220 * np.arange(16000) / 16000).astype(np.float32) * 0.3
+    p = {"gain_db": 6.0, "pink_snr_db": 20.0, "downsample_hz": 8000}
+    a = waveform_ops(x, p, clip_id=7)
+    b = waveform_ops(x, p, clip_id=7)
+    assert a.shape == x.shape and np.allclose(a, b)
+    quiet = waveform_ops(x, {"gain_db": 0.0}, clip_id=7)
+    loud = waveform_ops(x, {"gain_db": 6.0}, clip_id=7)
+    # 6 dB is a factor of 10**(6/20) = 1.99526, not 2.0
+    assert np.isclose(np.sqrt(np.mean(loud ** 2)) / np.sqrt(np.mean(quiet ** 2)),
+                      10 ** 0.3, rtol=1e-4)
 
 
 def test_params_table_shape():

@@ -43,8 +43,13 @@ FAM_B = {
 __all__ = [
     "SEED_BASE", "SAMPLE_RATE", "MAX_DURATION_DRIFT_S", "FAM_A", "FAM_A_EXTRA", "FAM_B",
     "view_seed", "fam_a_params", "fam_b_params", "ffmpeg_cmd", "run_view",
-    "duration_s", "params_table",
+    "duration_s", "params_table", "apply_view", "CODEC_CONTAINER",
 ]
+
+# Opus/AAC/MP3 cannot live in a WAV container; the chain hop writes the codec's
+# native container and the next step decodes it back to WAV.
+CODEC_CONTAINER = {"libopus": ".ogg", "opus": ".ogg", "aac": ".m4a", "libmp3lame": ".mp3",
+                   "libvorbis": ".ogg", "libfdk_aac": ".m4a"}
 
 
 def view_seed(clip_id: Any) -> int:
@@ -100,33 +105,126 @@ def fam_b_params(clip_id: Any) -> Dict[str, Any]:
     }
 
 
-def ffmpeg_cmd(src: str, dst: str, params: Mapping[str, Any]) -> List[str]:
-    """Build the ffmpeg command for one view (16 kHz mono WAV in and out)."""
-    cmd = ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-i", str(src)]
-    filters: List[str] = []
+def _resample(x: np.ndarray, sr_out: int, sr_in: int = SAMPLE_RATE) -> np.ndarray:
+    if sr_out == sr_in:
+        return x
+    n = max(1, int(round(len(x) * sr_out / sr_in)))
+    return np.interp(np.linspace(0, len(x) - 1, n), np.arange(len(x)), x).astype(np.float32)
+
+
+def waveform_ops(x: np.ndarray, params: Mapping[str, Any], clip_id: Any) -> np.ndarray:
+    """The waveform-domain part of a Fam-A view: gain, pink noise, 8 kHz round trip.
+
+    Done in numpy rather than with ffmpeg filters: ``anoisesrc`` is a SOURCE and
+    mixing it needs a complex filtergraph, and the SNR is easier to honour exactly
+    when the noise amplitude is derived from the clip's own RMS.
+    """
+    x = np.asarray(x, np.float32)
     if params.get("gain_db"):
-        filters.append(f"volume={float(params['gain_db'])}dB")
-    if params.get("pink_snr_db") is not None:
-        # pink noise mixed at the SNR implied by the parameter
-        filters.append(f"anoisesrc=c=pink:r={SAMPLE_RATE}:a=0.01[noise]")
-        filters.append(f"amix=inputs=2:duration=first:normalize=0")
+        x = x * float(10.0 ** (float(params["gain_db"]) / 20.0))
+    snr = params.get("pink_snr_db")
+    if snr is not None:
+        rng = np.random.default_rng(view_seed(f"{clip_id}#pink"))
+        # 1/f noise via a random walk, then scaled to the requested SNR
+        w = rng.normal(size=x.size).cumsum()
+        w = w - w.mean()
+        w = w / (np.std(w) + 1e-9)
+        rms = float(np.sqrt(np.mean(x ** 2)) + 1e-9)
+        amp = rms / (10.0 ** (float(snr) / 20.0))
+        x = x + (w * amp).astype(np.float32)
     if params.get("downsample_hz"):
-        filters.append(f"aresample={int(params['downsample_hz'])},aresample={SAMPLE_RATE}")
-    if params.get("band_limit_hz"):
-        filters.append(f"lowpass=f={int(params['band_limit_hz'])}")
-    if filters:
-        cmd += ["-af", ",".join(filters)]
-    cmd += ["-ac", "1", "-ar", str(SAMPLE_RATE)]
+        low = _resample(x, int(params["downsample_hz"]))
+        x = _resample(low, SAMPLE_RATE, int(params["downsample_hz"]))
+    return x.astype(np.float32)
+
+
+def codec_hops(params: Mapping[str, Any]) -> List[tuple]:
+    """The (codec, bitrate) hops to apply, Fam-A single hop or Fam-B double."""
     chain = params.get("chain")
     if chain:
-        for codec, bitrate in chain:
-            cmd += ["-c:a", str(codec), "-b:a", f"{int(bitrate)}k"]
-        cmd += ["-f", "wav"]
-    else:
-        cmd += ["-c:a", str(params.get("codec", "libopus")),
-                "-b:a", f"{int(params.get('bitrate_kbps', 32))}k", "-f", "wav"]
-    cmd += [str(dst)]
-    return cmd
+        return [(str(c), int(b)) for c, b in chain]
+    return [(str(params.get("codec", "libopus")), int(params.get("bitrate_kbps", 32)))]
+
+
+def encode_cmd(src: str, dst: str, codec: str, bitrate: int) -> List[str]:
+    return ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-i", str(src),
+            "-ac", "1", "-ar", str(SAMPLE_RATE), "-c:a", codec, "-b:a", f"{int(bitrate)}k",
+            str(dst)]
+
+
+def decode_cmd(src: str, dst: str) -> List[str]:
+    return ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-i", str(src),
+            "-ac", "1", "-ar", str(SAMPLE_RATE), "-c:a", "pcm_s16le", str(dst)]
+
+
+def lowpass_cmd(src: str, dst: str, hz: int) -> List[str]:
+    return ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-i", str(src),
+            "-af", f"lowpass=f={int(hz)}", "-ac", "1", "-ar", str(SAMPLE_RATE),
+            "-c:a", "pcm_s16le", str(dst)]
+
+
+def ffmpeg_cmd(src: str, dst: str, params: Mapping[str, Any]) -> List[str]:
+    """Backwards-compatible single command for a one-hop view (used by tests)."""
+    codec, bitrate = codec_hops(params)[0]
+    if params.get("band_limit_hz"):
+        return lowpass_cmd(src, dst, int(params["band_limit_hz"]))
+    if codec in ("pcm_s16le", "wav"):
+        return decode_cmd(src, dst)
+    return encode_cmd(src, dst, codec, bitrate)
+
+
+def apply_view(x: np.ndarray, params: Mapping[str, Any], clip_id: Any,
+               tmpdir: Optional[str] = None) -> np.ndarray:
+    """Full view pipeline in memory: waveform ops -> codec hops -> band limit."""
+    import tempfile
+
+    own_tmp = tmpdir is None
+    tmp = tempfile.mkdtemp() if own_tmp else tmpdir
+    try:
+        y = waveform_ops(x, params, clip_id)
+        cur = Path(tmp) / "cur.wav"
+        write_wav_mono(cur, y)
+        for hop, (codec, bitrate) in enumerate(codec_hops(params)):
+            if codec in ("none", "pcm_s16le"):
+                continue
+            enc = Path(tmp) / f"hop{hop}{CODEC_CONTAINER.get(codec, '.mka')}"
+            res = subprocess.run(encode_cmd(str(cur), str(enc), codec, bitrate),
+                                 capture_output=True, timeout=300)
+            if res.returncode != 0:
+                raise RuntimeError(f"{codec} encode failed: {res.stderr[-200:]!r}")
+            nxt = Path(tmp) / f"dec{hop}.wav"
+            res = subprocess.run(decode_cmd(str(enc), str(nxt)), capture_output=True, timeout=300)
+            if res.returncode != 0:
+                raise RuntimeError(f"{codec} decode failed: {res.stderr[-200:]!r}")
+            cur = nxt
+        if params.get("band_limit_hz"):
+            out = Path(tmp) / "band.wav"
+            res = subprocess.run(lowpass_cmd(str(cur), str(out), int(params["band_limit_hz"])),
+                                 capture_output=True, timeout=300)
+            if res.returncode != 0:
+                raise RuntimeError(f"lowpass failed: {res.stderr[-200:]!r}")
+            cur = out
+        import soundfile as sf
+
+        data, sr = sf.read(str(cur), dtype="float32", always_2d=True)
+        return _resample(data.mean(axis=1), SAMPLE_RATE, sr) if sr != SAMPLE_RATE \
+            else data.mean(axis=1).astype(np.float32)
+    finally:
+        if own_tmp:
+            import shutil
+
+            shutil.rmtree(tmp, ignore_errors=True)
+
+
+def write_wav_mono(path: Path, x: np.ndarray, sr: int = SAMPLE_RATE) -> None:
+    import wave
+
+    xi = np.clip(np.asarray(x, np.float32), -1.0, 1.0)
+    with wave.open(str(path), "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(sr)
+        w.writeframes((xi * 32767.0).astype("<i2").tobytes())
 
 
 def duration_s(path: str) -> float:
@@ -142,14 +240,19 @@ def duration_s(path: str) -> float:
         return float("nan")
 
 
-def run_view(src: str, dst: str, params: Mapping[str, Any], check_duration: bool = True) -> Dict[str, Any]:
+def run_view(src: str, dst: str, params: Mapping[str, Any], check_duration: bool = True,
+             clip_id: Any = 0) -> Dict[str, Any]:
     """Transcode one clip and (optionally) enforce the <=50 ms duration budget."""
+    import soundfile as sf
+
     Path(dst).parent.mkdir(parents=True, exist_ok=True)
-    cmd = ffmpeg_cmd(src, dst, params)
-    res = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
-    info: Dict[str, Any] = {"ok": res.returncode == 0, "cmd": cmd, "stderr": res.stderr[-500:]}
-    if res.returncode != 0:
-        return info
+    try:
+        x, sr = sf.read(str(src), dtype="float32", always_2d=True)
+        y = apply_view(x.mean(axis=1), params, clip_id)
+        write_wav_mono(Path(dst), y)
+    except Exception as exc:
+        return {"ok": False, "stderr": f"{type(exc).__name__}: {exc}"}
+    info: Dict[str, Any] = {"ok": True}
     if check_duration:
         d_src, d_dst = duration_s(src), duration_s(dst)
         drift = abs(d_dst - d_src)

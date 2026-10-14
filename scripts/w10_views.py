@@ -92,26 +92,15 @@ def read_wav(path: Path) -> np.ndarray:
 
 
 def _one(args) -> Tuple[int, Optional[str], Optional[bytes]]:
-    idx, x, view, params, tmp = args
-    src = Path(tmp) / f"{idx}.in.wav"
-    dst = Path(tmp) / f"{idx}.out.wav"
+    idx, x, view, params, tmp, clip_id = args
     try:
-        write_wav(src, x)
-        cmd = ffmpeg_cmd(str(src), str(dst), params)
-        res = subprocess.run(cmd, capture_output=True, timeout=300)
-        if res.returncode != 0:
-            return idx, f"ffmpeg rc={res.returncode}: {res.stderr[-200:]!r}", None
-        y = read_wav(dst)
+        from src.views import apply_view
+
+        y = apply_view(x, params, clip_id, tmpdir=tmp)
         out = prepare_waveform(y)
         return idx, None, (np.clip(out, -1, 1) * 32767.0).astype("<i2").tobytes()
     except Exception as exc:  # pragma: no cover
         return idx, f"{type(exc).__name__}: {exc}", None
-    finally:
-        for p in (src, dst):
-            try:
-                p.unlink()
-            except OSError:
-                pass
 
 
 def transcode_view(view: str, waves: Sequence[np.ndarray], clip_ids: Sequence[Any],
@@ -124,7 +113,8 @@ def transcode_view(view: str, waves: Sequence[np.ndarray], clip_ids: Sequence[An
     params_rows, errors = [], []
     t0 = time.time()
     with tempfile.TemporaryDirectory() as tmp:
-        tasks = [(i, waves[i], view, params_for(view, clip_ids[i]), tmp) for i in range(n)]
+        tasks = [(i, waves[i], view, params_for(view, clip_ids[i]), tmp, clip_ids[i])
+                 for i in range(n)]
         if jobs > 1:
             import multiprocessing as mp
 
