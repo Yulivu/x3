@@ -1,0 +1,23 @@
+{
+  "SPEAKER_GAP": true,
+  "SPEAKER_GAP_methods": [
+    "B1",
+    "B2",
+    "B3",
+    "B7",
+    "B8",
+    "B9",
+    "C1"
+  ],
+  "B9_minus_B1_unseen": -0.07614456805832996,
+  "B9_minus_B1_unseen_ci": [
+    -8.954004568228708,
+    12.831627192783749
+  ],
+  "LP_GAIN_IS_SPEAKER_LOCAL": true,
+  "B9_minus_B1_seen": -1.6857245266172458,
+  "B9_minus_B1_seen_ci": [
+    -4.113157015700523,
+    0.2918510778311375
+  ]
+}
