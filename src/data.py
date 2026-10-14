@@ -23,12 +23,14 @@ import pandas as pd
 DEFAULT_DATA = "/root/autodl-tmp/data"
 SPOOF, BONAFIDE = 1, 0
 
-# platform -> (bona fide, spoof), X2_mlitw_probe.md section 1.1
+# platform -> (bona fide, spoof), X2_mlitw_probe.md section 1.1.
+# NOTE: the doc writes the platform as "X (Twitter)"; the manifest stores it as
+# "x" (verified on the box, W0 2026-10-14).  Keys must match the manifest.
 EXPECTED_PLATFORM_COUNTS: Dict[str, Tuple[int, int]] = {
     "youtube": (5948, 531),
     "bilibili": (4263, 793),
     "facebook": (3027, 1129),
-    "twitter": (3046, 1061),
+    "x": (3046, 1061),
     "rednote": (1333, 1393),
     "douyin": (182, 1149),
     "tiktok": (369, 305),
