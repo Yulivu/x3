@@ -1,0 +1,32 @@
+# X3 work-package queue (TASKBOOK section 0.3).
+# Lane G = GPU/network, lane C = CPU.  `deps` may name another work package,
+# the control file FREEZE_OK, or an artifact path (chosen_backbone.json = gate G3).
+# gating: false marks the P3 backlog, which keeps running in wait mode and never
+# blocks ALL_DONE.
+version: 1
+python: /root/miniconda3/bin/python
+wps:
+  - {id: W0,  tier: P0, lane: C,    deps: [],                       est_h: 0.3,  cmd: "/root/miniconda3/bin/python scripts/w0_recon.py",        outputs: ["results/w0_recon.csv", "REPORT.md"]}
+  - {id: W1,  tier: P0, lane: G,    deps: [],                       est_h: 1.5,  cmd: "/root/miniconda3/bin/python scripts/w1_env.py",          outputs: ["ENV_READY"]}
+  - {id: W2,  tier: P0, lane: G,    deps: [W1],                     est_h: 3.5,  cmd: "/root/miniconda3/bin/python scripts/w2_features.py",     outputs: ["results/zeroshot_mlitw.csv"]}
+  - {id: W3,  tier: P0, lane: C,    deps: [W0],                     est_h: 0.3,  cmd: "/root/miniconda3/bin/python scripts/w3_split.py",        outputs: ["splits/speaker_split_v2.json"]}
+  - {id: W4,  tier: P0, lane: C,    deps: [W0, W3],                 est_h: 2.0,  cmd: "/root/miniconda3/bin/python scripts/w4_reproduce.py",    outputs: ["results/reconciliation.csv", "results/w4_mechanism.csv"]}
+  - {id: W5,  tier: P0, lane: C,    deps: [W2, W3],                 est_h: 2.0,  cmd: "/root/miniconda3/bin/python scripts/w5_backbones.py",    outputs: ["results/backbone_rank.csv"]}
+  - {id: W6,  tier: P0, lane: C,    deps: [W3],                     est_h: 3.0,  cmd: "/root/miniconda3/bin/python scripts/w6_baselines.py",    outputs: ["results/w6_summary.csv", "results/w6_paired.csv"]}
+  - {id: W7,  tier: P0, lane: C,    deps: [W6],                     est_h: 1.0,  cmd: "/root/miniconda3/bin/python scripts/w7_curve.py",        outputs: ["results/w7_curve.csv"]}
+  - {id: W8,  tier: P0, lane: C,    deps: [W5],                     est_h: 1.5,  cmd: "/root/miniconda3/bin/python scripts/w8_zlabel.py",       outputs: ["results/w8_zlabel.csv"]}
+  - {id: W9,  tier: P0, lane: C,    deps: [W6],                     est_h: 1.0,  cmd: "/root/miniconda3/bin/python scripts/w9_audit.py",        outputs: ["results/w9_audit.csv"]}
+  - {id: W10, tier: P1, lane: "G+C", deps: [chosen_backbone.json],   est_h: 2.5,  cmd: "/root/miniconda3/bin/python scripts/w10_views.py",       outputs: ["logs/w10_views.done"]}
+  - {id: W11, tier: P1, lane: C,    deps: [W6, W10],                est_h: 3.0,  cmd: "/root/miniconda3/bin/python scripts/w11_past.py",        outputs: ["results/w11_past.csv"]}
+  - {id: W12, tier: P1, lane: C,    deps: [W6],                     est_h: 2.0,  cmd: "/root/miniconda3/bin/python scripts/w12_casa.py",        outputs: ["results/w12_casa.csv"]}
+  - {id: W13, tier: P1, lane: G,    deps: [chosen_backbone.json],   est_h: 3.5,  cmd: "/root/miniconda3/bin/python scripts/w13_ft_last.py",     outputs: ["results/w13_b10.csv"]}
+  - {id: W14, tier: P1, lane: C,    deps: [W6],                     est_h: 1.5,  cmd: "/root/miniconda3/bin/python scripts/w14_graphssl.py",    outputs: ["results/w14_graphssl.csv"]}
+  - {id: W15, tier: P1, lane: "G+C", deps: [chosen_backbone.json],   est_h: 2.2,  cmd: "/root/miniconda3/bin/python scripts/w15_itw.py",         outputs: ["results/w15_itw.csv"]}
+  - {id: W16, tier: P1, lane: C,    deps: [W11, W12],               est_h: 2.0,  cmd: "/root/miniconda3/bin/python scripts/w16_factorial.py",   outputs: ["results/w16_factorial.csv", "results/w16_mechanism.csv"]}
+  - {id: W17, tier: P2, lane: G,    deps: [chosen_backbone.json],   est_h: 2.0,  cmd: "/root/miniconda3/bin/python scripts/w17_nda.py",         outputs: ["results/w17_nda.csv"]}
+  - {id: W18, tier: P2, lane: C,    deps: [W10, W11],               est_h: 1.5,  cmd: "/root/miniconda3/bin/python scripts/w18_c4.py",          outputs: ["results/w18_c4.csv"]}
+  - {id: W19, tier: P2, lane: C,    deps: [W10, W11],               est_h: 1.0,  cmd: "/root/miniconda3/bin/python scripts/w19_famb.py",        outputs: ["results/w19_famb.csv"]}
+  - {id: W20, tier: P2, lane: C,    deps: [W11, W12],               est_h: 1.5,  cmd: "/root/miniconda3/bin/python scripts/w20_sensitivity.py", outputs: ["results/w20_sensitivity.csv"]}
+  - {id: W21, tier: P2, lane: C,    deps: [W6],                     est_h: 2.0,  cmd: "/root/miniconda3/bin/python scripts/w21_addgp.py",       outputs: ["results/w21_addgp.csv"]}
+  - {id: W22, tier: P3, lane: "G+C", deps: [], gating: false,        est_h: 0.0,  cmd: "/root/miniconda3/bin/python scripts/w22_backlog.py",     outputs: ["results/w22_backlog.csv"]}
+  - {id: WF,  tier: F,  lane: "G+C", deps: [FREEZE_OK, W6, W7, W8, W9, W11, W12, W13, W14, W15, W16, W17, W18, W19, W20, W21], est_h: 5.0, cmd: "/root/miniconda3/bin/python scripts/wf_final.py", outputs: ["results/wf_final.csv"]}

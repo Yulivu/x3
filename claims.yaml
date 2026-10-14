@@ -1,0 +1,65 @@
+# X3 pre-registered criteria.  FROZEN before any dev number is read
+# (TASKBOOK sections 0.1 and 8).  decide.py evaluates these; nothing is tuned to pass.
+version: 1
+seed_base: 20261015          # draw d uses seed 20261015 + d (hard rule 5)
+min_per_class: 30            # a platform needs >=30 clips of each class to be scored
+views: [pooled, within_macro, worst]
+base_f: [B1, B2, B3, B4, B7, B8, B9, B10, B11]
+multiple_comparison: holm
+
+claims:
+  S-F:
+    statement: >-
+      At k=290 the final method M* beats every BASE_F baseline on at least two of the
+      three views (pooled / within_macro / worst) with the paired 95% interval excluding 0,
+      and is not worse than +0.3 points on the third; this must hold on the two best
+      zero-shot backbones.
+    k: 290
+    views: [pooled, within_macro, worst]
+    min_views_win: 2
+    paired_ci_level: 0.95
+    margin_tolerance_points: 0.3
+    required_backbones: 2
+  S-Z:
+    statement: >-
+      At k=0 pooled <= 24.65 (>=3 points below the paper's 27.65) and >=2 points below the
+      best AntiDeepfake zero-shot, with within_macro no worse than zero-shot.
+    pooled_max: 24.65
+    gain_vs_best_zeroshot_points: 2.0
+    within_macro_not_worse_than_zeroshot: true
+  S-K:
+    statement: "For every k in the budget curve the final method is not worse than the strongest baseline."
+    k: [30, 100, 290, 600, 1200]
+  S-R:
+    statement: "ITW ordering is not overturned (gate G9)."
+  N1:
+    name: MPP            # multi-level / multi-platform probe (C1)
+    gate: G4
+  N2:
+    name: PAST           # prior-aware self-training (C2)
+    gate: G6
+  N3:
+    name: CASA           # cell-aware active selection (C3)
+    gate: G7
+  N4:
+    name: de-confounding mechanism evidence
+    gate: G10
+
+novelty_rule: >-
+  If >=2 of N1..N4 pass, the method is the main contribution; if only N1 passes it is an
+  implementation detail; if none pass, report "method gain insufficient" and keep the
+  baseline and protocol results.  Never tune anything to pass a gate.
+
+gates:
+  G0: {name: feature health, rule: ">=3 AntiDeepfake backbones extracted + fidelity self-check passed"}
+  G1: {name: headroom, rule: "best zero-shot backbone pooled >15 or within_macro >20"}
+  G2: {name: reproduction, rule: "W4 reproduction diff <=0.5 points; 100-draw mean vs 3-draw headline pooled diff <=2"}
+  G3: {name: backbone choice, rule: "lowest within_macro (backbone, spec) on dev; switch only if paired diff >=0.5 points and CI excludes 0"}
+  G4: {name: MPP, rule: "C1 vs best of {B1,B2,B3,B11}: pooled lower by >=1.0 or within_macro lower by >=0.7, paired CI excludes 0"}
+  G5: {name: pseudo-label collapse, rule: "share of extreme-prior cells with >20-point label-mix error >=30% -> PL_COLLAPSE"}
+  G6: {name: PAST, rule: "PAST vs C1: within_macro lower by >=1.5 or pooled lower by >=1.0, paired CI excludes 0"}
+  G7: {name: CASA, rule: "CASA vs uniform at k=100: pooled lower by >=1.0, paired CI excludes 0"}
+  G8: {name: Track Z, rule: "Z2 or Z3 pooled <=24.65 and >=2 points below best zero-shot with within_macro not worse"}
+  G9: {name: ITW replication, rule: "C1 no worse than B1 by >0.3 points and PAST no worse than C1"}
+  G10: {name: de-confounding, rule: "C1 platform-predictability AUC at least 0.03 below B1 with within_macro not worse"}
+  G11: {name: dev SOTA, rule: "S-F holds on dev for the two chosen backbones"}

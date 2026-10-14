@@ -1,0 +1,70 @@
+# X3 hyper-parameter grids (TASKBOOK section 7, hard rule 6).
+# Every method gets <=16 configurations, selected by stratified 5-fold CV *inside L*
+# with the same folds for every method.
+version: 1
+cv:
+  folds: 5
+  stratified: true
+  same_folds_for_all_methods: true
+  select_by: log_likelihood
+  max_configs_per_method: 16
+
+preprocessing:
+  standardize: fit_on_unlabelled_region_only
+  pca:
+    dims: 256
+    keep_variance: 0.95
+    take: min          # min(256, components covering 95 % variance)
+  fit_on: unlabelled_region_features
+
+methods:
+  B1:  {model: logreg, grid: {C: [1e-3, 1e-2, 1e-1, 1, 10]}, class_weight: null}
+  B2:  {model: logreg_cell_offset, base: B1, prior: bb_eb}
+  B3:  {model: logreg_platform_offset, base: B1, sigma: [0.25, 0.5, 1, 2]}
+  B4:  {model: gpc_rbf, pca: 64}
+  B5:  {model: knn_prototype, k: 15, metric: cosine, calibrate: platt}
+  B6:  {model: zeroshot_platt_em, grid: {tau: [0.8, 0.9, 0.95]}, shrink: {kappa: 10}}
+  B7:  {model: naive_pseudo_label, rounds: 3, grid: {tau: [0.8, 0.9, 0.95]}, weight: 0.5}
+  B8:  {model: fixmatch_lite, rounds: 3, grid: {tau: [0.8, 0.9, 0.95]}, weight: 0.5}
+  B9:  {model: label_propagation, k: 15, metric: cosine, alpha: 0.9, iters: 20}
+  B10: {model: ft_last_block, grid: {lr: [1e-5, 3e-5]}, epochs: 5, batch: 16, class_weight: null}
+  B11: {model: mlp, hidden: 256, activation: gelu, dropout: 0.3, weight_decay: 1e-2, lr: 1e-3, steps: 100}
+  C1:
+    model: mpp                 # multi-level probe: w'z + mu + alpha_p + beta_l + gamma_c
+    grid: {sigma_p: [0.25, 0.5, 1, 2], sigma_gamma: [0.25, 0.5, 1, 2]}   # 16 combos
+    lambda_from: B1            # lambda = 1 / C selected by B1's CV
+    variants: [MPP-MLP, MPP-noInt, MPP-platformOnly]
+  C2:
+    model: past                # prior-aware self-training
+    rounds: 4
+    grid: {kappa: [5, 10, 20]}
+    lambda_u: 0.1
+    quota_r0: 0.1
+    quota_step: 0.1
+    tau0: 0.75
+    tau_step: 0.05
+  C3:
+    model: casa                # cell-aware active label selection
+    n0: 60
+    batches: 4
+    grid: {rho: [0.5, 1, 2]}
+    per_cell_cap_factor: 2.0
+    dedup_cosine: 0.1
+    baselines: [U, P, N, E, K, BADGE-lite]
+  C4:
+    models: [E1, E2, E3]       # E1 top-2 backbone logit average, E2 Fam-A TTA, E3 both
+  Z:
+    models: [Z0, Z1, Z2, Z3]
+    em_iters: 20
+    kappa: 10
+    clip: [0.02, 0.98]
+
+views:                          # W10 transcoding chains (ffmpeg, 16 kHz mono)
+  fam_a:
+    A1: {codec: libopus, bitrates: [12, 16, 24, 32, 48]}
+    A2: {codec: aac, bitrates: [24, 32, 48, 64, 96]}
+    extra: {gain_db: [-6, 6], gain_p: 0.5, pink_noise_snr_db: [10, 30], pink_noise_p: 0.3,
+            downsample_hz: 8000, downsample_p: 0.3}
+  fam_b:
+    B1: {chain: [opus_24k, mp3_64k], band_limit_hz_p: 0.5}
+  seed: clip_id_based        # params drawn from seed 20261015 + clip_id
