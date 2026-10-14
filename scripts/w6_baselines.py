@@ -217,6 +217,9 @@ def _worker(payload):
 
 def summarize_draws(rows: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     main = rows[rows["mask"].isin(["clips", "strict"])].copy()
+    # Pair inside ONE mask: the same draw appears twice (clips and strict), so an
+    # unfiltered set_index("draw") silently returns two rows per draw.
+    clips = main[main["mask"] == "clips"]
     # LONG format on purpose: decide.py's gates read (method, metric, mean), so a
     # wide table silently makes every gate report NOT_RUN.
     metrics = ["pooled_eer", "within_macro_eer", "worst_platform_eer", "auc"]
@@ -226,8 +229,8 @@ def summarize_draws(rows: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame, pd.
     long = long[["backbone", "spec", "method", "mask", "metric", "mean", "std"]]
 
     def paired(a: str, b: str, metric: str) -> Optional[Dict[str, Any]]:
-        wa = main[main["method"] == a].set_index("draw")[metric]
-        wb = main[main["method"] == b].set_index("draw")[metric]
+        wa = clips[clips["method"] == a].set_index("draw")[metric]
+        wb = clips[clips["method"] == b].set_index("draw")[metric]
         common = wa.index.intersection(wb.index)
         if len(common) < 3:
             return None
@@ -271,9 +274,22 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                              "$DATA/x3/feats/<backbone>/")
     parser.add_argument("--spec", default=SPEC)
     parser.add_argument("--suffix", default="", help="suffix for the draws filename")
+    parser.add_argument("--summary-only", action="store_true",
+                        help="rebuild the tables from an existing draws file")
     args = parser.parse_args(argv)
     root = Path(args.root).resolve()
     data_dir = data_root(args.data)
+    if args.summary_only:
+        src = root / "results" / f"w6_draws_{args.backbone}_{args.spec}{args.suffix}.csv"
+        df = pd.read_csv(src)
+        summary, paired_tbl, collapse = summarize_draws(df)
+        summary.to_csv(root / "results" / "w6_summary.csv", index=False)
+        if not paired_tbl.empty:
+            paired_tbl.to_csv(root / "results" / "w6_paired.csv", index=False)
+        if not collapse.empty:
+            collapse.to_csv(root / "results" / "w6_collapse.csv", index=False)
+        print(f"rebuilt the tables from {src} ({len(df)} rows)")
+        return 0
     methods = tuple(m.strip() for m in args.methods.split(",") if m.strip())
 
     sub, F = load_spec(root, data_dir, args.backbone, args.spec)
