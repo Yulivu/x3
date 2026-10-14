@@ -270,6 +270,8 @@ def _nt02_block(root: Path) -> List[str]:
     for label, fname in (("G17 (N5, ESN)", "u8_gate.json"),
                          ("G18 (N6, projection)", "u9_gate.json"),
                          ("G12-G16 (U4 / M-ALP)", "malp_gate.json"),
+                         ("W15 ITW availability", "w15_itw_verdict.json"),
+                         ("W21 ADD-GP attempt", "w21_addgp_verdict.json"),
                          ("U1' verdicts", "u1p_verdicts.json")):
         path = root / "results" / fname
         lines.append(f"### {label}")

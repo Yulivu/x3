@@ -76,11 +76,13 @@ def inspect_repo(path: Path) -> Dict[str, Any]:
     weights = sorted(p.name for p in files
                      if p.suffix in (".pt", ".pth", ".ckpt", ".safetensors", ".npy",
                                      ".npz", ".pkl"))
+    py_files = sorted(str(p.relative_to(path)) for p in files if p.suffix == ".py")
     readme = next((p for p in files if p.name.lower().startswith("readme")), None)
     head = ""
     if readme is not None:
         head = readme.read_text(encoding="utf-8", errors="ignore")[:1500]
     return {"exists": True, "n_files": len(files), "entry_points": entries,
+            "python_files": py_files[:20],
             "requirements": reqs, "weights": weights[:20],
             "has_readme": readme is not None, "readme_head": head}
 
@@ -101,7 +103,11 @@ def build_verdict(clone: Dict[str, Any], info: Dict[str, Any]) -> Dict[str, Any]
     if not info.get("entry_points"):
         out["verdict"] = "ADDGP_UNAVAILABLE"
         out["reason"] = ("no recognisable entry point "
-                         f"(looked for {', '.join(ENTRY_HINTS)})")
+                         f"(looked for {', '.join(ENTRY_HINTS)}); the checkout holds "
+                         f"{info.get('n_files')} files and "
+                         f"{len(info.get('python_files', []))} python files: "
+                         + ", ".join(info.get("python_files", [])[:6])
+                         + ("" if info.get("weights") else "; no weights either"))
         return out
     out["verdict"] = "ADDGP_AVAILABLE"
     out["reason"] = "entry points found; B4 stays the documented stand-in until the "

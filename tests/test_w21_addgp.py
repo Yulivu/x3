@@ -51,6 +51,7 @@ def test_inspect_finds_entry_points_requirements_and_weights(tmp_path):
     (d / "README.md").write_text("# ADD-GP\nrun main.py", encoding="utf-8")
     info = w21.inspect_repo(d)
     assert info["exists"] and info["entry_points"] == ["main.py"]
+    assert "main.py" in info["python_files"]
     assert any("torch" in r for r in info["requirements"])
     assert info["weights"] == ["model.pt"]
     assert info["has_readme"] and "ADD-GP" in info["readme_head"]
@@ -68,9 +69,12 @@ def test_verdict_is_unavailable_without_a_clone():
 
 def test_verdict_is_unavailable_without_an_entry_point():
     got = w21.build_verdict({"cloned": True},
-                            {"exists": True, "entry_points": [], "n_files": 3})
+                            {"exists": True, "entry_points": [], "n_files": 3,
+                             "python_files": ["code/tts_trainer.py"], "weights": []})
     assert got["verdict"] == "ADDGP_UNAVAILABLE"
     assert "entry point" in got["reason"]
+    assert "tts_trainer.py" in got["reason"]      # the evidence is in the reason
+    assert "no weights" in got["reason"]
 
 
 def test_verdict_is_available_when_an_entry_point_exists():
