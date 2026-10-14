@@ -98,6 +98,8 @@ def _worker(payload):
 
 
 def paired_table(draws: pd.DataFrame, variants: Sequence[str] = VARIANTS) -> pd.DataFrame:
+    if draws.empty or "mask" not in draws.columns:
+        return pd.DataFrame()
     main = draws[draws["mask"] == "clips"]
     rows = []
     for other in variants:
@@ -138,7 +140,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     data_dir = data_root(args.data)
     w6.BACKBONE, w6.SPEC = args.backbone, args.spec
     sub, F = w6.load_spec(root, data_dir, args.backbone, args.spec)
-    Z = w6.preprocess(F)
+    transform, Z = w6.fit_preprocess(F)
     y = sub["y"].to_numpy()
     plat = sub["platform"].to_numpy()
     lang = sub["language"].to_numpy()
@@ -152,7 +154,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             tile = np.load(p)
             if tile.shape[0] != len(sub):
                 raise ValueError(f"{p} has {tile.shape[0]} rows, expected {len(sub)}")
-            _VIEW_TILES[view] = np.asarray(tile, np.float32)
+            # project the raw spec through the SAME standardiser + PCA as the clean
+            # features, so the augmented design matrix has one consistent width
+            _VIEW_TILES[view] = transform(np.asarray(tile, np.float32))
             used_views.append(view)
     print(f"dev clips={len(sub)} draws={args.draws} variants={VARIANTS} "
           f"views={used_views or 'none'}")

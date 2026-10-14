@@ -105,13 +105,29 @@ def load_spec(root: Path, data_dir: Path, backbone: str, spec: str):
 
 def preprocess(F: np.ndarray, dim: int = PCA_DIM, seed: int = 20261015) -> np.ndarray:
     """Standardise then PCA, fitted on the UNLABELLED region features only."""
+    return fit_preprocess(F, dim=dim, seed=seed)[1]
+
+
+def fit_preprocess(F: np.ndarray, dim: int = PCA_DIM, seed: int = 20261015):
+    """Fit the region standardiser + PCA and RETURN the transform.
+
+    A view feature vector must be projected with the SAME transform as the clean
+    features, otherwise the two live in different spaces and PAST's augmented
+    design matrix cannot be built (the raw spec is 3,840-d, the clean one is
+    256-d after PCA).
+    """
     from sklearn.decomposition import PCA
 
+    F = np.asarray(F, np.float32)
     mu, sd = F.mean(0, keepdims=True), F.std(0, keepdims=True) + 1e-6
-    Z = (F - mu) / sd
-    dim = int(min(dim, Z.shape[1], max(1, Z.shape[0] - 1)))
-    pca = PCA(n_components=dim, svd_solver="randomized", random_state=seed).fit(Z)
-    return pca.transform(Z).astype(np.float32)
+    Zs = (F - mu) / sd
+    d = int(min(dim, Zs.shape[1], max(1, Zs.shape[0] - 1)))
+    pca = PCA(n_components=d, svd_solver="randomized", random_state=seed).fit(Zs)
+
+    def transform(X: np.ndarray) -> np.ndarray:
+        return pca.transform((np.asarray(X, np.float32) - mu) / sd).astype(np.float32)
+
+    return transform, pca.transform(Zs).astype(np.float32)
 
 
 # ------------------------------------------------------------------- a draw
