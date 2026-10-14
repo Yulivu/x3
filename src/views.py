@@ -54,9 +54,20 @@ def view_seed(clip_id: Any) -> int:
     return SEED_BASE + (zlib.crc32(str(clip_id).encode("utf-8")) & 0x7FFFFFFF)
 
 
-def fam_a_params(clip_id: Any) -> Dict[str, Any]:
+def fam_a_params(clip_id: Any, view_key: Optional[str] = None) -> Dict[str, Any]:
+    """Fam-A parameters for one clip.
+
+    ``view_key`` pins the codec branch (``"A1"`` = Opus, ``"A2"`` = AAC) so the two
+    training views can be generated from the same clip without ever drawing a
+    different branch for the same seed.  ``None`` draws the branch itself.
+    """
     rng = np.random.default_rng(view_seed(clip_id))
-    view = "A1" if rng.random() < 0.5 else "A2"
+    if view_key is not None:
+        if view_key not in FAM_A:
+            raise ValueError(f"unknown Fam-A view {view_key!r}")
+        view = view_key
+    else:
+        view = "A1" if rng.random() < 0.5 else "A2"
     cfg = FAM_A[view]
     bitrate = int(rng.choice(cfg["bitrates"]))
     gain = float(rng.uniform(-FAM_A_EXTRA["gain_db"], FAM_A_EXTRA["gain_db"])) \
