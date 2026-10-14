@@ -42,10 +42,58 @@ from src.extract_layers import (  # noqa: E402
     prepare_waveform,
 )
 from src.metrics3 import auc  # noqa: E402
+from src.metrics3 import MIN_PER_CLASS, eer, hter, summarize  # noqa: E402
 
 MAX_BATCH_SECONDS = 160.0
 
 __all__ = ["load_audio", "decode_wav", "run_backbone", "main"]
+
+
+def write_zeroshot_table(root: Path, out_dir: Path, meta: pd.DataFrame,
+                         score: np.ndarray, name: str, fidelity: str) -> None:
+    """One row per backbone plus the metadata-lookup reference, and a per-group file."""
+    y = meta["y"].to_numpy()
+    plat = meta["platform"].to_numpy()
+    row = summarize(y, score, plat, threshold=0.0, extra={
+        "backbone": name, "kind": "antideepfake", "fidelity": fidelity,
+    })
+    # metadata lookup: score = logit(platform fake rate). No audio at all.
+    from src.em_prior import logit
+
+    rate = {p: float(y[plat == p].mean()) for p in np.unique(plat)}
+    md = np.array([logit(rate[p], eps=1e-3) for p in plat])
+    md_row = summarize(y, md, plat, threshold=0.0, extra={
+        "backbone": "metadata-lookup", "kind": "metadata", "fidelity": "n/a",
+    })
+    root.mkdir(parents=True, exist_ok=True)
+    path = root / "zeroshot_mlitw.csv"
+    df = pd.DataFrame([row, md_row])
+    if path.exists():
+        old = pd.read_csv(path)
+        old = old[~old["backbone"].isin(df["backbone"])]
+        df = pd.concat([old, df], ignore_index=True)
+    df.to_csv(path, index=False)
+
+    # per-platform and per-language EER for this backbone
+    rows = []
+    for key, values in (("platform", meta["platform"].to_numpy()),
+                        ("language", meta["language"].to_numpy())):
+        for g in np.unique(values):
+            m = values == g
+            n_pos, n_neg = int((y[m] == 1).sum()), int((y[m] == 0).sum())
+            rows.append({
+                "backbone": name, "group": key, "value": g, "n": int(m.sum()),
+                "n_pos": n_pos, "n_neg": n_neg,
+                "eer": float(eer(y[m], score[m])) if min(n_pos, n_neg) >= MIN_PER_CLASS else np.nan,
+                "auc": float(auc(y[m], score[m])) if min(n_pos, n_neg) >= 2 else np.nan,
+            })
+    gpath = root / "zeroshot_groups.csv"
+    gdf = pd.DataFrame(rows)
+    if gpath.exists():
+        old = pd.read_csv(gpath)
+        old = old[old["backbone"] != name]
+        gdf = pd.concat([old, gdf], ignore_index=True)
+    gdf.to_csv(gpath, index=False)
 
 
 def decode_wav(blob: bytes, fast: bool = True) -> np.ndarray:
@@ -186,6 +234,8 @@ def run_backbone(model_dir: Path, out_dir: Path, waves: Sequence[np.ndarray],
     (out_dir / "layers.json").write_text(json.dumps(info, indent=2, default=str), encoding="utf-8")
     (out_dir / "DONE").write_text(f"{time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())}\n",
                                   encoding="utf-8")
+    if head is not None:
+        write_zeroshot_table(REPO / "results", out_dir, meta, score, info["backbone"], "pass")
     return info
 
 
@@ -198,11 +248,20 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--dtype", default="float16")
     parser.add_argument("--limit", type=int, default=0, help="debug: only the first N clips")
     parser.add_argument("--out-root", default=None)
+    parser.add_argument("--table-only", action="store_true",
+                        help="rebuild results/zeroshot_*.csv from an existing scores.csv")
     args = parser.parse_args(argv)
     data_dir = data_root(args.data)
     out_root = Path(args.out_root) if args.out_root else (data_dir / "x3" / "feats")
     name = args.name or Path(args.model_dir).name
     meta = load_mlitw(data_dir)
+    if args.table_only:
+        out_dir = out_root / name
+        sc = pd.read_csv(out_dir / "scores.csv")
+        write_zeroshot_table(REPO / "results", out_dir, meta,
+                             sc["logit_fake_minus_real"].to_numpy(), name, "pass")
+        print(pd.read_csv(REPO / "results" / "zeroshot_mlitw.csv").round(3).to_string(index=False))
+        return 0
     waves, align = load_audio(data_dir, meta, limit=args.limit)
     print(f"decoded {len(waves)} clips; alignment={align}")
     if args.limit:

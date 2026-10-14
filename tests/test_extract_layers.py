@@ -1,6 +1,9 @@
 """Pins for the checkpoint remapping and the waveform policy (no weights needed)."""
 
 import numpy as np
+import pandas as pd
+import sys
+from pathlib import Path
 
 from src.extract_layers import (
     MODEL_PREFIX,
@@ -8,6 +11,12 @@ from src.extract_layers import (
     prepare_waveform,
     remap_state_dict,
 )
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT / "scripts") not in sys.path:
+    sys.path.insert(0, str(ROOT / "scripts"))
+
+import w2_features  # noqa: E402
 
 
 def _fake_fairseq_sd(n_layers=2, hidden=8, conv_dim=(4, 4)):
@@ -89,3 +98,53 @@ def test_prepare_waveform_tiles_short_clips_and_truncates_long_ones():
     long = np.arange(N_SAMPLES * 2, dtype=np.float32)
     assert np.array_equal(prepare_waveform(long), long[:N_SAMPLES])
     assert prepare_waveform(np.zeros(0, np.float32)).shape == (N_SAMPLES,)
+
+
+def test_zeroshot_table_has_a_metadata_reference_and_per_group_rows(tmp_path):
+    from src.data import add_cell
+
+    rng = np.random.default_rng(0)
+    n = 400
+    meta = pd.DataFrame({
+        "speaker": [f"s{i % 20}" for i in range(n)],
+        "language": [["en", "zh"][i % 2] for i in range(n)],
+        "platform": [["a", "b"][i % 2] for i in range(n)],
+        "label": ["spoof" if rng.random() < 0.5 else "bona-fide" for i in range(n)],
+    })
+    meta["y"] = (meta["label"] == "spoof").astype(int)
+    meta["clip_id"] = np.arange(n)
+    meta = add_cell(meta)
+    score = meta["y"].to_numpy() * 1.5 + rng.normal(0, 1.0, n)
+    out = tmp_path / "results"
+    w2_features.write_zeroshot_table(out, tmp_path / "feats", meta, score, "demo", "pass")
+    tbl = pd.read_csv(out / "zeroshot_mlitw.csv")
+    assert set(tbl["backbone"]) == {"demo", "metadata-lookup"}
+    assert set(tbl["kind"]) == {"antideepfake", "metadata"}
+    demo = tbl[tbl["backbone"] == "demo"].iloc[0]
+    md = tbl[tbl["backbone"] == "metadata-lookup"].iloc[0]
+    assert demo["auc"] > md["auc"], "the audio detector must beat the metadata lookup"
+    assert demo["fidelity"] == "pass"
+    groups = pd.read_csv(out / "zeroshot_groups.csv")
+    assert set(groups["group"]) == {"platform", "language"}
+    assert set(groups["value"]) == {"a", "b", "en", "zh"}
+
+
+def test_zeroshot_table_rerun_replaces_rather_than_duplicates(tmp_path):
+    from src.data import add_cell
+
+    rng = np.random.default_rng(1)
+    n = 200
+    meta = pd.DataFrame({
+        "speaker": [f"s{i % 10}" for i in range(n)],
+        "language": ["en"] * n, "platform": ["a"] * n,
+        "label": ["spoof" if rng.random() < 0.5 else "bona-fide" for i in range(n)],
+    })
+    meta["y"] = (meta["label"] == "spoof").astype(int)
+    meta["clip_id"] = np.arange(n)
+    meta = add_cell(meta)
+    score = meta["y"].to_numpy() * 1.2 + rng.normal(0, 1.0, n)
+    out = tmp_path / "results"
+    for _ in range(2):
+        w2_features.write_zeroshot_table(out, tmp_path / "feats", meta, score, "demo", "pass")
+    tbl = pd.read_csv(out / "zeroshot_mlitw.csv")
+    assert len(tbl) == 2, tbl["backbone"].tolist()
