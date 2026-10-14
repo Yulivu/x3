@@ -222,6 +222,20 @@ def _nt02_block(root: Path) -> List[str]:
     u9 = read_csv(root, "u9_projection.csv")
     lines.append("### U9 projection - packaged view")
     lines.append("")
+
+    u5 = read_csv(root, "u5_summary.csv")
+    lines.append("### U5 label-noise robustness")
+    lines.append("")
+    if u5 is None:
+        lines.append("NOT_RUN - `results/u5_summary.csv` missing")
+    else:
+        lines.append("`results/u5_noise.csv` (pooled EER, clips mask)")
+        lines.append("")
+        lines.append(_md_table(
+            u5.pivot_table(index=["method", "k"], columns="noise_rate",
+                           values="pooled_eer").round(3).reset_index(),
+            max_rows=20))
+    lines.append("")
     if u9 is None:
         lines.append("NOT_RUN - `results/u9_projection.csv` missing")
     else:
