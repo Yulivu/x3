@@ -49,6 +49,7 @@ from src.draws import draw_labels, draw_seed, strict_eval_mask  # noqa: E402
 from src.em_prior import logit  # noqa: E402
 from src.metrics3 import summarize  # noqa: E402
 from src.mpp import MPP  # noqa: E402
+from src.past import PAST  # noqa: E402
 
 LINEA_LAYERS = (8, 12, 16, 18, 20)
 SPEC = "S1-lineA"
@@ -96,7 +97,9 @@ def run_one_draw(args) -> List[Dict[str, Any]]:
     lab[lab_pos] = True
     ev_clips = np.setdiff1d(np.arange(len(y)), lab_pos)
     ev_strict = ev_clips[strict_eval_mask(speaker, lab_pos, ev_clips)]
-    if lab.sum() < 50 or ev_clips.size < 100:
+    # a low floor only: the budget curve deliberately goes down to m=1 (k~30),
+    # and refusing to score it would silently drop the smallest curve point
+    if lab.sum() < 10 or ev_clips.size < 100:
         return []
     folds = stratified_folds(y[lab])
     scores: Dict[str, np.ndarray] = {}
@@ -142,6 +145,12 @@ def run_one_draw(args) -> List[Dict[str, Any]]:
     if "B9" in methods:
         s, i = b9_label_propagation(Z, yl, lab, k=15, alpha=0.9)
         scores["B9"] = s; infos["B9"] = i
+    if "PAST" in methods:
+        from src.past import PAST as _PAST
+
+        model = _PAST(rounds=3).fit(Zl, yl, pl, ll, cl, Zu, plat[~lab], lang[~lab], cell[~lab])
+        scores["PAST"] = model.predict_logit(Z, plat, lang, cell)
+        infos["PAST"] = {"rounds": 3, "views": "none"}
 
     rows: List[Dict[str, Any]] = []
     for mask, ev in (("clips", ev_clips), ("strict", ev_strict)):
