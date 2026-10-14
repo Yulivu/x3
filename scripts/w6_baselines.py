@@ -99,7 +99,7 @@ def run_one_draw(args) -> List[Dict[str, Any]]:
     ev_strict = ev_clips[strict_eval_mask(speaker, lab_pos, ev_clips)]
     # a low floor only: the budget curve deliberately goes down to m=1 (k~30),
     # and refusing to score it would silently drop the smallest curve point
-    if lab.sum() < 10 or ev_clips.size < 100:
+    if lab.sum() < 5 or len(np.unique(y[lab])) < 2 or ev_clips.size < 100:
         return []
     folds = stratified_folds(y[lab])
     scores: Dict[str, np.ndarray] = {}

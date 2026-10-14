@@ -32,7 +32,7 @@ def _pool(seed=0, d=14, n_cells=6, per=160):
 
 
 def test_run_one_draw_supports_past_and_the_budget_knob():
-    Z, y, plat, lang, cell, spk = _pool()
+    Z, y, plat, lang, cell, spk = _pool(n_cells=12)
     zero = y * 0.8 + np.random.default_rng(1).normal(0, 1.0, len(y))
     for m in (1, 3, 10):
         rows = pd.DataFrame(w6.run_one_draw((0, Z, y, plat, lang, cell, spk, zero,
