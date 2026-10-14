@@ -1,0 +1,12 @@
+{
+  "backbone": "xls-r-2b",
+  "second": {
+    "backbone": "xls-r-2b",
+    "spec": "S5",
+    "within_macro": 10.248637719538245
+  },
+  "spec": "S3",
+  "status": "xls-r-2b|S3",
+  "switched": true,
+  "within_macro": 10.247122275197476
+}

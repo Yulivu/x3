@@ -21,8 +21,293 @@
     }
   },
   "G11": {
-    "status": "NOT_RUN",
-    "why": "no chosen (backbone, spec) yet - run G3 with --select"
+    "detail": {
+      "xls-r-2b|S3": {
+        "ok": false,
+        "per_baseline": {
+          "B1": {
+            "ok": false,
+            "views": {
+              "pooled_eer": {
+                "hi": 4.292458344828524,
+                "lo": -0.4396064956076959,
+                "mean": 0.8666881477016674,
+                "n": 200,
+                "wins": 25
+              },
+              "within_macro_eer": {
+                "hi": 5.33968337598474,
+                "lo": -0.49984302868368147,
+                "mean": 1.0054721557695792,
+                "n": 189,
+                "wins": 23
+              },
+              "worst_platform_eer": {
+                "hi": 5.658956796628029,
+                "lo": -3.3473389355742285,
+                "mean": 1.0507603485623866,
+                "n": 189,
+                "wins": 25
+              }
+            },
+            "wins": 0
+          },
+          "B10": {
+            "ok": false,
+            "views": {
+              "pooled_eer": null,
+              "within_macro_eer": null,
+              "worst_platform_eer": null
+            },
+            "wins": 0
+          },
+          "B11": {
+            "ok": true,
+            "views": {
+              "pooled_eer": {
+                "hi": -11.84494775904058,
+                "lo": -33.26301482303658,
+                "mean": -19.905377542974875,
+                "n": 200,
+                "wins": 200
+              },
+              "within_macro_eer": {
+                "hi": -8.646226983514914,
+                "lo": -38.56222418917084,
+                "mean": -20.275160177011195,
+                "n": 189,
+                "wins": 189
+              },
+              "worst_platform_eer": {
+                "hi": -7.303973819541858,
+                "lo": -39.85650525290608,
+                "mean": -24.951976032925256,
+                "n": 189,
+                "wins": 188
+              }
+            },
+            "wins": 3
+          },
+          "B2": {
+            "ok": false,
+            "views": {
+              "pooled_eer": {
+                "hi": 2.006660171812903,
+                "lo": -15.473440252941995,
+                "mean": -5.165234907407619,
+                "n": 200,
+                "wins": 185
+              },
+              "within_macro_eer": {
+                "hi": 5.33968337598474,
+                "lo": -3.461014846365914,
+                "mean": -0.26377551390794424,
+                "n": 189,
+                "wins": 111
+              },
+              "worst_platform_eer": {
+                "hi": 5.33968337598474,
+                "lo": -9.72221443853467,
+                "mean": -0.36322916846780506,
+                "n": 189,
+                "wins": 69
+              }
+            },
+            "wins": 0
+          },
+          "B3": {
+            "ok": false,
+            "views": {
+              "pooled_eer": {
+                "hi": 5.7966178828151165,
+                "lo": -4.736120520817257,
+                "mean": 0.26543914304887456,
+                "n": 200,
+                "wins": 84
+              },
+              "within_macro_eer": {
+                "hi": 5.33968337598474,
+                "lo": -0.49984302868368147,
+                "mean": 1.0054721557695792,
+                "n": 189,
+                "wins": 23
+              },
+              "worst_platform_eer": {
+                "hi": 5.658956796628029,
+                "lo": -3.3473389355742285,
+                "mean": 1.0507603485623866,
+                "n": 189,
+                "wins": 25
+              }
+            },
+            "wins": 0
+          },
+          "B4": {
+            "ok": false,
+            "views": {
+              "pooled_eer": null,
+              "within_macro_eer": null,
+              "worst_platform_eer": null
+            },
+            "wins": 0
+          },
+          "B7": {
+            "ok": false,
+            "views": {
+              "pooled_eer": {
+                "hi": 12.512750190293007,
+                "lo": -10.155136356700345,
+                "mean": 1.0620413178189474,
+                "n": 400,
+                "wins": 101
+              },
+              "within_macro_eer": {
+                "hi": 14.457415350719614,
+                "lo": -9.543851949957867,
+                "mean": 0.9367428439874382,
+                "n": 367,
+                "wins": 100
+              },
+              "worst_platform_eer": {
+                "hi": 14.820436507936463,
+                "lo": -13.433204199208589,
+                "mean": 0.8137585972028759,
+                "n": 367,
+                "wins": 123
+              }
+            },
+            "wins": 0
+          },
+          "B8": {
+            "ok": false,
+            "views": {
+              "pooled_eer": null,
+              "within_macro_eer": null,
+              "worst_platform_eer": null
+            },
+            "wins": 0
+          },
+          "B9": {
+            "ok": false,
+            "views": {
+              "pooled_eer": {
+                "hi": 9.16150772103558,
+                "lo": -10.088206380745293,
+                "mean": 1.710242131663871,
+                "n": 200,
+                "wins": 33
+              },
+              "within_macro_eer": {
+                "hi": 6.525941959785675,
+                "lo": -14.82890583578906,
+                "mean": -0.018054894284908096,
+                "n": 189,
+                "wins": 56
+              },
+              "worst_platform_eer": {
+                "hi": 12.348410302137397,
+                "lo": -16.623902203108646,
+                "mean": -0.18437454321898375,
+                "n": 189,
+                "wins": 81
+              }
+            },
+            "wins": 0
+          }
+        }
+      },
+      "xls-r-2b|S5": {
+        "ok": false,
+        "per_baseline": {
+          "B1": {
+            "ok": false,
+            "views": {
+              "pooled_eer": null,
+              "within_macro_eer": null,
+              "worst_platform_eer": null
+            },
+            "wins": 0
+          },
+          "B10": {
+            "ok": false,
+            "views": {
+              "pooled_eer": null,
+              "within_macro_eer": null,
+              "worst_platform_eer": null
+            },
+            "wins": 0
+          },
+          "B11": {
+            "ok": false,
+            "views": {
+              "pooled_eer": null,
+              "within_macro_eer": null,
+              "worst_platform_eer": null
+            },
+            "wins": 0
+          },
+          "B2": {
+            "ok": false,
+            "views": {
+              "pooled_eer": null,
+              "within_macro_eer": null,
+              "worst_platform_eer": null
+            },
+            "wins": 0
+          },
+          "B3": {
+            "ok": false,
+            "views": {
+              "pooled_eer": null,
+              "within_macro_eer": null,
+              "worst_platform_eer": null
+            },
+            "wins": 0
+          },
+          "B4": {
+            "ok": false,
+            "views": {
+              "pooled_eer": null,
+              "within_macro_eer": null,
+              "worst_platform_eer": null
+            },
+            "wins": 0
+          },
+          "B7": {
+            "ok": false,
+            "views": {
+              "pooled_eer": null,
+              "within_macro_eer": null,
+              "worst_platform_eer": null
+            },
+            "wins": 0
+          },
+          "B8": {
+            "ok": false,
+            "views": {
+              "pooled_eer": null,
+              "within_macro_eer": null,
+              "worst_platform_eer": null
+            },
+            "wins": 0
+          },
+          "B9": {
+            "ok": false,
+            "views": {
+              "pooled_eer": null,
+              "within_macro_eer": null,
+              "worst_platform_eer": null
+            },
+            "wins": 0
+          }
+        }
+      }
+    },
+    "per_backbone": {
+      "xls-r-2b|S3": false,
+      "xls-r-2b|S5": false
+    },
+    "status": "SOTA_F_DEV_NO"
   },
   "G2": {
     "stability": "NOT_RUN",
@@ -30,30 +315,38 @@
     "worst_reproduction_gap": 0.4479426648035378
   },
   "G3": {
-    "status": "NOT_RUN",
-    "why": "results/backbone_rank.csv missing"
+    "backbone": "xls-r-2b",
+    "second": {
+      "backbone": "xls-r-2b",
+      "spec": "S5",
+      "within_macro": 10.248637719538245
+    },
+    "spec": "S3",
+    "status": "xls-r-2b|S3",
+    "switched": true,
+    "within_macro": 10.247122275197476
   },
   "G4": {
     "best_baseline": "B1",
     "pooled": {
-      "hi": 1.624438355145052,
-      "lo": -2.0050550005212973,
-      "mean": 0.4193162063089776,
-      "n": 100,
-      "wins": 22
+      "hi": 1.4969278547996367,
+      "lo": -1.2332191255173326,
+      "mean": 0.3611978939269409,
+      "n": 200,
+      "wins": 41
     },
     "status": "C1_FAIL",
     "within_macro": {
-      "hi": 1.6762109867883273,
-      "lo": -2.00602224338105,
-      "mean": 0.238687359266329,
-      "n": 100,
-      "wins": 25
+      "hi": 1.6368888480837238,
+      "lo": -1.6153829899177745,
+      "mean": 0.33559627193835256,
+      "n": 200,
+      "wins": 43
     }
   },
   "G5": {
     "n_extreme_cells": 500,
-    "share_of_extreme_cells": 0.006,
+    "share_of_extreme_cells": 0.0,
     "status": "PL_OK"
   },
   "G6": {
