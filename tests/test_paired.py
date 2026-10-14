@@ -146,6 +146,20 @@ def test_save_and_load_draw_scores_roundtrip(tmp_path):
     assert load_draw_scores(tmp_path, "C1", "B1") == []
 
 
+def test_save_and_load_draw_scores_with_a_pandas_object_speaker_column(tmp_path):
+    """Speaker ids come out of a manifest as ``object``; they must stay loadable."""
+    import pandas as pd
+
+    y = np.tile([0, 1], 4)
+    speaker = pd.Series(["n000001", "n000001", "n000001", "n000001",
+                         "n000002", "n000002", "n000002", "n000002"]).to_numpy()
+    assert speaker.dtype == object
+    save_draw_scores(tmp_path, 0, y, {"A": y * 1.0, "B": y * 0.5}, speaker)
+    back = load_draw_scores(tmp_path, "A", "B")
+    assert len(back) == 1
+    assert back[0]["speaker"].tolist() == speaker.tolist()
+
+
 def test_cluster_bootstrap_resamples_whole_speakers_not_clips():
     """Every replicate must hand the metric complete speaker blocks."""
     y = np.tile([0, 1], 4)

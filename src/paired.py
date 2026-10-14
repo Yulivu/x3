@@ -111,13 +111,21 @@ def two_intervals(
 
 def save_draw_scores(path, draw: int, y: np.ndarray, scores: Dict[str, np.ndarray],
                      speaker: np.ndarray, extra: Optional[Dict[str, Any]] = None) -> None:
-    """Persist one draw so the intervals can be recomputed without a model."""
+    """Persist one draw so the intervals can be recomputed without a model.
+
+    ``speaker`` is coerced to a fixed-width unicode array: a pandas object column
+    would be written as an object array, and ``np.load`` refuses those without
+    ``allow_pickle`` (which no analysis script should need).
+    """
     import json
     from pathlib import Path
 
     path = Path(path)
     path.mkdir(parents=True, exist_ok=True)
-    np.savez_compressed(path / f"draw{draw:04d}.npz", y=y, speaker=speaker,
+    sp = np.asarray(speaker)
+    if sp.dtype.kind in "OU" or sp.dtype == object:
+        sp = sp.astype(str)
+    np.savez_compressed(path / f"draw{draw:04d}.npz", y=y, speaker=sp,
                         **{f"s_{k}": v for k, v in scores.items()})
     if extra is not None:
         (path / f"draw{draw:04d}.json").write_text(json.dumps(extra, default=str),
