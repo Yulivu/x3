@@ -1,0 +1,7 @@
+item,status,evidence,note,has_kcurve,has_spec
+1. 100 -> 200 draws (headline configs),DONE,w6_baselines.py --draws 200 --suffix _d200 writes results/w6_draws_*_d200.csv and results/w6_summary_d200.csv,"{""ran"": true, ""returncode"": 0, ""tail"": ""s-r-2b   S3     C1  clips worst_platform_eer 19.449092  3.351297\nxls-r-2b   S3     C1  clips                auc  0.951903  0.009463\nxls-r-2b   S3     C1 strict         pooled_eer 14.807289  4.840927\nxls-r-2b   S3     C1 strict   within_macro_eer 14.912803  ",True,True
+2. more k points,DONE,results/w22_kcurve.csv,"k in [30, 60, 100, 200, 290, 600] on 2 masks",True,True
+3. Z4 label-free PAST,DONE,results/w8_zlabel.csv (row Z4),"LR self-trained on the Z2 posterior, cell priors fixed",True,True
+4. spec / layer sensitivity,DONE,results/w22_spec_sensitivity.csv,"specs ['S1', 'S2', 'S3', 'S4', 'S5'] x 2 masks at k=290",True,True
+5. second backbone for the P1 experiments,PARTIAL,results/w6_summary_v3_mms1b.csv (all baselines) and results/w17_extra_backbone_paired.csv,"W11 accepts --backbone, so PAST can follow; CASA (W12) has no backbone switch yet and its second-backbone run is still open",True,True
+6. more transcode-chain families,NOT_RUN,-,"needs new augmented views, i.e. a W10 GPU pass; W19 already covers Fam-B1 (Opus24 + MP3 64 + 8 kHz)",True,True

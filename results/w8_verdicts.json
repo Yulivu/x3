@@ -14,6 +14,15 @@
   "best_zero_shot_macro": 21.54489664956107,
   "margin": 2.0,
   "other_label_free_methods": {
+    "Z4": {
+      "beats_zero_by_margin": false,
+      "below_threshold": true,
+      "macro_not_worse": false,
+      "margin_points": -1.7273568956900043,
+      "pooled": 22.58295347886607,
+      "satisfies_g8_conditions": false,
+      "within_macro": 23.24634670795987
+    },
     "Z5": {
       "beats_zero_by_margin": true,
       "below_threshold": true,

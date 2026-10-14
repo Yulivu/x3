@@ -156,6 +156,53 @@ U8 intervals (delta = method - control; negative = method better)
 
 ### Second backbone + Track Z (W17 / W8)
 
+### W22 backlog: budget curve and spec sensitivity
+
+`results/w22_kcurve.csv` (pooled EER; rows are methods x nominal budget, 50 draws)
+
+| method | k_nominal | clips | strict_draw |
+|---|---|---|---|
+| B1 | 30 | 17.61 | 21.14 |
+| B1 | 60 | 14.93 | 16.5 |
+| B1 | 100 | 13.84 | 15.45 |
+| B1 | 200 | 11.95 | 14.8 |
+| B1 | 290 | 11.03 | 14.09 |
+| B1 | 600 | 9.049 | 13.67 |
+| B9 | 30 | 18.67 | 21.27 |
+| B9 | 60 | 14.11 | 19.5 |
+| B9 | 100 | 11.86 | 16.81 |
+| B9 | 200 | 9.278 | 15.76 |
+| B9 | 290 | 8.12 | 14.58 |
+| B9 | 600 | 6.415 | 13.5 |
+| C1 | 30 | 18.53 | 22.09 |
+| C1 | 60 | 15.48 | 17.58 |
+| C1 | 100 | 14.33 | 16.45 |
+| C1 | 200 | 12.26 | 16.57 |
+| C1 | 290 | 11.4 | 16 |
+| C1 | 600 | 9.764 | 15.71 |
+
+
+`results/w22_spec_sensitivity.csv` (same features, same draws, k=290, 30 draws)
+
+| spec | method | clips | strict_draw |
+|---|---|---|---|
+| S1 | B1 | 10.77 | 14.43 |
+| S1 | B9 | 7.87 | 14.97 |
+| S1 | C1 | 10.93 | 16.01 |
+| S2 | B1 | 12.01 | 14.84 |
+| S2 | B9 | 10.11 | 15.58 |
+| S2 | C1 | 12.46 | 16.62 |
+| S3 | B1 | 10.88 | 13.99 |
+| S3 | B9 | 8.261 | 14.33 |
+| S3 | C1 | 11.22 | 16.04 |
+| S4 | B1 | 11.04 | 13.92 |
+| S4 | B9 | 8.947 | 14.87 |
+| S4 | C1 | 11.42 | 15.8 |
+| S5 | B1 | 10.88 | 13.98 |
+| S5 | B9 | 8.258 | 14.33 |
+| S5 | C1 | 11.22 | 16.04 |
+
+
 `results/w6_summary_v3_mms1b.csv` (mms-1b/S3 on the v3 dev region)
 
 | method | clips | strict |
@@ -179,6 +226,7 @@ Track Z (k=0, v3 dev): `results/w8_zlabel.csv`
 | Z2 | 22.18 | 23.33 | 33.25 | 0.837 |
 | Z5 | 16.16 | 18.41 | 36.73 | 0.894 |
 | Z5-z1 | 23.74 | 21.04 | 31.02 | 0.851 |
+| Z4 | 22.58 | 23.25 | 37.22 | 0.842 |
 
 
 `results/u5_noise.csv` (pooled EER, clips mask)
@@ -679,13 +727,14 @@ k in {30, 100, 290, 600, 1200}.
 
 Z0 - Z3, zero labels.
 
-| pooled_eer | within_macro_eer | worst_platform | worst_platform_eer | auc | hter_pooled | n_eval | n_pos | eer_bilibili | eer_douyin | eer_facebook | eer_rednote | eer_tiktok | eer_x | eer_youtube | protocol | region | backbone | spec | method | k | mask | n_labeled | mu0 | mu1 | sig0 | sig1 | pi_global | loglik | seed_score |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 20.86 | 21.54 | tiktok | 30.03 | 0.8573 | nan | 15002 | 3990 | 17.2 | 18.34 | 25.2 | 21.42 | 30.03 | 17.84 | 20.8 | track_z_v3_dev | dev | xls-r-2b | S3 | Z0 | 0 | clips | 0 | nan | nan | nan | nan | nan | nan | nan |
-| 25.62 | 21.54 | tiktok | 30.03 | 0.8127 | nan | 15002 | 3990 | 17.2 | 18.34 | 25.2 | 21.42 | 30.03 | 17.84 | 20.8 | track_z_v3_dev | dev | xls-r-2b | S3 | Z1 | 0 | clips | 0 | nan | nan | nan | nan | nan | nan | nan |
-| 22.18 | 23.33 | tiktok | 33.25 | 0.8373 | nan | 15002 | 3990 | 17.2 | 18.34 | 27.17 | 26.24 | 33.25 | 18.04 | 23.08 | track_z_v3_dev | dev | xls-r-2b | S3 | Z2 | 0 | clips | 0 | -105.3 | 0.3661 | 12.2 | 74.7 | 0.2642 | -4.777 | nan |
-| 16.16 | 18.41 | tiktok | 36.73 | 0.8941 | nan | 15002 | 3990 | 17.14 | 10.92 | 13.57 | 20.07 | 36.73 | 14.56 | 15.9 | track_z_v3_dev | dev | xls-r-2b | S3 | Z5 | 0 | clips | 0 | nan | nan | nan | nan | nan | nan | Z2 |
-| 23.74 | 21.04 | tiktok | 31.02 | 0.8508 | nan | 15002 | 3990 | 20.8 | 14.82 | 29.57 | 15.66 | 31.02 | 16.17 | 19.19 | track_z_v3_dev | dev | xls-r-2b | S3 | Z5-z1 | 0 | clips | 0 | nan | nan | nan | nan | nan | nan | Z1 |
+| pooled_eer | within_macro_eer | worst_platform | worst_platform_eer | auc | hter_pooled | n_eval | n_pos | eer_bilibili | eer_douyin | eer_facebook | eer_rednote | eer_tiktok | eer_x | eer_youtube | protocol | region | backbone | spec | method | k | mask | n_labeled | mu0 | mu1 | sig0 | sig1 | pi_global | loglik | seed_score | iters | n_pseudo_pos |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 20.86 | 21.54 | tiktok | 30.03 | 0.8573 | nan | 15002 | 3990 | 17.2 | 18.34 | 25.2 | 21.42 | 30.03 | 17.84 | 20.8 | track_z_v3_dev | dev | xls-r-2b | S3 | Z0 | 0 | clips | 0 | nan | nan | nan | nan | nan | nan | nan | nan | nan |
+| 25.62 | 21.54 | tiktok | 30.03 | 0.8127 | nan | 15002 | 3990 | 17.2 | 18.34 | 25.2 | 21.42 | 30.03 | 17.84 | 20.8 | track_z_v3_dev | dev | xls-r-2b | S3 | Z1 | 0 | clips | 0 | nan | nan | nan | nan | nan | nan | nan | nan | nan |
+| 22.18 | 23.33 | tiktok | 33.25 | 0.8373 | nan | 15002 | 3990 | 17.2 | 18.34 | 27.17 | 26.24 | 33.25 | 18.04 | 23.08 | track_z_v3_dev | dev | xls-r-2b | S3 | Z2 | 0 | clips | 0 | -105.3 | 0.3661 | 12.2 | 74.7 | 0.2642 | -4.777 | nan | nan | nan |
+| 16.16 | 18.41 | tiktok | 36.73 | 0.8941 | nan | 15002 | 3990 | 17.14 | 10.92 | 13.57 | 20.07 | 36.73 | 14.56 | 15.9 | track_z_v3_dev | dev | xls-r-2b | S3 | Z5 | 0 | clips | 0 | nan | nan | nan | nan | nan | nan | Z2 | nan | nan |
+| 23.74 | 21.04 | tiktok | 31.02 | 0.8508 | nan | 15002 | 3990 | 20.8 | 14.82 | 29.57 | 15.66 | 31.02 | 16.17 | 19.19 | track_z_v3_dev | dev | xls-r-2b | S3 | Z5-z1 | 0 | clips | 0 | nan | nan | nan | nan | nan | nan | Z1 | nan | nan |
+| 22.58 | 23.25 | tiktok | 37.22 | 0.8417 | nan | 15002 | 3990 | 19.71 | 17.95 | 23.83 | 27.41 | 37.22 | 15.83 | 20.78 | track_z_v3_dev | dev | xls-r-2b | S3 | Z4 | 0 | clips | 0 | nan | nan | nan | nan | nan | nan | Z2 posterior | 3 | 3973 |
 
 
 ## W9 audit
@@ -960,5 +1009,5 @@ NOT_RUN - `results/w21_addgp.csv` missing
 
 ## 5. Reproduction and commit
 
-- commit: `d8f7f8e`
+- commit: `a175204`
 - environment: `scripts/w1_env.py`; queue: `queue.yaml`; criteria: `claims.yaml`

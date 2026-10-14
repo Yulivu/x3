@@ -1,0 +1,27 @@
+
+backlog item 4: spec / layer sensitivity
+mask          clips  strict_draw
+spec method                     
+S1   B1      10.774       14.433
+     B9       7.870       14.968
+     C1      10.925       16.007
+S2   B1      12.005       14.841
+     B9      10.109       15.577
+     C1      12.455       16.622
+S3   B1      10.878       13.986
+     B9       8.261       14.328
+     C1      11.221       16.042
+S4   B1      11.039       13.917
+     B9       8.947       14.870
+     C1      11.420       15.796
+S5   B1      10.881       13.985
+     B9       8.258       14.332
+     C1      11.222       16.041
+
+                                     item    status                                                                                                                        note
+   1. 100 -> 200 draws (headline configs) DELEGATED                                                                             run with --heavy; no stored file is overwritten
+                         2. more k points   NOT_RUN                                                                                k in [30, 60, 100, 200, 290, 600] on 2 masks
+                    3. Z4 label-free PAST      DONE                                                                      LR self-trained on the Z2 posterior, cell priors fixed
+              4. spec / layer sensitivity      DONE                                                                     specs ['S1', 'S2', 'S3', 'S4', 'S5'] x 2 masks at k=290
+5. second backbone for the P1 experiments   PARTIAL W11 accepts --backbone, so PAST can follow; CASA (W12) has no backbone switch yet and its second-backbone run is still open
+         6. more transcode-chain families   NOT_RUN                         needs new augmented views, i.e. a W10 GPU pass; W19 already covers Fam-B1 (Opus24 + MP3 64 + 8 kHz)
