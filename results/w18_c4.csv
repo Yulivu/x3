@@ -1,0 +1,7 @@
+method,other,metric,arm,mean,lo,hi,n,backbone,spec,note
+C1+TTA,C1,pooled_eer,E2,0.7665173575870772,-0.01982058055952992,1.6595619545307936,50,xls-r-2b,S3,
+C1+TTA,C1,within_macro_eer,E2,0.6363693199381926,-0.0241606734102082,1.8600578882183563,50,xls-r-2b,S3,
+PAST+TTA,PAST,pooled_eer,E2,0.6195329406193837,-0.04365663946882154,1.3237215179206359,50,xls-r-2b,S3,
+PAST+TTA,PAST,within_macro_eer,E2,0.6162769984670007,-0.3529314795622396,1.667084340144884,50,xls-r-2b,S3,
+E1,top-2 backbones,pooled_eer,E1,,,,0,xls-r-2b,S3,NOT_RUN(needs_2nd_backbone)
+E3,E1+E2,pooled_eer,E3,,,,0,xls-r-2b,S3,NOT_RUN(needs_2nd_backbone)
