@@ -66,6 +66,8 @@ def fit_logreg_cv(
     for C in grid:
         scores = []
         for f in np.unique(folds):
+            if f < 0:
+                continue          # negative folds are training-only (extra labelled rows)
             tr, te = folds != f, folds == f
             if len(np.unique(y[tr])) < 2 or te.sum() == 0:
                 continue
