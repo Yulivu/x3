@@ -22,6 +22,7 @@ Writes ``results/u2_baseline_audit.csv``.
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence
@@ -124,6 +125,34 @@ def _worker(payload):
         return payload[0], [{"error": f"{type(exc).__name__}: {exc}"}]
 
 
+def verdicts(summary: "pd.DataFrame", margin: float = 3.0) -> Dict[str, Any]:
+    """``B11_BROKEN``: the original MLP recipe is at fault, not the MLP itself.
+
+    The rule is a *comparison against its own repair*: if replacing the training
+    recipe with ``MLPClassifier(early_stopping=True)`` moves pooled EER by at least
+    ``margin`` points, then the recipe was the problem and B11 must be reported as
+    broken rather than as a baseline.  Missing rows give ``NOT_RUN`` - never False.
+    """
+    def mean_of(method: str) -> Optional[float]:
+        row = summary[summary["method"] == method]
+        if row.empty:
+            return None
+        return float(row["pooled_eer_mean"].iloc[0])
+
+    b11 = mean_of("B11")
+    fixed = mean_of("B11'")
+    b1 = mean_of("B1")
+    out: Dict[str, Any] = {"B11_BROKEN": "NOT_RUN", "B11": b11, "B11_fixed": fixed,
+                           "B1": b1, "margin_points": float(margin)}
+    if b11 is None or fixed is None:
+        return out
+    out["B11_BROKEN"] = bool((b11 - fixed) >= float(margin))
+    out["repair_gain_points"] = float(b11 - fixed)
+    if b1 is not None:
+        out["B11_minus_B1_points"] = float(b11 - b1)
+    return out
+
+
 def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="X3 U2 baseline audit")
     parser.add_argument("--root", default=".")
@@ -178,8 +207,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     summary["spec"] = args.spec
     summary.to_csv(root / "results" / "u2_baseline_audit.csv", index=False)
     df.to_csv(root / "results" / "u2_draws.csv", index=False)
+    with open(root / "results" / "u2_verdicts.json", "w", encoding="utf-8") as fh:
+        json.dump(verdicts(summary), fh, indent=2, sort_keys=True)
     print(summary[["method", "pooled_eer_mean", "pooled_eer_std", "within_macro_eer_mean",
                    "auc_mean"]].round(3).to_string(index=False))
+    print(json.dumps(verdicts(summary), indent=2, sort_keys=True))
     return 0
 
 
