@@ -72,11 +72,19 @@ class MPP:
             return len(self.platform_index), len(self.language_index), 0
         return len(self.platform_index), len(self.language_index), len(self.cell_index)
 
-    def fit(self, Z, y, platform, language, cell) -> "MPP":
+    def fit(self, Z, y, platform, language, cell, sample_weight=None) -> "MPP":
+        """``y`` may be soft in [0, 1] (PAST feeds posterior targets) and
+        ``sample_weight`` scales each row's likelihood term."""
         Z = np.asarray(Z, float)
         y = np.asarray(y, float)
         if Z.ndim != 2:
             raise ValueError("Z must be 2-D")
+        if sample_weight is None:
+            w_row = np.ones(Z.shape[0], float)
+        else:
+            w_row = np.asarray(sample_weight, float).reshape(-1)
+            if w_row.shape[0] != Z.shape[0]:
+                raise ValueError("sample_weight must have one entry per row")
         self.d_ = Z.shape[1]
         pc, self.platform_index = _codes(platform)
         lc, self.language_index = _codes(language)
@@ -110,8 +118,8 @@ class MPP:
                 eta = eta + bet[lc]
             if C:
                 eta = eta + gam[cc]
-            r = _sigmoid(eta) - y                       # dNLL/deta
-            nll = float(np.sum(np.logaddexp(0.0, eta) - y * eta))
+            r = w_row * (_sigmoid(eta) - y)             # dNLL/deta
+            nll = float(np.sum(w_row * (np.logaddexp(0.0, eta) - y * eta)))
             nll += 0.5 * self.lam * float(w @ w)
             if P:
                 nll += 0.5 * inv_p2 * float(alp @ alp)
@@ -193,6 +201,19 @@ class MPP:
             g = gam[j] if C else 0.0
             out[c] = float(a + g)
         return out
+
+    def detector_logit(self, Z) -> np.ndarray:
+        """``w'z + mu`` - the detector part ONLY.
+
+        PAST needs this: ``gamma_c`` already absorbs the cell's prior-driven
+        intercept, so feeding ``predict_logit`` into the EM would count the cell
+        prior twice and bias every estimate toward the middle.  TASKBOOK 7.3
+        specifies ``d_i = w'z_i + mu - logit(pi_bar_L)`` for exactly this reason.
+        """
+        if not self.fitted_:
+            raise RuntimeError("detector_logit called before fit()")
+        w, mu, _alp, _bet, _gam = self._unpack()
+        return np.asarray(Z, float) @ w + mu
 
     def platform_effects(self) -> Dict[Any, float]:
         P, _L, _C = self._terms()
