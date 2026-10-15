@@ -100,9 +100,14 @@ def _run_unit(payload):
             scores["z0f-o3"][idx] = d2[:, : min(3, d2.shape[1])].mean(axis=1)
         else:
             scores["z0f-o3"][idx] = scores["o3"][idx]
+    # fill speakers that ended up with no usable reference BEFORE anything is
+    # written, otherwise the saved archives carry NaN into the bootstrap
+    for k in list(scores):
+        v = scores[k]
+        med = float(np.nanmedian(v)) if np.isfinite(v).any() else 0.0
+        scores[k] = np.where(np.isnan(v), med, v)
     rows: List[Dict[str, Any]] = []
     for name, v in scores.items():
-        v = np.where(np.isnan(v), float(np.nanmedian(v)), v)
         rows.append(summarize(y[ev], v[ev], pl[ev], extra={
             "protocol": "w2lite_contam", "region": "dev", "setting": "TrackE0",
             "method": name, "m": M, "c": float(c), "draw": int(draw),
