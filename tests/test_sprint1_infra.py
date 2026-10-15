@@ -237,7 +237,7 @@ def test_reclaim_orphans_reopens_a_restart_leftover(tmp_path: Path) -> None:
     table = _write_pkg_table(tmp_path, packages)
     state_path = tmp_path / "state.json"
     state: dict = {}
-    st.mark(state, "O1", "RUNNING", pid=999999, note="lane A pid 999999")
+    st.mark(state, "O1", "RUNNING", os_pid=999999, note="lane A pid 999999")
     st.save_state(state_path, state)
     sprint = Sprint(table, state_path, poll=1, once=True, root=tmp_path, verbose=False)
     sprint.sync_from_disk()

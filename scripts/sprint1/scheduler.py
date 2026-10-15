@@ -179,7 +179,7 @@ class Sprint:
         for pid, row in list(self.state.items()):
             if row.get("status") != "RUNNING" or pid in self.running:
                 continue
-            rec = row.get("pid")
+            rec = row.get("os_pid")
             if rec and os.name == "posix":
                 try:
                     os.killpg(os.getpgid(int(rec)), signal.SIGTERM)
@@ -296,7 +296,7 @@ class Sprint:
         row["attempts"] = int(row.get("attempts") or 0) + 1
         row["started"].append(st.now_iso())
         st.mark(self.state, pid, "RUNNING", note=f"lane {lane} pid {proc.pid}",
-                eta_min=pkg.get("eta_min"), pid=int(proc.pid))
+                eta_min=pkg.get("eta_min"), os_pid=int(proc.pid))
         self.persist()
         self.running[pid] = {"proc": proc, "handle": handle, "lane": lane,
                              "pkg": pkg, "t0": time.time()}
