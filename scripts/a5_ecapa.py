@@ -14,12 +14,19 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any, Dict, List
 
 import numpy as np
 import pandas as pd
+
+# The box cannot reach huggingface.co; the mirror is the only route, and
+# speechbrain's fetch helpers go through HF_ENDPOINT.  It must be set before the
+# speechbrain import, and the model files are already on disk.
+os.environ.setdefault("HF_ENDPOINT", "https://hf-mirror.com")
+os.environ.setdefault("HF_HUB_OFFLINE", "0")
 
 REPO = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(REPO), str(REPO / "scripts")]
