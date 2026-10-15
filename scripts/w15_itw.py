@@ -41,8 +41,11 @@ for _p in (REPO, REPO / "scripts"):
 
 from src.metrics3 import eer, summarize  # noqa: E402
 
-HF_API = "https://huggingface.co/api/models/mueller91/In-The-Wild"
-MIRROR_API = "https://hf-mirror.com/api/models/mueller91/In-The-Wild"
+# ``mueller91/In-The-Wild`` is a Hugging Face *dataset*, not a model.  The
+# model endpoint returns an unrelated 401/404 policy response, so use the
+# dataset endpoint for availability diagnostics.
+HF_API = "https://huggingface.co/api/datasets/mueller91/In-The-Wild"
+MIRROR_API = "https://hf-mirror.com/api/datasets/mueller91/In-The-Wild"
 DEFAULT_DIR = "itw/release_in_the_wild"
 G9_MARGIN = 0.3
 N_DRAWS = 50
