@@ -8,6 +8,7 @@ or ``--jobs 64``.
 from __future__ import annotations
 
 import argparse
+import contextlib
 import multiprocessing as mp
 import sys
 from pathlib import Path
@@ -27,6 +28,20 @@ from src.sgm import fit_1d, fit_sgm_lr, prepare_features  # noqa: E402
 
 _G: Dict[str, Any] = {}
 
+try:  # every pool worker must stay single-threaded or 24 workers x N BLAS
+    from threadpoolctl import threadpool_limits  # threads thrash the box
+except Exception:  # pragma: no cover
+    threadpool_limits = None
+
+
+@contextlib.contextmanager
+def one_thread_blas():
+    if threadpool_limits is None:  # pragma: no cover
+        yield
+        return
+    with threadpool_limits(limits=1):
+        yield
+
 
 def _row(score, mask, method, track, draw, nlab, extra=None):
     return summarize(
@@ -39,6 +54,11 @@ def _row(score, mask, method, track, draw, nlab, extra=None):
 
 
 def run_unit(payload):
+    with one_thread_blas():
+        return _run_unit(payload)
+
+
+def _run_unit(payload):
     track, draw = payload
     y, sp, pl, cell = _G["y"], _G["speaker"], _G["platform"], _G["cell"]
     s, X, Z = _G["zero"], _G["X"], _G["Z64"]

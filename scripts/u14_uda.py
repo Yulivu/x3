@@ -15,6 +15,7 @@ baselines are real implementations, not aliases:
 from __future__ import annotations
 
 import argparse
+import contextlib
 import multiprocessing as mp
 import sys
 from pathlib import Path
@@ -37,6 +38,20 @@ from src.sgm import fit_sgm_lr, prepare_features  # noqa: E402
 
 C_GRID = (0.01, 0.1, 1.0, 10.0)
 _G: Dict[str, Any] = {}
+
+try:
+    from threadpoolctl import threadpool_limits
+except Exception:  # pragma: no cover
+    threadpool_limits = None
+
+
+@contextlib.contextmanager
+def one_thread_blas():
+    if threadpool_limits is None:  # pragma: no cover
+        yield
+        return
+    with threadpool_limits(limits=1):
+        yield
 
 
 def _pick_C(Zs, ys, groups):
@@ -84,6 +99,11 @@ def _speaker_standardise(Z, groups):
 
 
 def run_unit(draw):
+    with one_thread_blas():
+        return _run_unit(draw)
+
+
+def _run_unit(draw):
     y, sp, pl = _G["y"], _G["speaker"], _G["platform"]
     Z, s = _G["Z256"], _G["zero"]
     src, tgt = speaker_split(sp, draw, 0.6)
