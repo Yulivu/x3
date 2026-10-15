@@ -172,9 +172,28 @@ def build(root: Path) -> str:
              "the same gain (ratio 0.96-1.10) - so it is not speaker-specific.")
     L.append("- **Cross-platform enrolment (A2 / G29)**: not constructible on ML-ITW, so "
              "the channel-shortcut question cannot be answered with this dataset.")
-    L.append("- **Improvements on top of OC**: none. Pseudo-enrolment 22.96 vs Z0 20.86; "
-             "E-norm-s / multi-OC / LCM are within noise of OC once the shared OC "
-             "implementation is used.")
+    if g28.get("verdict", "").startswith("E0_METHOD_PASS"):
+        per = g28.get("per_m", {})
+        best = min((v for v in per.values() if v.get("verdict") == "E0_METHOD_PASS"),
+                   key=lambda v: v.get("pooled_delta", 0), default={})
+        L.append("- **Improvements on top of OC**: `E-norm-s` (scale-normalising the 1-NN "
+                 "distance by each speaker's enrolment scale) clears G28 at m=3 and m=5 "
+                 f"(best pooled delta {best.get('pooled_delta', float('nan')):+.2f}, "
+                 f"(b) half-width {best.get('b_half_width', float('nan')):.2f}); it fails "
+                 "at m=10. `multi-OC` and `LCM` add nothing over the single best OC, and "
+                 "pseudo-enrolment does not recover the gain (22.96 vs Z0 20.86).")
+    else:
+        L.append("- **Improvements on top of OC**: none reached the G28 bar "
+                 "(E-norm-s / multi-OC / LCM); pseudo-enrolment 22.96 vs Z0 20.86.")
+    a5 = _json(root, "results/a5_ecapa.json")
+    if a5:
+        L.append("- **Is the one-class signal identity?** No. The same construction on a "
+                 "dedicated speaker-verification embedding (SpeechBrain ECAPA-TDNN) is "
+                 f"far worse than on the SSL features: SV-OC "
+                 f"{float(a5.get('SV-OC', float('nan'))):.2f} vs SSL-OC "
+                 f"{float(a5.get('SSL-OC', float('nan'))):.2f} pooled EER (SV-OC AUC "
+                 "0.379, i.e. anti-correlated). Per NEW_TASKS 07 section 1 this points at "
+                 "channel / artefact / session information rather than speaker identity.")
     L.append("- **Contamination robustness (G30)**: the one provable claim - at 30 % "
              "contaminated enrolment, trimmed-1NN beats plain 1-NN by 7.0-7.7 pooled EER "
              "with the (b) interval clear of 0, at a cost of 0.6-0.9 points when the "
