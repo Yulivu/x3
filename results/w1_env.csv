@@ -1,0 +1,18 @@
+check,required,value,present
+python,True,3.12.3,True
+torch,True,2.8.0+cu128,True
+transformers,True,5.19.0,True
+sklearn,True,1.7.1,True
+numpy,True,2.2.6,True
+fairseq,False,,False
+soundfile,False,0.14.0,True
+scipy,False,1.15.2,True
+pandas,False,2.3.2,True
+yaml,False,6.0.2,True
+gpu,False,"{""n_gpu"": 1, ""name"": ""NVIDIA GeForce RTX 4080 SUPER"", ""memory_mib"": 32760}",True
+ffmpeg,True,ffmpeg version 4.4.2-0ubuntu0.22.04.1 Copyright (c) 2000-2021 the FFmpeg developers,True
+tmux,True,tmux 3.2a,True
+git,False,git version 2.34.1,True
+cpus,False,208,True
+disk_root_gb,False,23.2,True
+data_dir,False,/root/autodl-tmp/data,True
