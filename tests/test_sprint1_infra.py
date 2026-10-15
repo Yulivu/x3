@@ -297,6 +297,20 @@ def test_test_side_is_refused_without_freeze(tmp_path: Path) -> None:
     assert rc == 3, "reading test clips before FREEZE_OK must be refused"
 
 
+def test_preflight_runs_and_reports_blocking(tmp_path: Path) -> None:
+    from scripts.sprint1 import preflight as pf
+
+    data = tmp_path / "data"
+    data.mkdir()
+    rc = pf.main(["--root", str(tmp_path), "--out", "preflight.md",
+                  "--json", "logs/env.json", "--data", str(data)])
+    assert rc == 0
+    env = json.loads((tmp_path / "logs" / "env.json").read_text(encoding="utf-8"))
+    assert env["blocking"], "an empty data root must be reported as blocking"
+    assert (tmp_path / "preflight.md").exists()
+    assert env["budget"]["cpu_budget"] == cfg.CPU_BUDGET
+
+
 # --- PCA / graph / download --------------------------------------------------
 def test_standardise_uses_only_the_given_rows() -> None:
     train = np.array([[1.0, 2.0], [3.0, 4.0]], np.float32)

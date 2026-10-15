@@ -114,11 +114,12 @@ def sprint_inputs(root: Path, data_root: Path) -> Dict[str, Any]:
 def environment_blocking(env: Dict[str, Any]) -> List[str]:
     """The inputs the sprint cannot start without."""
     blocking: List[str] = []
+    inputs = env.get("sprint_inputs", {})
     if not env["manifest"]["exists"]:
         blocking.append("mlitw_meta.csv is missing under the data root")
     if env["parquet_shards"]["count"] == 0:
         blocking.append("no parquet shards under <data>/mlitw/data")
-    if not env["split_file"]["exists"]:
+    if not (inputs.get("split_file") or {}).get("exists"):
         blocking.append(f"split file {cfg.SPLIT_FILE} is missing")
     if not env["feature_blocks"]:
         blocking.append("no feature blocks under <data>/x3/feats (needed by S1-B and later)")
