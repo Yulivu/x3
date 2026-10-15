@@ -1,15 +1,12 @@
 #!/usr/bin/env python3
 """W15 - ITW: the second dataset (TASKBOOK W15).
 
-Two modes, because the dataset turned out not to be openly downloadable:
+Two modes, separating remote access from local data staging:
 
-* **probe** (default): ask the Hugging Face API whether ``mueller91/In-The-Wild`` is
-  reachable without credentials, and write the verdict to
-  ``results/w15_itw_verdict.json``.  TASKBOOK 1.2 says the repository is
-  ``gated=false``; if the live API disagrees, that contradiction is the evidence and
-  the work package is reported as ``ITW_UNAVAILABLE`` rather than skipped silently.
-  Rule 14 forbids working around an access control, so no token or re-upload is
-  attempted.
+* **probe** (default): ask the Hugging Face *dataset* API whether
+  ``mueller91/In-The-Wild`` is reachable without credentials.  A reachable remote
+  dataset which is not yet staged locally is ``ITW_DOWNLOAD_REQUIRED``; it is not
+  an access-control failure.
 * **run**: if the dataset is present locally (``$DATA/itw/release_in_the_wild``), do
   what W15 asks - zero-shot EER, then the few-shot replication with **speaker** cells
   (58 of them), ``k=290`` (5 clips per speaker), evaluation on the remaining clips,
@@ -197,7 +194,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                               "taskbook_claim": "gated=false (TASKBOOK 1.2)"}
     if local is None:
         reachable = any(p.get("reachable") for p in probes.values())
-        status["verdict"] = "ITW_UNAVAILABLE"
+        status["verdict"] = "ITW_DOWNLOAD_REQUIRED" if reachable else "ITW_UNAVAILABLE"
         status["reason"] = (
             "the dataset is not on the box and the public endpoints answer "
             + ", ".join(f"{k}={p.get('status')}" for k, p in probes.items())
