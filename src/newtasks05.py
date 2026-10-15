@@ -82,3 +82,55 @@ def write_csv_atomic(df: pd.DataFrame, path: Path) -> None:
     tmp = path.with_suffix(path.suffix + ".tmp")
     df.to_csv(tmp, index=False)
     tmp.replace(path)
+
+
+def oc_scores(Xn: np.ndarray, speaker: np.ndarray, enrol: np.ndarray) -> np.ndarray:
+    """One-class score: ``+min`` cosine distance to the speaker's enrolment set.
+
+    Sign convention (NEW_TASKS 06 section 0): every score is "larger = more
+    spoof", so the distance is used with a POSITIVE sign.  ``Xn`` must already
+    be L2-normalised, which makes ``1 - x.y`` the cosine distance.
+    """
+    Xn = np.asarray(Xn, float)
+    sp = np.asarray(speaker).astype(str)
+    en = np.asarray(enrol, bool)
+    if Xn.shape[0] != sp.shape[0] or en.shape != sp.shape:
+        raise ValueError("Xn, speaker and enrol must share the first dimension")
+    out = np.full(sp.shape[0], np.nan)
+    glob = np.where(en)[0]
+    glob_mat = Xn[glob] if glob.size else None
+    for s in np.unique(sp):
+        idx = np.where(sp == s)[0]
+        r = idx[en[idx]]
+        ref = Xn[r] if r.size else glob_mat
+        if ref is None or ref.size == 0:
+            continue
+        out[idx] = (1.0 - Xn[idx] @ np.asarray(ref, float).T).min(axis=1)
+    if np.isnan(out).any():
+        fill = float(np.nanmedian(out)) if np.isfinite(out).any() else 0.0
+        out = np.where(np.isnan(out), fill, out)
+    return out
+
+
+def l2_normalise(X: np.ndarray) -> np.ndarray:
+    X = np.asarray(X, float)
+    return X / np.maximum(np.linalg.norm(X, axis=1, keepdims=True), 1e-12)
+
+
+def enrol_norm(s: np.ndarray, speaker: np.ndarray, enrol: np.ndarray) -> np.ndarray:
+    """E0-norm: z-score the zero-shot logit inside each speaker's enrolment set."""
+    s = np.asarray(s, float)
+    sp = np.asarray(speaker).astype(str)
+    en = np.asarray(enrol, bool)
+    out = np.full(s.shape[0], np.nan)
+    glob_sd = float(np.std(s[en])) if en.any() else 0.0
+    glob_sd = glob_sd if glob_sd > 1e-9 else 1.0
+    for k in np.unique(sp):
+        idx = np.where(sp == k)[0]
+        r = idx[en[idx]]
+        if r.size == 0:
+            out[idx] = (s[idx] - float(np.mean(s[en]) if en.any() else np.mean(s))) / glob_sd
+            continue
+        sd = float(np.std(s[r]))
+        out[idx] = (s[idx] - float(np.mean(s[r]))) / (sd if sd > 1e-9 else glob_sd)
+    return out

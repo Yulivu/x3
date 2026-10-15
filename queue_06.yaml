@@ -1,0 +1,7 @@
+# NEW_TASKS 06 queue.  U12R runs first; the U8 audit (A), the label-free local
+# probe (P-LOCAL) and the SGM diagnostic (D1) are appended once their drivers
+# exist.  U13/U14 are deliberately absent: NEW_TASKS 06 says not to re-run them.
+version: 6
+python: /root/miniconda3/bin/python
+wps:
+  - {id: U12R, tier: P0, lane: C, deps: [], est_h: 1.5, cmd: "/root/miniconda3/bin/python scripts/u12r_e0.py", outputs: ["results/u12r_e0.csv", "results/u12r_gate.json"]}
