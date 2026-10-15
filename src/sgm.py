@@ -120,6 +120,7 @@ def fit_sgm_lr(
     X: np.ndarray, zero_score: Sequence[float], speaker: Sequence[object], platform: Sequence[object],
     labels: Optional[Sequence[int]] = None, *, alpha: float = 0.5, rounds: int = 4,
     pca_dim: int = 64, kappa_offset: float = 20.0, kappa_prior: float = 20.0,
+    prepared: Optional[np.ndarray] = None,
 ) -> SGMFit:
     """SGM-LR: alternate the 1-D mixture and a weighted ridge detector.
 
@@ -130,10 +131,10 @@ def fit_sgm_lr(
     X = np.asarray(X, float)
     if X.ndim != 2 or X.shape[0] != len(zero_score):
         raise ValueError("X must be (n,d) and align with zero_score")
-    scaler = StandardScaler().fit(X)
-    Z = scaler.transform(X)
-    dim = max(1, min(int(pca_dim), Z.shape[0] - 1, Z.shape[1]))
-    Z = PCA(n_components=dim, random_state=20261015).fit_transform(Z)
+    # ``prepared`` lets a driver fit the unsupervised scaler+PCA once and reuse it
+    # across draws.  Re-fitting it inside every draw is identical numerically (the
+    # features do not change) but costs minutes per driver.
+    Z = prepare_features(X, pca_dim) if prepared is None else np.asarray(prepared, float)
     labels_a = np.full(len(Z), -1, int) if labels is None else np.asarray(labels, int)
     base = fit_1d(zero_score, speaker, platform, labels_a, kappa_offset=kappa_offset,
                   kappa_prior=kappa_prior)
@@ -149,3 +150,11 @@ def fit_sgm_lr(
         fit = fit_1d(mixed, speaker, platform, labels_a, kappa_offset=kappa_offset,
                      kappa_prior=kappa_prior)
     return fit
+
+
+def prepare_features(X: np.ndarray, pca_dim: int = 64) -> np.ndarray:
+    """Unsupervised standardise + PCA, the feature space every SGM-LR round uses."""
+    X = np.asarray(X, float)
+    Z = StandardScaler().fit_transform(X)
+    dim = max(1, min(int(pca_dim), Z.shape[0] - 1, Z.shape[1]))
+    return PCA(n_components=dim, random_state=20261015).fit_transform(Z)
