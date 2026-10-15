@@ -296,9 +296,18 @@ def test_p1_is_speaker_disjoint_and_deterministic() -> None:
         assert {sp[r] for r in lib} <= set(block["library_pool_speakers"])
         assert set(block["library_pool_speakers"]) <= target_speakers
         for draw, sizes in block["library_by_draw"].items():
-            for n, rows in sizes.items():
+            for n, lib_entry in sizes.items():
+                rows = lib_entry["rows"]
                 assert len(rows) <= int(n)
                 assert len(set(rows)) == len(rows)
+                assert lib_entry["effective_n"] == len(rows)
+                # 09 section 0: at most ceil(N/4) clips per speaker
+                cap = max(1, -(-int(n) // 4))
+                counts: dict = {}
+                for r in rows:
+                    counts[sp[r]] = counts.get(sp[r], 0) + 1
+                assert max(counts.values(), default=0) <= cap
+                assert set(lib_entry["proper"]) | set(lib_entry["calibration"]) == set(rows)
         assert len(block["bootstrap_speaker_index"]) == 5
         assert all(len(r) == len(target_speakers) for r in block["bootstrap_speaker_index"])
         folds = a["lopo_folds"][p]
@@ -318,6 +327,24 @@ def test_assert_no_test_rows_blocks_leaks() -> None:
     stab.assert_no_test_rows({"source_rows": [1, 2, 3]}, {9})
     with pytest.raises(ValueError):
         stab.assert_no_test_rows({"target_rows": [1, 9]}, {9})
+
+
+def test_sample_library_caps_clips_per_speaker() -> None:
+    rows = list(range(40))
+    speakers = [f"s{i % 2}" for i in range(40)]      # only two speakers, 20 clips each
+    gen = np.random.default_rng(11)
+    lib = stab.sample_library(rows, speakers, 20, gen)
+    cap = max(1, -(-20 // 4))                        # ceil(20/4) = 5
+    # two speakers x 5 = the whole library the cap allows; effective N < N is reported
+    assert len(lib) == 10
+    counts: dict = {}
+    for r in lib:
+        counts[speakers[r]] = counts.get(speakers[r], 0) + 1
+    assert max(counts.values()) <= cap
+    # a pool too small for N returns everything it has, with the cap still respected
+    small = stab.sample_library(rows[:6], speakers[:6], 40, np.random.default_rng(12))
+    assert len(small) <= 6
+    assert len(set(small)) == len(small)
 
 
 def test_p2_fallback_uses_u8_sampler() -> None:

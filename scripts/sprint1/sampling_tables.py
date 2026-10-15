@@ -55,6 +55,41 @@ def sample(rows: np.ndarray, n: int, gen: np.random.Generator) -> List[int]:
     return [int(r) for r in gen.choice(rows, size=n, replace=False)]
 
 
+def sample_library(pool_rows: Sequence[int], pool_speaker: Sequence[Any], n: int,
+                   gen: np.random.Generator, cap: Optional[int] = None) -> List[int]:
+    """Sample up to ``n`` genuine library clips, at most ``ceil(n/4)`` per speaker.
+
+    NEW_TASKS 09 section 0: the target platform's library is drawn from other
+    speakers and "每个说话人至多贡献 N/4 条", so one talkative speaker cannot fill the
+    whole library.  Speakers are visited round-robin so the cap is the binding
+    constraint rather than the draw order.
+    """
+    n = int(n)
+    cap = int(cap or max(1, int(np.ceil(n / 4))))
+    by_speaker: Dict[str, List[int]] = {}
+    for r, s in zip(np.asarray(pool_rows, int), np.asarray(pool_speaker).astype(str)):
+        by_speaker.setdefault(str(s), []).append(int(r))
+    order = sorted(by_speaker)
+    gen.shuffle(order)
+    for s in order:                       # deterministic per-speaker permutation
+        arr = np.asarray(by_speaker[s], int)
+        by_speaker[s] = arr[gen.permutation(arr.size)].tolist()
+    picked: List[int] = []
+    depth = 0
+    while len(picked) < n:
+        added = False
+        for s in order:
+            if len(picked) >= n:
+                break
+            if depth < min(cap, len(by_speaker[s])):
+                picked.append(by_speaker[s][depth])
+                added = True
+        if not added:
+            break
+        depth += 1
+    return picked[:n]
+
+
 def build_p1(meta, dev_rows: np.ndarray, draws: int, sizes: Sequence[int],
              boot: int) -> Dict[str, Any]:
     y = meta["y"].to_numpy()
@@ -82,13 +117,20 @@ def build_p1(meta, dev_rows: np.ndarray, draws: int, sizes: Sequence[int],
         lib_by_draw: Dict[str, Dict[str, List[int]]] = {}
         counts: List[Dict[str, int]] = []
         for d in range(int(draws)):
-            gen = rng_for(1, abs(hash(p)) % 10 ** 6 if False else sum(map(ord, p)), d)
+            gen = rng_for(1, sum(map(ord, p)), d)
             entry: Dict[str, List[int]] = {}
             for n in sizes:
-                lib = sample(lib_pool, int(n), gen)
-                entry[str(int(n))] = lib
+                lib = sample_library(lib_pool, sp[lib_pool], int(n), gen)
+                half = int(np.ceil(len(lib) / 2)) if lib else 0
+                perm = gen.permutation(len(lib)) if lib else np.array([], int)
+                entry[str(int(n))] = {
+                    "rows": lib,
+                    "proper": [lib[i] for i in perm[:half]],
+                    "calibration": [lib[i] for i in perm[half:]],
+                    "effective_n": len(lib),
+                }
             lib_by_draw[str(d)] = entry
-            biggest = set(entry[str(int(max(sizes)))])
+            biggest = set(entry[str(int(max(sizes)))]["rows"])
             ev = [r for r in p_rows if r not in biggest]
             counts.append({"n_real": int(sum(1 for r in ev if y[r] == 0)),
                            "n_fake": int(sum(1 for r in ev if y[r] == 1))})
