@@ -102,6 +102,10 @@ def test_w12_can_target_a_backbone_and_a_suffix(monkeypatch, tmp_path):
         return sub, np.zeros((n, 6), np.float32)
 
     monkeypatch.setattr(w12.w6, "load_spec", fake_load_spec)
+    # main() rewrites w6's globals; record them first so monkeypatch restores the
+    # shared module afterwards instead of leaking into other test files
+    monkeypatch.setattr(w12.w6, "BACKBONE", w12.w6.BACKBONE)
+    monkeypatch.setattr(w12.w6, "SPEC", w12.w6.SPEC)
 
     rc = w12.main(["--root", str(tmp_path), "--data", str(tmp_path), "--draws", "1",
                    "--jobs", "1", "--backbone", "mms-1b", "--spec", "S3",
