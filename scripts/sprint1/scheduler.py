@@ -516,10 +516,11 @@ class Sprint:
             self.persist()
             if self.once:
                 break
-            if st.all_terminal(self.state, [p["id"] for p in self.packages]):
+            if st.all_complete(self.state, [p["id"] for p in self.packages]):
                 if not (self.root / "ALL_DONE").exists():
                     (self.root / "ALL_DONE").write_text(
-                        f"all sprint packages terminal at {st.now_iso()}\n", encoding="utf-8")
+                        f"all sprint packages ran to a verdict at {st.now_iso()}\n",
+                        encoding="utf-8")
                     self.log("ALL_DONE written; continuing with the backlog queue")
                     continue
                 backlog_open = any(self.row(p["id"])["status"] in st.STARTABLE

@@ -116,6 +116,16 @@ def test_state_roundtrip(tmp_path: Path) -> None:
     assert st.load_state(path) == {}
 
 
+def test_all_complete_blocks_missing_and_blocked() -> None:
+    state = {"A": {"status": "DONE"}, "B": {"status": "MISSING"}}
+    assert st.all_terminal(state, ["A", "B"]) is True
+    assert st.all_complete(state, ["A", "B"]) is False, "MISSING must block ALL_DONE"
+    state["B"] = {"status": "BLOCKED"}
+    assert st.all_complete(state, ["A", "B"]) is False
+    state["B"] = {"status": "TIMEOUT"}
+    assert st.all_complete(state, ["A", "B"]) is True
+
+
 # --- scheduler ---------------------------------------------------------------
 def _write_pkg_table(tmp_path: Path, packages: list) -> Path:
     path = tmp_path / "packages.yaml"

@@ -21,6 +21,10 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 TERMINAL = ("DONE", "DONE_ALT", "FAILED", "BLOCKED", "TIMEOUT", "MISSING")
 SATISFIED = ("DONE", "DONE_ALT")
 STARTABLE = ("TODO", "PAUSED")
+#: ``ALL_DONE`` needs every package to have actually run - a package whose script
+#: is not written (MISSING) or that never got a chance (BLOCKED) must keep the
+#: sprint out of the waiting state (section 2: MISSING never counts as progress).
+COMPLETE = ("DONE", "DONE_ALT", "FAILED", "TIMEOUT")
 
 
 def load_state(path: Path) -> Dict[str, Dict[str, Any]]:
@@ -117,6 +121,14 @@ def all_terminal(state: Dict[str, Dict[str, Any]], ids: Iterable[str]) -> bool:
     if not ids:
         return False
     return all((state.get(i) or {}).get("status") in TERMINAL for i in ids)
+
+
+def all_complete(state: Dict[str, Dict[str, Any]], ids: Iterable[str]) -> bool:
+    """True when every package ran (success or failure) and none is MISSING/BLOCKED."""
+    ids = list(ids)
+    if not ids:
+        return False
+    return all((state.get(i) or {}).get("status") in COMPLETE for i in ids)
 
 
 def now_iso() -> str:
