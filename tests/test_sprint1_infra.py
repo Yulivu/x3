@@ -231,6 +231,21 @@ def test_scheduler_honours_an_external_state_reset(tmp_path: Path) -> None:
     assert st.load_state(tmp_path / "state.json")["R1"]["status"] == "DONE"
 
 
+def test_reclaim_orphans_reopens_a_restart_leftover(tmp_path: Path) -> None:
+    packages = [{"id": "O1", "lane": "A", "deps": [], "eta_min": 5, "priority": "P0",
+                 "cmd": f"{sys.executable} -c pass", "artifacts": ["o.txt"]}]
+    table = _write_pkg_table(tmp_path, packages)
+    state_path = tmp_path / "state.json"
+    state: dict = {}
+    st.mark(state, "O1", "RUNNING", pid=999999, note="lane A pid 999999")
+    st.save_state(state_path, state)
+    sprint = Sprint(table, state_path, poll=1, once=True, root=tmp_path, verbose=False)
+    sprint.sync_from_disk()
+    assert sprint.retired == {}, "RUNNING is not terminal"
+    assert sprint.reclaim_orphans() == ["O1"]
+    assert st.load_state(state_path)["O1"]["status"] == "TODO"
+
+
 # --- sampling tables ---------------------------------------------------------
 def synthetic_meta(n_platforms: int = 4, speakers_per_platform: int = 6,
                    clips_per_speaker: int = 12) -> tuple[pd.DataFrame, np.ndarray]:

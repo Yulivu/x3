@@ -168,6 +168,34 @@ class Sprint:
                         for pid, row in self.state.items()
                         if (row.get("status") or "") in st.TERMINAL}
 
+    def reclaim_orphans(self) -> List[str]:
+        """A restarted scheduler owns no children.
+
+        Any package the previous instance left ``RUNNING`` is killed (its pid is in
+        ``state.json``) and re-opened, otherwise it would sit ``RUNNING`` for ever
+        while the work is dead - or keep burning CPU unobserved.
+        """
+        reaped: List[str] = []
+        for pid, row in list(self.state.items()):
+            if row.get("status") != "RUNNING" or pid in self.running:
+                continue
+            rec = row.get("pid")
+            if rec and os.name == "posix":
+                try:
+                    os.killpg(os.getpgid(int(rec)), signal.SIGTERM)
+                except Exception:
+                    try:
+                        os.kill(int(rec), signal.SIGTERM)
+                    except Exception:
+                        pass
+            st.mark(self.state, pid, "TODO",
+                    note="orphaned by a scheduler restart; re-opened")
+            reaped.append(pid)
+        if reaped:
+            self.persist()
+            self.log(f"re-opened orphans: {', '.join(reaped)}")
+        return reaped
+
     def mark_blocked(self) -> None:
         for pkg in self.packages + self.backlog:
             pid = pkg["id"]
@@ -268,7 +296,7 @@ class Sprint:
         row["attempts"] = int(row.get("attempts") or 0) + 1
         row["started"].append(st.now_iso())
         st.mark(self.state, pid, "RUNNING", note=f"lane {lane} pid {proc.pid}",
-                eta_min=pkg.get("eta_min"))
+                eta_min=pkg.get("eta_min"), pid=int(proc.pid))
         self.persist()
         self.running[pid] = {"proc": proc, "handle": handle, "lane": lane,
                              "pkg": pkg, "t0": time.time()}
@@ -469,6 +497,8 @@ class Sprint:
                 "利用率明细见 `util.csv`。\n\n", encoding="utf-8")
         self.log(f"scheduler up: {len(self.packages)} packages, {len(self.backlog)} backlog, "
                  f"lanes {cfg.LANE_CAPACITY}")
+        self.sync_from_disk()
+        self.reclaim_orphans()
         while True:
             self.sync_from_disk()
             self.reap()
