@@ -10,3 +10,7 @@ wps:
   # the existing drivers with a different --ms, so it can run without new code.
   - {id: U12RB, tier: P0, lane: C, deps: [], est_h: 0.5, cmd: "/root/miniconda3/bin/python scripts/u12r_e0.py --ms 3,5,10,20,40 --out results/u12r_curve.csv", outputs: ["results/u12r_curve.csv"]}
   - {id: AB, tier: P0, lane: C, deps: [], est_h: 1.0, cmd: "/root/miniconda3/bin/python scripts/a_enroll_audit.py --ms 5,10,20,40 --out results/a_curve.csv", outputs: ["results/a_curve.csv"]}
+  # NEW_TASKS 07 section 1: OC variants (o1/o3/centroid/Mahalanobis) + language
+  # and platform x language sub-metrics.
+  - {id: AOC, tier: P0, lane: C, deps: [], est_h: 2.0, cmd: "/root/miniconda3/bin/python scripts/a_oc_variants.py", outputs: ["results/a_oc_variants.csv"]}
+  - {id: AOCM, tier: P0, lane: C, deps: [], est_h: 2.0, cmd: "/root/miniconda3/bin/python scripts/a_oc_variants.py --backbone mms-1b --out results/a_oc_variants_mms.csv", outputs: ["results/a_oc_variants_mms.csv"]}
