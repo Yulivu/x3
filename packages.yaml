@@ -1,0 +1,341 @@
+# X3 sprint 1 (NEW_TASKS 10) package table.  Section 2: this file plus state.json
+# are the only things the resume logic reads.
+#
+# Fields: id / lane(A,B,G,N) / deps / eta_min (time box) / priority / artifacts
+# (what must exist for the package to count as finished) / cmd / heavy (GPU lane:
+# takes the lane alone) / needs_freeze (only start once FREEZE_OK exists).
+#
+# Lane budgets: A 5 threads, B 3 threads + nice 10, G 4 loader workers, N 1.
+# Packages whose script is not written yet are reported MISSING by the scheduler;
+# MISSING never counts as progress and blocks ALL_DONE.
+
+packages:
+  # --- prefetch / infrastructure (first hour) -------------------------------
+  - id: P-0
+    lane: A
+    deps: []
+    eta_min: 15
+    priority: P0
+    cmd: python -m scripts.sprint1.preflight --out preflight.md --json logs/sprint1_env.json
+    artifacts: [preflight.md, logs/sprint1_env.json]
+  - id: P-1
+    lane: B
+    deps: [P-0]
+    eta_min: 15
+    priority: P0
+    cmd: >-
+      python -m scripts.sprint1.audio_memmap --side dev
+      --out sprint1/audio/dev_i16.mm --index sprint1/audio/dev_index.json
+    artifacts: [sprint1/audio/dev_i16.mm, sprint1/audio/dev_index.json]
+  - id: P-2
+    lane: A
+    deps: [P-0]
+    eta_min: 18
+    priority: P0
+    cmd: python -m scripts.sprint1.sampling_tables --out-dir sprint1/tables
+    artifacts:
+      - sprint1/tables/p1_folds.json
+      - sprint1/tables/p2_folds.json
+      - sprint1/tables/bootstrap.json
+  - id: P-3
+    lane: A
+    deps: [P-2]
+    eta_min: 18
+    priority: P0
+    cmd: python -m scripts.sprint1.fold_pca --out-dir sprint1/pca --tables sprint1/tables
+    artifacts: [sprint1/pca/pca_index.json]
+  - id: P-4
+    lane: B
+    deps: [P-3]
+    eta_min: 18
+    priority: P0
+    cmd: python -m scripts.sprint1.inknn_graph --out-dir sprint1/graph --pca sprint1/pca
+    artifacts: [sprint1/graph/graph_index.json]
+  - id: N-1
+    lane: N
+    deps: [P-0]
+    eta_min: 120
+    priority: P0
+    retries: 1
+    cmd: python -m scripts.sprint1.download_itw --out /root/autodl-tmp/data/itw
+    artifacts: [sprint1/itw_status.json]
+
+  # --- G lane chain (GPU) ---------------------------------------------------
+  - id: G-A1
+    lane: G
+    deps: [P-1]
+    eta_min: 30
+    priority: P1
+    heavy: true
+    cmd: python -m scripts.sprint1.recode_feats --view aac64 --backbone mms-1b --side dev
+    artifacts: [sprint1/feats/recode_mms-1b_aac64.npz]
+  - id: G-A2
+    lane: G
+    deps: [G-A1]
+    eta_min: 36
+    priority: P1
+    heavy: true
+    cmd: python -m scripts.sprint1.recode_feats --view aac64 --backbone xls-r-2b --side dev
+    artifacts: [sprint1/feats/recode_xls-r-2b_aac64.npz]
+  - id: G-B
+    lane: G
+    deps: [P-1]
+    eta_min: 30
+    priority: P1
+    heavy: true
+    cmd: python -m scripts.sprint1.extra_feats --side dev
+    artifacts: [sprint1/feats/extra_layers_dev.npz]
+  - id: G-C
+    lane: G
+    deps: [P-1]
+    eta_min: 90
+    priority: P1
+    heavy: true
+    cmd: python -m scripts.sprint1.counterfactual --side dev
+    artifacts: [sprint1/counterfactual/manifest.json]
+  - id: S2-E
+    lane: G
+    deps: [S1-A, P-3]
+    eta_min: 90
+    priority: P1
+    cmd: python -m scripts.sprint1.m_b_lrc --out sprint1/results/m_b_lrc.csv
+    artifacts: [sprint1/results/m_b_lrc.csv]
+  - id: S3-E
+    lane: G
+    deps: [N-1, S2-H]
+    eta_min: 90
+    priority: P2
+    cmd: python -m scripts.sprint1.s3_itw --out sprint1/results/s3_itw.csv
+    artifacts: [sprint1/results/s3_itw.csv]
+
+  # --- A lane chain (CPU main) ---------------------------------------------
+  - id: S1-A
+    lane: A
+    deps: [P-3, P-4]
+    eta_min: 60
+    priority: P1
+    cmd: python -m scripts.sprint1.harness_selftest --out sprint1/harness_report.json
+    artifacts: [sprint1/harness_report.json]
+  - id: S1-B
+    lane: A
+    deps: [S1-A]
+    eta_min: 75
+    priority: P1
+    cmd: python -m scripts.sprint1.base_m --out-dir sprint1/results
+    artifacts: [sprint1/results/base_m.csv, sprint1/results/base_m_gate.csv]
+  - id: S2-A
+    lane: A
+    deps: [S1-B]
+    eta_min: 60
+    priority: P1
+    cmd: python -m scripts.sprint1.m_a --out-dir sprint1/results
+    artifacts: [sprint1/results/m_a.csv]
+  - id: S2-B
+    lane: A
+    deps: [S2-A]
+    eta_min: 30
+    priority: P2
+    cmd: python -m scripts.sprint1.m_c --out-dir sprint1/results
+    artifacts: [sprint1/results/m_c.csv]
+  - id: S2-D
+    lane: A
+    deps: [S2-B]
+    eta_min: 45
+    priority: P2
+    cmd: python -m scripts.sprint1.m_f --out-dir sprint1/results
+    artifacts: [sprint1/results/m_f.csv]
+  - id: S2-G
+    lane: A
+    deps: [S2-D]
+    eta_min: 30
+    priority: P2
+    cmd: python -m scripts.sprint1.m_g --out-dir sprint1/results
+    artifacts: [sprint1/results/m_g.csv]
+  - id: S2-H
+    lane: A
+    deps: [S2-G, S2-E]
+    eta_min: 15
+    priority: P1
+    cmd: python -m scripts.sprint1.mstar --out sprint1/mstar.json
+    artifacts: [sprint1/mstar.json]
+  - id: S3-A
+    lane: A
+    deps: [S2-H]
+    eta_min: 60
+    priority: P2
+    cmd: python -m scripts.sprint1.s3_grid --out-dir sprint1/results
+    artifacts: [sprint1/results/s3_grid.csv, sprint1/results/s3_forest.csv]
+  - id: S3-C
+    lane: A
+    deps: [S3-A]
+    eta_min: 15
+    priority: P3
+    cmd: python -m scripts.sprint1.s3_dose --out sprint1/results/s3_dose.csv
+    artifacts: [sprint1/results/s3_dose.csv]
+  - id: S3-D
+    lane: A
+    deps: [S3-C]
+    eta_min: 30
+    priority: P2
+    cmd: python -m scripts.sprint1.s3_recompute --out sprint1/results/s3_recompute.json
+    artifacts: [sprint1/results/s3_recompute.json]
+  - id: S4-A
+    lane: A
+    deps: [S3-A, S3-D, S3-B, S3-F]
+    eta_min: 60
+    priority: P2
+    cmd: python -m scripts.sprint1.s4_report --out-dir .
+    artifacts: [DECISION_POINT_4.md, method_card.md, frozen_config.json, paper_tables/index.csv]
+
+  # --- B lane chain (CPU low priority) -------------------------------------
+  - id: S2-C
+    lane: B
+    deps: [P-4, S1-B]
+    eta_min: 60
+    priority: P2
+    cmd: python -m scripts.sprint1.m_d --out-dir sprint1/results
+    artifacts: [sprint1/results/m_d.csv]
+  - id: S2-F
+    lane: B
+    deps: [S2-C]
+    eta_min: 45
+    priority: P3
+    cmd: python -m scripts.sprint1.m_e --out-dir sprint1/results
+    artifacts: [sprint1/results/m_e.csv]
+  - id: S3-B
+    lane: B
+    deps: [S3-A]
+    eta_min: 45
+    priority: P2
+    cmd: python -m scripts.sprint1.s3_robust --out sprint1/results/s3_robust.csv
+    artifacts: [sprint1/results/s3_robust.csv]
+  - id: S3-F
+    lane: B
+    deps: [G-A2, G-B, G-C]
+    eta_min: 45
+    priority: P2
+    cmd: python -m scripts.sprint1.s3_retention --out sprint1/results/s3_retention.csv
+    artifacts: [sprint1/results/s3_retention.csv]
+
+# Section 5 backlog: every lane keeps >= 2 h of work here; the scheduler takes the
+# first entry whose lane is free once the main table is exhausted.
+backlog:
+  - id: X-J1
+    lane: G
+    deps: [P-3]
+    eta_min: 60
+    priority: P5
+    cmd: python -m scripts.sprint1.x_j1_framecover --out sprint1/results/x_j1.csv
+    artifacts: [sprint1/results/x_j1.csv]
+  - id: X-J2
+    lane: G
+    deps: [P-1, S1-B]
+    eta_min: 60
+    priority: P5
+    cmd: python -m scripts.sprint1.x_j2_codec --out sprint1/results/x_j2.csv
+    artifacts: [sprint1/results/x_j2.csv]
+  - id: X-J3
+    lane: G
+    deps: [G-C]
+    eta_min: 60
+    priority: P5
+    cmd: python -m scripts.sprint1.x_j3_vocoder --out sprint1/results/x_j3.csv
+    artifacts: [sprint1/results/x_j3.csv]
+  - id: X-F
+    lane: G
+    deps: [S2-H]
+    eta_min: 60
+    priority: P5
+    cmd: python -m scripts.sprint1.x_f_backbone --out sprint1/results/x_f.csv
+    artifacts: [sprint1/results/x_f.csv]
+  - id: X-L
+    lane: G
+    deps: [S2-H]
+    eta_min: 60
+    priority: P5
+    cmd: python -m scripts.sprint1.x_l_concat --out sprint1/results/x_l.csv
+    artifacts: [sprint1/results/x_l.csv]
+  - id: X-M2
+    lane: G
+    deps: [S2-H]
+    eta_min: 60
+    priority: P6
+    cmd: python -m scripts.sprint1.x_m2_heads --out sprint1/results/x_m2.csv
+    artifacts: [sprint1/results/x_m2.csv]
+  - id: X-S2
+    lane: G
+    deps: [S2-H]
+    eta_min: 60
+    priority: P6
+    cmd: python -m scripts.sprint1.x_s2_seeds --out sprint1/results/x_s2.csv
+    artifacts: [sprint1/results/x_s2.csv]
+  - id: X-G
+    lane: G
+    deps: [S2-H]
+    eta_min: 60
+    priority: P6
+    cmd: python -m scripts.sprint1.x_g_libcurve --out sprint1/results/x_g.csv
+    artifacts: [sprint1/results/x_g.csv]
+  - id: X-H
+    lane: A
+    deps: [S2-H]
+    eta_min: 60
+    priority: P5
+    cmd: python -m scripts.sprint1.x_h_p3_rehearsal --out sprint1/results/p3_rehearsal.csv
+    artifacts: [sprint1/results/p3_rehearsal.csv]
+  - id: X-I
+    lane: A
+    deps: [S3-A]
+    eta_min: 60
+    priority: P5
+    cmd: python -m scripts.sprint1.x_i_paper_tables --out-dir paper_tables
+    artifacts: [paper_tables/index.csv]
+  - id: X-A
+    lane: A
+    deps: [S2-H]
+    eta_min: 45
+    priority: P6
+    cmd: python -m scripts.sprint1.x_a_draws40 --out sprint1/results/x_a.csv
+    artifacts: [sprint1/results/x_a.csv]
+  - id: X-B
+    lane: B
+    deps: [S2-H]
+    eta_min: 30
+    priority: P6
+    cmd: python -m scripts.sprint1.x_b_strata --out sprint1/results/x_b.csv
+    artifacts: [sprint1/results/x_b.csv]
+  - id: X-K
+    lane: B
+    deps: [S2-H]
+    eta_min: 45
+    priority: P6
+    cmd: python -m scripts.sprint1.x_k_sensitivity --out sprint1/results/x_k.csv
+    artifacts: [sprint1/results/x_k.csv]
+  - id: X-C
+    lane: A
+    deps: [S1-B]
+    eta_min: 90
+    priority: P6
+    cmd: python -m scripts.sprint1.x_c_finetune --out sprint1/results/x_c.csv
+    artifacts: [sprint1/results/x_c.csv]
+  - id: X-D
+    lane: A
+    deps: [S1-B]
+    eta_min: 120
+    priority: P6
+    cmd: python -m scripts.sprint1.x_d_pvp --out sprint1/results/x_d.csv
+    artifacts: [sprint1/results/x_d.csv]
+  - id: X-N
+    lane: B
+    deps: [S2-H]
+    eta_min: 60
+    priority: P6
+    cmd: python -m scripts.sprint1.x_n_lolo --out sprint1/results/x_n.csv
+    artifacts: [sprint1/results/x_n.csv]
+  - id: X-E
+    lane: B
+    deps: [P-0]
+    eta_min: 20
+    priority: P7
+    cmd: python -m scripts.sprint1.x_e_audit_list --out paper_tables/audit_list.csv
+    artifacts: [paper_tables/audit_list.csv]
