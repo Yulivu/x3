@@ -390,6 +390,8 @@ def main(argv=None):
     ap.add_argument("--draws", type=int, default=N_DRAWS)
     ap.add_argument("--ms", default=",".join(map(str, M_LIST)))
     ap.add_argument("--jobs", type=int, default=worker_slots())
+    ap.add_argument("--out", default="results/a_enroll_audit.csv",
+                    help="main CSV; the variant/gate files share its stem")
     a = ap.parse_args(argv)
 
     root = Path(a.root)
@@ -415,22 +417,24 @@ def main(argv=None):
         if i % 25 == 0:
             print(f"  {i}/{len(payloads)} units ({len(rows)} rows)", flush=True)
     df = pd.DataFrame(rows)
-    df.to_csv(root / "results" / "a_enroll_audit.csv", index=False)
+    out = root / a.out
+    stem = out.with_suffix("")
+    df.to_csv(out, index=False)
     piv = (df[df["variant"].isin(["A0", "A1"])]
            .groupby(["backbone", "m", "variant", "method"])
            [["pooled_eer", "within_macro_eer", "worst_platform_eer", "auc"]]
            .mean().reset_index())
-    piv.to_csv(root / "results" / "a_variants.csv", index=False)
+    piv.to_csv(Path(str(stem) + "_variants.csv"), index=False)
     print(piv.round(2).to_string(index=False))
     q, a3 = a3_same_source(root, pairs, ms)
-    q.to_csv(root / "results" / "a_o_quantiles.csv", index=False)
-    a3.to_csv(root / "results" / "a_a3_same_source.csv", index=False)
+    q.to_csv(Path(str(stem) + "_o_quantiles.csv"), index=False)
+    a3.to_csv(Path(str(stem) + "_a3_same_source.csv"), index=False)
     if not q.empty:
         print("\nOC-distance quantiles by label\n" + q.round(4).to_string(index=False))
     if not a3.empty:
         print("\nA3 conservative same-source control\n" + a3.round(3).to_string(index=False))
     gate = gate_g25(root, df, pairs, ms)
-    (root / "results" / "a_gate.json").write_text(
+    (Path(str(stem) + "_gate.json")).write_text(
         json.dumps(gate, indent=2, sort_keys=True, default=str), encoding="utf-8")
     print("\n" + json.dumps(gate, indent=2, sort_keys=True, default=str))
     return 0
