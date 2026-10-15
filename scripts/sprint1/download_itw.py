@@ -128,9 +128,16 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         return 0
 
     zip_path = out / "release_in_the_wild.zip"
-    attempts.append({"source": "snapshot", **(try_snapshot(args.dataset, out, args.endpoint,
-                                                          min(args.timeout, 3600)) or {})})
+    # An earlier run may already have staged the set (the previous phase extracted it):
+    # verify first so a present corpus never triggers an 8 GB re-download.
     check = verify(out, zip_path)
+    if check["ok"]:
+        attempts.append({"source": "already-present", "rc": 0,
+                         "stderr": f"verified in place: {check}"})
+    else:
+        attempts.append({"source": "snapshot", **(try_snapshot(args.dataset, out, args.endpoint,
+                                                              min(args.timeout, 3600)) or {})})
+        check = verify(out, zip_path)
     if not check["ok"]:
         attempts.append({"source": "aria2", **try_aria2(args.zip_url, zip_path,
                                                        min(args.timeout, 5400))})
@@ -156,7 +163,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     })
     if check["ok"]:
         status.update(status="OK", reason="")
-        if zip_path.exists():
+        if attempts and attempts[0].get("source") == "already-present":
+            status["note"] = "the staged corpus was already on the data disk; nothing downloaded"
+        elif zip_path.exists():
             status["note"] = "archive verified; extract on first use and delete the zip"
     else:
         reasons = " ".join(str(a.get("stderr", ""))[-200:] for a in attempts)
