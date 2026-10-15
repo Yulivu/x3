@@ -154,6 +154,20 @@ class Sprint:
     def persist(self) -> None:
         st.save_state(self.state_path, self.state)
 
+    def sync_from_disk(self) -> None:
+        """``state.json`` is authoritative every pass (section 2).
+
+        An operator (``state_tool.py``) re-opening a failed package has to take
+        effect while the scheduler runs, so the disk copy is reloaded and the
+        in-memory "already retired" set is recomputed from the statuses it holds.
+        """
+        disk = st.load_state(self.state_path)
+        if disk:
+            self.state = disk
+        self.retired = {pid: (row.get("status") or "")
+                        for pid, row in self.state.items()
+                        if (row.get("status") or "") in st.TERMINAL}
+
     def mark_blocked(self) -> None:
         for pkg in self.packages + self.backlog:
             pid = pkg["id"]
@@ -456,6 +470,7 @@ class Sprint:
         self.log(f"scheduler up: {len(self.packages)} packages, {len(self.backlog)} backlog, "
                  f"lanes {cfg.LANE_CAPACITY}")
         while True:
+            self.sync_from_disk()
             self.reap()
             self.mark_blocked()
             self.timebox()

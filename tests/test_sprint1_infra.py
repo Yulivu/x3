@@ -205,6 +205,32 @@ def test_scheduler_respects_pause_and_freeze(tmp_path: Path) -> None:
                 p.unlink()
 
 
+def test_scheduler_honours_an_external_state_reset(tmp_path: Path) -> None:
+    """state.json is authoritative, so `state_tool --set R1 TODO` re-opens the package
+    even while the scheduler that retired it is still running."""
+    (tmp_path / "job.py").write_text(
+        "import pathlib, sys\n"
+        "if not pathlib.Path('flag').exists():\n"
+        "    sys.exit(1)\n"
+        "pathlib.Path('art.txt').write_text('ok')\n", encoding="utf-8")
+    packages = [{"id": "R1", "lane": "A", "deps": [], "eta_min": 5, "priority": "P0",
+                 "cmd": f"{sys.executable} job.py", "artifacts": ["art.txt"]}]
+    table = _write_pkg_table(tmp_path, packages)
+    sprint = Sprint(table, tmp_path / "state.json", poll=1, once=True, root=tmp_path,
+                    verbose=False)
+    sprint.loop()
+    sprint.drain(timeout=60)
+    assert st.load_state(tmp_path / "state.json")["R1"]["status"] == "FAILED"
+
+    state = st.load_state(tmp_path / "state.json")
+    st.mark(state, "R1", "TODO", note="operator re-opened it")
+    st.save_state(tmp_path / "state.json", state)
+    (tmp_path / "flag").write_text("go", encoding="utf-8")
+    sprint.loop()
+    sprint.drain(timeout=60)
+    assert st.load_state(tmp_path / "state.json")["R1"]["status"] == "DONE"
+
+
 # --- sampling tables ---------------------------------------------------------
 def synthetic_meta(n_platforms: int = 4, speakers_per_platform: int = 6,
                    clips_per_speaker: int = 12) -> tuple[pd.DataFrame, np.ndarray]:
