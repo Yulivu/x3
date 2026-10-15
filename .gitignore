@@ -14,3 +14,15 @@ progress.log.tmp
 # per-clip score archives: ~0.9 GB of npz that every script regenerates from the
 # cached feature blocks (kept on the compute box, not in git)
 results/*_draws/
+
+# sprint 1 (NEW_TASKS 10) runtime state: produced on the machine, never merged back
+control/
+ALL_DONE
+SPRINT_WAIT
+util.csv
+logs/sprint1/
+preflight.md
+logs/sprint1_env.json
+sprint1/audio/
+sprint1/pca/
+sprint1/graph/

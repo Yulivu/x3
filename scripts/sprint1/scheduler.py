@@ -241,8 +241,9 @@ class Sprint:
         kwargs: Dict[str, Any] = dict(shell=True, cwd=str(self.root), env=cfg.lane_env(lane))
         if os.name == "posix":
             kwargs["preexec_fn"] = os.setsid
-        cfg.LOG_DIR.mkdir(parents=True, exist_ok=True)
-        handle = open(cfg.LOG_DIR / f"{pid}.log", "ab", buffering=0)
+        log_dir = self.root / "logs" / "sprint1"   # root-relative: tests stay in tmp
+        log_dir.mkdir(parents=True, exist_ok=True)
+        handle = open(log_dir / f"{pid}.log", "ab", buffering=0)
         kwargs["stdout"] = handle
         kwargs["stderr"] = subprocess.STDOUT
         proc = subprocess.Popen(shell_cmd, **kwargs)  # noqa: S602 - commands come from packages.yaml
