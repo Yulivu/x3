@@ -17,3 +17,5 @@ wps:
   # NEW_TASKS 07 section 2.1: pseudo-enrolment (highest priority in W2-lite).
   - {id: PLB, tier: P0, lane: C, deps: [], est_h: 1.0, cmd: "/root/miniconda3/bin/python scripts/w2lite_pseudo.py", outputs: ["results/w2lite_pseudo.csv"]}
   - {id: PLBM, tier: P0, lane: C, deps: [], est_h: 1.0, cmd: "/root/miniconda3/bin/python scripts/w2lite_pseudo.py --backbone mms-1b --out results/w2lite_pseudo_mms.csv", outputs: ["results/w2lite_pseudo_mms.csv"]}
+  # NEW_TASKS 07 section 2.2: enrolment-contamination robustness (gate G30).
+  - {id: CONT, tier: P0, lane: C, deps: [], est_h: 2.0, cmd: "/root/miniconda3/bin/python scripts/w2lite_contam.py", outputs: ["results/w2lite_contam.csv", "results/w2lite_contam_gate.json"]}
