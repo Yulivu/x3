@@ -106,9 +106,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         return 3
     n = len(index["rows"]) if not args.limit else min(args.limit, len(index["rows"]))
 
+    # The frozen backbones live beside the feature blocks: <data>/x3/models/<name>
+    # (verified from the existing feat block's layers.json on the box).
+    default_model_dir = data_root / "x3" / "models" / args.backbone
     model_dir = args.model_dir or os.environ.get(
         f"X3_MODEL_DIR_{args.backbone.upper().replace('-', '_')}",
-        str(Path("/root/autodl-tmp/models") / args.backbone))
+        str(default_model_dir))
     if not Path(model_dir).exists():
         print(f"model dir {model_dir} not found; pass --model-dir or set "
               f"X3_MODEL_DIR_{args.backbone.upper().replace('-', '_')}")

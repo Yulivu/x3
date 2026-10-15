@@ -64,7 +64,7 @@ packages:
   - id: G-A1
     lane: G
     deps: [P-1]
-    eta_min: 30
+    eta_min: 60      # measured: 15002 clips through ffmpeg + re-embedding is slower than 0.5 h
     priority: P1
     heavy: true
     cmd: python -m scripts.sprint1.recode_feats --view aac64 --backbone mms-1b --side dev
@@ -72,7 +72,7 @@ packages:
   - id: G-A2
     lane: G
     deps: [G-A1]
-    eta_min: 36
+    eta_min: 60
     priority: P1
     heavy: true
     cmd: python -m scripts.sprint1.recode_feats --view aac64 --backbone xls-r-2b --side dev
