@@ -116,6 +116,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     df.to_csv(out, index=False)
     summary = (df[df["mask"] == "clips"].groupby("method")
                [["pooled_eer", "within_macro_eer", "auc"]].mean().round(3))
+    # the queue declares ``results/w14_graphssl.csv`` as this package's output, so the
+    # summary is written there as well as printed (the draws file above is unchanged)
+    summary.to_csv(root / "results" / "w14_graphssl.csv")
     print(summary.to_string())
     print(f"wrote {out}")
     return 0

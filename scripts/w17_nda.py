@@ -71,7 +71,14 @@ def remote_size(url: str, timeout: int = 30) -> Optional[int]:
 
 def download_model(repo: str, dest: Path, base: str = HF, chunk: int = 1 << 20,
                    max_seconds: int = 3600) -> Dict[str, Any]:
-    """Stream one HF repo into ``dest``; skip files that are already complete."""
+    """Fetch one HF repo into ``dest`` with curl (resume + retry).
+
+    ``urllib`` was the obvious tool and the wrong one here: an 8 GB transfer through
+    the box's proxy stalls for minutes at a time without raising, and a Python read
+    loop then hangs forever.  ``curl -C -`` resumes from the partial file and
+    ``--retry`` rides out the drops, and the file is only renamed once its size
+    matches the server's ``Content-Length``.
+    """
     dest = Path(dest)
     dest.mkdir(parents=True, exist_ok=True)
     got: Dict[str, Any] = {"repo": repo, "dir": str(dest), "files": {}}
@@ -84,32 +91,35 @@ def download_model(repo: str, dest: Path, base: str = HF, chunk: int = 1 << 20,
             continue
         tmp = target.with_suffix(target.suffix + ".part")
         t0 = time.time()
-        written = 0
+        cmd = ["curl", "-L", "--fail", "--retry", "8", "--retry-delay", "5",
+               "--connect-timeout", "20", "--max-time", str(int(max_seconds)),
+               "-C", "-", "-o", str(tmp), url]
         try:
-            req = urllib.request.Request(url, headers={"User-Agent": "x3-w17"})
-            with urllib.request.urlopen(req, timeout=120) as resp, \
-                    open(tmp, "wb") as fh:
-                while True:
-                    block = resp.read(chunk)
-                    if not block:
-                        break
-                    fh.write(block)
-                    written += len(block)
-                    if time.time() - t0 > max_seconds:      # pragma: no cover
-                        raise TimeoutError(f"{name} exceeded {max_seconds}s")
-            tmp.replace(target)
-        except Exception as exc:
+            out = subprocess.run(cmd, capture_output=True, text=True,
+                                 timeout=int(max_seconds) + 120)
+        except Exception as exc:                        # pragma: no cover
             got["files"][name] = {"ok": False,
                                   "reason": f"{type(exc).__name__}: {exc}",
-                                  "bytes": written}
-            if tmp.exists():
-                tmp.unlink()
+                                  "bytes": tmp.stat().st_size if tmp.exists() else 0}
             got["ok"] = False
             return got
+        got["files"][name] = {"ok": out.returncode == 0,
+                              "returncode": out.returncode,
+                              "stderr": (out.stderr or "").strip()[-200:],
+                              "bytes": tmp.stat().st_size if tmp.exists() else 0}
+        if out.returncode != 0:
+            got["ok"] = False
+            return got
+        if want is not None and tmp.stat().st_size != want:
+            got["files"][name]["ok"] = False
+            got["files"][name]["reason"] = (f"size {tmp.stat().st_size} != "
+                                            f"{want} after a clean curl exit")
+            got["ok"] = False
+            return got
+        tmp.replace(target)
         secs = max(time.time() - t0, 1e-6)
-        got["files"][name] = {"ok": True, "bytes": written,
-                              "seconds": round(secs, 1),
-                              "mb_per_s": round(written / secs / 2 ** 20, 2)}
+        got["files"][name].update({"seconds": round(secs, 1),
+                                   "mb_per_s": round(target.stat().st_size / secs / 2 ** 20, 2)})
     got["ok"] = all(v.get("ok") or v.get("skipped")
                     for v in got["files"].values())
     return got

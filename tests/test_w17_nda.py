@@ -36,14 +36,44 @@ def test_download_skips_a_file_whose_size_already_matches(tmp_path, monkeypatch)
 def test_download_records_a_failure_and_removes_the_partial_file(tmp_path, monkeypatch):
     monkeypatch.setattr(w17, "remote_size", lambda url, timeout=30: 99)
 
-    def boom(url, timeout=120):
-        raise OSError("no network")
+    calls = {}
 
-    monkeypatch.setattr(w17.urllib.request, "urlopen", boom)
+    class Out:
+        returncode = 1
+        stdout = ""
+        stderr = "curl: (56) Recv failure"
+
+    def fake(cmd, capture_output=True, text=True, timeout=None):
+        calls["cmd"] = cmd
+        return Out()
+
+    monkeypatch.setattr(w17.subprocess, "run", fake)
     got = w17.download_model("toy", tmp_path)
     assert got["ok"] is False
-    assert "no network" in got["files"]["config.json"]["reason"]
-    assert not list(tmp_path.glob("*.part"))          # no half model left behind
+    assert got["files"]["config.json"]["returncode"] == 1
+    # resumable + retrying, so a stalled proxy cannot hang the run
+    assert "-C" in calls["cmd"] and "--retry" in calls["cmd"]
+    assert "--max-time" in calls["cmd"]
+
+
+def test_download_refuses_a_short_file(tmp_path, monkeypatch):
+    monkeypatch.setattr(w17, "remote_size", lambda url, timeout=30: 100)
+
+    class Out:
+        returncode = 0
+        stdout = ""
+        stderr = ""
+
+    def fake(cmd, capture_output=True, text=True, timeout=None):
+        # curl claims success but writes fewer bytes than the server promised
+        (tmp_path / (cmd[cmd.index("-o") + 1].split("/")[-1])).write_bytes(b"x" * 10)
+        return Out()
+
+    monkeypatch.setattr(w17.subprocess, "run", fake)
+    got = w17.download_model("toy", tmp_path)
+    assert got["ok"] is False
+    reason = got["files"]["config.json"]["reason"]
+    assert "10" in reason and "100" in reason
 
 
 def test_g3_keeps_the_incumbent_without_a_clear_win():

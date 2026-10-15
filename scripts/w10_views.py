@@ -256,6 +256,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             audio.unlink()
         except OSError:
             pass
+    # the queue's marker for this package (its declared output)
+    (root / "logs").mkdir(parents=True, exist_ok=True)
+    (root / "logs" / "w10_views.done").write_text(
+        time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()) + "\n", encoding="utf-8")
     return 0
 
 

@@ -133,3 +133,28 @@ def test_params_for_rejects_an_unknown_view():
         assert "unknown view" in str(exc)
     else:                                                 # pragma: no cover
         raise AssertionError("an unknown view must raise")
+
+
+def test_main_writes_the_declared_done_marker(tmp_path, monkeypatch):
+    """The queue's output list names logs/w10_views.done, so main has to write it."""
+    import json as _json
+
+    import w10_views as w10
+
+    (tmp_path / "splits").mkdir()
+    (tmp_path / "splits" / "speaker_split_v2.json").write_text(
+        _json.dumps({"dev_speakers": ["a"], "test_speakers": ["b"]}), encoding="utf-8")
+    monkeypatch.setattr(w10, "REPO", tmp_path)
+    monkeypatch.setattr(w10, "load_mlitw",
+                        lambda data_dir: pd.DataFrame({
+                            "speaker": ["a"], "platform": ["p"], "language": ["en"],
+                            "label": ["spoof"], "clip_id": [0], "y": [1]}))
+    monkeypatch.setattr(w10.w2, "load_audio", lambda data_dir, meta: ([np.zeros(10)], {}))
+    monkeypatch.setattr(w10, "transcode_view",
+                        lambda view, waves, ids, vdir, jobs: {"view": view, "n": 1})
+    monkeypatch.setattr(w10, "extract_spec",
+                        lambda *a, **k: {"view": "stub", "shape": [1, 2]})
+    rc = w10.main(["--data", str(tmp_path), "--model-dir", str(tmp_path),
+                   "--backbone", "toy", "--views", "famB1", "--jobs", "1"])
+    assert rc == 0
+    assert (tmp_path / "logs" / "w10_views.done").exists()

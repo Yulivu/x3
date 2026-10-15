@@ -115,6 +115,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     out = root / "results" / f"w6_draws_{w6.BACKBONE}_{w6.SPEC}_b10.csv"
     df.to_csv(out, index=False)
     summary = df[df["mask"] == "clips"][["pooled_eer", "within_macro_eer", "auc"]].mean().round(3)
+    # the queue declares ``results/w13_b10.csv``; write the summary there too so the
+    # package's output exists even when the head turns out to be broken
+    summary.to_csv(root / "results" / "w13_b10.csv")
     print(summary.to_string())
     print(f"wrote {out}  ({B10_REDUCED_NOTE})")
     auc_mean = float(df[df["mask"] == "clips"]["auc"].mean())
