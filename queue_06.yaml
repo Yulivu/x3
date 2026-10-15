@@ -27,3 +27,5 @@ wps:
   - {id: TIE, tier: P0, lane: C, deps: [], est_h: 0.5, cmd: "/root/miniconda3/bin/python scripts/oc_tie_audit.py", outputs: ["results/oc_tie_audit.csv", "results/oc_tie_audit_summary.csv"]}
   # ENORM re-run with the shared oc_scores (the local re-derivation was the bug).
   - {id: ENORM2, tier: P0, lane: C, deps: [], est_h: 2.0, cmd: "/root/miniconda3/bin/python scripts/w2lite_enorm.py --out results/w2lite_enorm2.csv", outputs: ["results/w2lite_enorm2.csv", "results/w2lite_enorm2_gate.json"]}
+  # NEW_TASKS 07 section 1: A5 (ECAPA speaker-verification OC vs SSL OC).
+  - {id: A5, tier: P0, lane: C, deps: [], est_h: 1.0, cmd: "/root/miniconda3/bin/python scripts/a5_ecapa.py", outputs: ["results/a5_ecapa.csv", "results/a5_ecapa.json"]}
