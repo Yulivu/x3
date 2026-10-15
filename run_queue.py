@@ -483,6 +483,10 @@ class Orchestrator:
             self.checkpoint()
 
     def run_once(self) -> None:
+        # Re-read the state file every pass: an operator may have reset a FAILED
+        # or BLOCKED entry by hand, and the in-memory copy would otherwise
+        # clobber that edit on the next save.
+        self.state = self._load_state()
         self.reap()
         self.mark_blocked()
         missing = self.mark_missing()
