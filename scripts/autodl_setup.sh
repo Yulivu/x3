@@ -10,6 +10,8 @@
 # Environment overrides: REPO_NAME, WORK_ROOT, REPO_DIR, GITHUB_SSH, BRANCH, KEY.
 set -euo pipefail
 
+export PATH=/root/miniconda3/bin:$PATH   # so plain `python` is the sandbox interpreter
+
 REPO_NAME=${REPO_NAME:-x3}
 WORK_ROOT=${WORK_ROOT:-/root/autodl-tmp}
 REPO_DIR=${REPO_DIR:-$WORK_ROOT/$REPO_NAME}
@@ -66,7 +68,9 @@ mkdir -p logs/sprint1 control sprint1/audio sprint1/tables sprint1/pca sprint1/g
          paper_figs export
 
 echo "== 5. runtime versions =="
-python - <<'PY'
+PY=${PY:-$(command -v python3 || command -v python)}
+echo "python at: $PY"
+"$PY" - <<'PY'
 import platform, sys
 print("python", sys.version.split()[0], platform.platform())
 for name in ("numpy", "pandas", "sklearn", "torch", "soundfile", "pyarrow", "yaml"):

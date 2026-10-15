@@ -56,6 +56,11 @@ SPRINT_DIR = REPO_ROOT / "sprint1"
 LOG_DIR = REPO_ROOT / "logs" / "sprint1"
 CONTROL_DIR = REPO_ROOT / "control"
 
+#: The package commands say plain ``python``; on AutoDL the interpreter lives in
+#: conda, so the lane environment puts it first on PATH (override with X3_PY_BIN).
+PY_BIN = os.environ.get("X3_PY_BIN") or (
+    "/root/miniconda3/bin" if Path("/root/miniconda3/bin/python").exists() else "")
+
 # --- contracts --------------------------------------------------------------
 SPLIT_FILE = "speaker_split_v3.json"
 BACKBONES = ("xls-r-2b", "mms-1b")
@@ -89,6 +94,8 @@ def lane_env(lane: str, base: Optional[Dict[str, str]] = None) -> Dict[str, str]
     env["X3_CPU_BUDGET"] = str(CPU_BUDGET)
     env["X3_LANE"] = lane
     env["PYTHONUNBUFFERED"] = "1"
+    if PY_BIN:
+        env["PATH"] = f"{PY_BIN}:{env.get('PATH', '')}"
     for name, path in SCRATCH_DIRS.items():
         env.setdefault(name, str(path))
     env.setdefault("X3_DATA_ROOT", str(DATA_ROOT))

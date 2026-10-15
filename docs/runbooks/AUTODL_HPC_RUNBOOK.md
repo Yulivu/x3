@@ -4,7 +4,8 @@
 PROJECT: x3
 GitHub SSH URL: git@github.com:Yulivu/x3.git   (HTTPS fallback: https://github.com/Yulivu/x3.git)
 branch: x3/main
-server repo dir: /root/autodl-tmp/x3
+server repo dir: /root/autodl-tmp/x3s1   (the older /root/autodl-tmp/x3 tree has its own
+  divergent history and 15 uncommitted files from the previous phase - leave it alone)
 local repo: C:\Users\debuf\Desktop\WWW\x3
 machine: vGPU-32GB x 1, 16 vCPU (Xeon Platinum 8470Q), 80 GiB RAM, system disk 30 GB,
 data disk ~50 GB free (the taskbook planned 70 GB - keep the disk guard in mind)
