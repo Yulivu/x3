@@ -14,6 +14,7 @@ wps:
   - {id: U9R, tier: P0, lane: C, deps: [TA05], est_h: 2.0, cmd: "/root/miniconda3/bin/python scripts/u9_projection.py", outputs: ["results/u9_projection.csv", "results/u9_gate.json"]}
   - {id: U10R, tier: P0, lane: C, deps: [TA05], est_h: 1.0, cmd: "/root/miniconda3/bin/python scripts/u10_fusion.py", outputs: ["results/u10_fusion.csv"]}
   - {id: DP05, tier: P1, lane: C, deps: [TG05, U13, U12, U8R, U14, U1R, U9R, U10R], est_h: 0.2, cmd: "/root/miniconda3/bin/python scripts/decision_point.py", outputs: ["DECISION_POINT.md"]}
+  - {id: DP05B, tier: P1, lane: C, deps: [DP05], est_h: 0.1, cmd: "/root/miniconda3/bin/python scripts/decision_point_05.py", outputs: ["DECISION_POINT.md"]}
   - {id: TB05, tier: P2, lane: C, deps: [DP05], est_h: 4.0, cmd: "/root/miniconda3/bin/python scripts/t_b_original_features.py", outputs: ["results/t_b_original_features.csv"]}
   - {id: TC05, tier: P2, lane: C, deps: [DP05], est_h: 1.0, cmd: "/root/miniconda3/bin/python scripts/t_c_recompute_headline.py", outputs: ["results/t_c_recompute.csv", "results/t_c_recompute_verdict.json"]}
   - {id: TD05, tier: P2, lane: C, deps: [DP05], est_h: 1.0, cmd: "/root/miniconda3/bin/python scripts/t_d_samelabel_opponents.py", outputs: ["results/t_d_samelabel_opponents.csv"]}
