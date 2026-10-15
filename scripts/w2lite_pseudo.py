@@ -45,8 +45,8 @@ def _oc_from(Xn: np.ndarray, sp: np.ndarray, ref: np.ndarray, mode: str) -> np.n
     out = np.full(n, np.nan)
     for s in np.unique(sp):
         idx = np.where(sp == s)[0]
-        r = ref[idx]
-        if not r.any():
+        r = idx[ref[idx]]              # global row ids of this speaker's pseudo set
+        if r.size == 0:
             continue
         d = 1.0 - Xn[idx] @ Xn[r].T
         if mode == "o3z":
