@@ -118,7 +118,7 @@ packages:
     artifacts: [sprint1/harness_report.json]
   - id: S1-B
     lane: A
-    deps: [S1-A]
+    deps: [S1-A, P-2, P-3]   # BASE_M needs the P1 tables and the source-fitted PCA
     eta_min: 75
     priority: P1
     cmd: python -m scripts.sprint1.base_m --out-dir sprint1/results
