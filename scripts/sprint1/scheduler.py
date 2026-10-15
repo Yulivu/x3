@@ -178,6 +178,10 @@ class Sprint:
         if cfg.has_control("PAUSE"):
             self.reasons["PAUSE"] = "control file PAUSE is present"
             return None
+        if lane == "B" and cfg.has_control("PAUSE_B"):
+            # section 1: lane B stands down while a ffmpeg transcoding stage runs
+            self.reasons["PAUSE_B"] = "transcoding in progress; lane B paused"
+            return None
         cands = sorted((p for p in self.packages if p["lane"] == lane),
                        key=lambda p: (p["priority"], p["order"]))
         for pkg in cands:

@@ -7,6 +7,7 @@ the sprint code is validated before it ever reaches the HPC.
 from __future__ import annotations
 
 import json
+import shutil
 import sys
 import time
 from pathlib import Path
@@ -27,6 +28,7 @@ from scripts.sprint1 import audio_memmap as am  # noqa: E402
 from scripts.sprint1 import download_itw as itw  # noqa: E402
 from scripts.sprint1 import fold_pca as fp  # noqa: E402
 from scripts.sprint1 import inknn_graph as ik  # noqa: E402
+from scripts.sprint1 import recode_feats as rf  # noqa: E402
 from scripts.sprint1.scheduler import Sprint, cmd_missing, load_packages  # noqa: E402
 
 
@@ -342,3 +344,27 @@ def test_harness_selftest_passes_on_this_machine(tmp_path: Path) -> None:
     assert rc == 0, "the harness must agree with src.metrics3 before S1-B uses it"
     report = json.loads((tmp_path / "sprint1" / "harness_report.json").read_text(encoding="utf-8"))
     assert report["ok"] and report["n_checks"] >= 6
+
+
+# --- G-A: codec-normalised features ------------------------------------------
+def test_recode_needs_the_memmap_and_refuses_non_dev(tmp_path: Path) -> None:
+    assert rf.main(["--backbone", "xls-r-2b", "--root", str(tmp_path)]) == 2
+    audio = tmp_path / "sprint1" / "audio"
+    audio.mkdir(parents=True)
+    mm = np.memmap(audio / "fake.mm", dtype=np.int16, mode="w+", shape=(2, 100))
+    mm[:] = 0
+    mm.flush()
+    del mm
+    (audio / "dev_index.json").write_text(json.dumps({
+        "side": "test", "path": str(audio / "fake.mm"), "dtype": "int16",
+        "shape": [2, 100], "rows": [0, 1]}), encoding="utf-8")
+    assert rf.main(["--backbone", "xls-r-2b", "--root", str(tmp_path)]) == 3
+
+
+def test_transcode_roundtrip_when_ffmpeg_is_present(tmp_path: Path) -> None:
+    if shutil.which("ffmpeg") is None:
+        pytest.skip("ffmpeg is only on the compute machine")
+    tone = (np.sin(2 * np.pi * 220 * np.arange(32000) / 16000) * 3000).astype(np.int16)
+    out = rf.transcode_one(tone, "64k", tmp_path)
+    assert out.ndim == 1 and out.size > 0
+    assert np.abs(out).max() <= 1.0
