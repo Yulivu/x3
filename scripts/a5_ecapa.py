@@ -70,6 +70,8 @@ def embed_audio(blobs: List[bytes], device: str, batch: int = 16) -> np.ndarray:
         source="/root/autodl-tmp/data/ecapa", savedir="/root/autodl-tmp/data/ecapa",
         run_opts={"device": device})
     embs: List[np.ndarray] = []
+    from torch.nn.utils.rnn import pad_sequence
+
     for i in range(0, len(blobs), batch):
         chunk = []
         for b in blobs[i:i + batch]:
@@ -80,9 +82,12 @@ def embed_audio(blobs: List[bytes], device: str, batch: int = 16) -> np.ndarray:
                 import librosa
                 wav = librosa.resample(np.asarray(wav, np.float32),
                                        orig_sr=sr, target_sr=16000)
-            chunk.append(torch.from_numpy(np.asarray(wav, np.float32)).unsqueeze(0))
+            chunk.append(torch.from_numpy(np.asarray(wav, np.float32)))
+        lengths = torch.tensor([c.numel() for c in chunk], dtype=torch.float32)
+        lengths = lengths / lengths.max()
+        padded = pad_sequence(chunk, batch_first=True)
         with torch.no_grad():
-            e = clf.encode_batch(torch.cat(chunk, dim=0)).squeeze(1).cpu().numpy()
+            e = clf.encode_batch(padded, wav_lens=lengths).squeeze(1).cpu().numpy()
         embs.append(e)
         if (i // batch) % 50 == 0:
             print(f"  embedded {min(i + batch, len(blobs))}/{len(blobs)}", flush=True)
