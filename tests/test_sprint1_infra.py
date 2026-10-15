@@ -292,6 +292,15 @@ def test_prepare_waveform_tiles_and_truncates() -> None:
     assert ints.dtype == np.int16 and ints[0] == -32768 and ints[2] == 32767
 
 
+def test_keep_positions_filters_by_global_index() -> None:
+    # a split row list must select exactly those global clips, not the first N clips
+    rows = [3, 5, 9, 10]
+    assert am.keep_positions(rows, 12) == [3, 5, 9, 10]
+    assert am.keep_positions([0, 1], 12) == [0, 1]
+    assert am.keep_positions([11], 12) == [11]
+    assert am.keep_positions([], 5) == []
+
+
 def test_test_side_is_refused_without_freeze(tmp_path: Path) -> None:
     rc = am.main(["--side", "test", "--root", str(tmp_path)])
     assert rc == 3, "reading test clips before FREEZE_OK must be refused"

@@ -58,6 +58,17 @@ def to_int16(x: np.ndarray) -> np.ndarray:
     return np.clip(np.rint(x * 32767.0), -32768, 32767).astype(np.int16)
 
 
+def keep_positions(rows: Sequence[int], n_total: int) -> List[int]:
+    """Global clip indices to decode, in manifest order.
+
+    The parquet shards hold the whole corpus in manifest order, so a *subset* split
+    has to filter by global index while walking them - reading only the first N
+    clips would silently fill the memmap with the wrong rows.
+    """
+    keep = set(int(r) for r in rows)
+    return [g for g in range(int(n_total)) if g in keep]
+
+
 def dev_rows(meta, root: Path, side: str):
     from src.regions import load_split, region_rows
 
@@ -104,6 +115,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     # A raw int16 memmap (no .npy header) so any reader can open it with
     # np.memmap(path, dtype="int16", mode="r", shape=index["shape"]).
+    positions = keep_positions(rows, len(meta))
+    if len(positions) != len(rows):
+        raise ValueError(f"only {len(positions)} of {len(rows)} split rows exist in the manifest")
     mm = np.memmap(out, dtype=np.int16, mode="w+", shape=(len(rows), N_SAMPLES))
     seen_speaker: List[str] = []
     seen_platform: List[str] = []
@@ -111,6 +125,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     seen_label: List[str] = []
     files: List[str] = []
     i = 0
+    g = 0
     cols = ["file", "speaker", "language", "platform", "label"]
     for shard in shards:
         if i >= len(rows):
@@ -119,6 +134,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         for j in range(len(table["file"])):
             if i >= len(rows):
                 break
+            global_index = g
+            g += 1
+            if global_index != positions[i]:
+                continue          # not part of this split: skip without decoding
             wave = prepare_waveform(decode_wav(table["file"][j]["bytes"]))
             mm[i] = to_int16(wave)
             seen_speaker.append(str(table["speaker"][j]))
