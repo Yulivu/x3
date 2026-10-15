@@ -6,7 +6,9 @@ GitHub SSH URL: git@github.com:Yulivu/x3.git   (HTTPS fallback: https://github.c
 branch: x3/main
 server repo dir: /root/autodl-tmp/x3
 local repo: C:\Users\debuf\Desktop\WWW\x3
-machine: vGPU-32GB x 1, 16 vCPU, 62 GiB RAM (taskbook says 80 GiB - the real box wins)
+machine: vGPU-32GB x 1, 16 vCPU (Xeon Platinum 8470Q), 80 GiB RAM, system disk 30 GB,
+data disk ~50 GB free (the taskbook planned 70 GB - keep the disk guard in mind)
+ssh: ssh -p 49395 root@connect.westd.seetacloud.com   (AutoDL keeps the repo at /root/autodl-tmp/x3)
 sprint entry points: scripts/sprint1/{preflight,audio_memmap,sampling_tables,fold_pca,inknn_graph}.py
 scheduler: scripts/sprint1/scheduler.py  (packages.yaml + state.json, lanes A/B/G/N)
 ```

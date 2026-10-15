@@ -4,9 +4,9 @@ Section 1 of the taskbook fixes the thread budgets, the nice level of lane B, th
 cache locations and the disk guard.  Every driver and the scheduler read this one
 module so the numbers cannot drift apart.
 
-The user-reported machine is 16 vCPU / 62 GiB RAM / vGPU-32GB.  The taskbook says
-"80 GB memory"; the smaller number is what is actually there, so the RAM limit is
-configurable and defaults to the reported 62 GiB.
+The machine is 16 vCPU (Xeon Platinum 8470Q) / 80 GiB RAM / vGPU-32GB, matching the
+taskbook.  The data disk has ~50 GB free (the taskbook planned for 70), so the disk
+guard matters and every stage reports free space before it starts.
 """
 
 from __future__ import annotations
@@ -35,7 +35,7 @@ LANE_NICE: Dict[str, int] = {"A": 0, "B": 10, "G": 0, "N": 0}
 VCPU = int(os.environ.get("X3_VCPU", "16"))
 RESERVED_VCPU = 2  # "always leave >= 2 vCPU for the system and the agent" (section 1)
 CPU_BUDGET = max(1, VCPU - RESERVED_VCPU)
-RAM_LIMIT_GB = float(os.environ.get("X3_RAM_GB", "62"))
+RAM_LIMIT_GB = float(os.environ.get("X3_RAM_GB", "80"))
 VGPU_COUNT = int(os.environ.get("X3_VGPU", "1"))
 VRAM_TOTAL_GB = float(os.environ.get("X3_VRAM_GB", "32"))
 #: Concurrent GPU memory the sprint is allowed to occupy (section 1: <= 24 GB).
