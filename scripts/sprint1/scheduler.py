@@ -229,16 +229,16 @@ class Sprint:
     def start(self, pkg: Dict[str, Any], lane: str) -> None:
         pid = pkg["id"]
         row = self.row(pid)
+        if self.dry_run:
+            self.log(f"dry-run would start {pid} on lane {lane}: {pkg.get('cmd')}")
+            self.retired[pid] = "DRY_RUN"
+            return
         miss = cmd_missing(pkg.get("cmd", ""), self.root)
         if miss:
             st.mark(self.state, pid, "MISSING", note=f"{miss} not written yet")
             self.retired[pid] = "MISSING"
             self.persist()
             self.log(f"start {pid}: MISSING ({miss})")
-            return
-        if self.dry_run:
-            self.log(f"dry-run would start {pid} on lane {lane}: {pkg.get('cmd')}")
-            self.retired[pid] = "DRY_RUN"
             return
         prefix = " ".join(cfg.lane_prefix(lane))
         shell_cmd = f"{prefix} {pkg['cmd']}" if prefix else pkg["cmd"]
