@@ -1,0 +1,43 @@
+dev clips=15002 strategies=('U', 'P', 'N', 'E', 'K', 'BADGE', 'CASA') ks=(100, 290)
+            pooled_eer  within_macro_eer    auc
+method k                                       
+BADGE  100      12.810            14.664  0.940
+       290       8.806            10.939  0.967
+CASA   100      10.364            12.171  0.956
+       290       6.683             8.068  0.977
+E      100      10.796            12.750  0.952
+       290       6.704             8.334  0.977
+K      100      15.579            16.995  0.917
+       290      13.048            15.200  0.940
+N      100      12.320            13.929  0.943
+       290       9.253            11.478  0.965
+P      100      12.269            13.826  0.943
+       290       9.248            11.376  0.965
+U      100      14.422            15.793  0.926
+       290      10.972            12.768  0.953
+
+method other           metric   k      mean        lo        hi  n       backbone     spec
+  CASA     U       pooled_eer 100 -4.058668 -9.548021 -0.874279 50 xlsr300m-linea S1-lineA
+  CASA     U within_macro_eer 100 -3.621578 -7.747740  0.223672 50 xlsr300m-linea S1-lineA
+  CASA     P       pooled_eer 100 -1.905066 -5.948858  0.735386 50 xlsr300m-linea S1-lineA
+  CASA     P within_macro_eer 100 -1.655111 -5.665032  1.669328 50 xlsr300m-linea S1-lineA
+  CASA     N       pooled_eer 100 -1.956486 -5.668050  0.758437 50 xlsr300m-linea S1-lineA
+  CASA     N within_macro_eer 100 -1.758330 -5.660809  1.526472 50 xlsr300m-linea S1-lineA
+  CASA     E       pooled_eer 100 -0.432739 -3.306368  2.681765 50 xlsr300m-linea S1-lineA
+  CASA     E within_macro_eer 100 -0.579305 -3.444650  2.987657 50 xlsr300m-linea S1-lineA
+  CASA     K       pooled_eer 100 -5.214839 -8.708251 -2.306925 50 xlsr300m-linea S1-lineA
+  CASA     K within_macro_eer 100 -4.824032 -7.772891 -1.686208 50 xlsr300m-linea S1-lineA
+  CASA BADGE       pooled_eer 100 -2.446288 -5.492657  0.838218 50 xlsr300m-linea S1-lineA
+  CASA BADGE within_macro_eer 100 -2.493268 -5.955791  1.070790 50 xlsr300m-linea S1-lineA
+  CASA     U       pooled_eer 290 -4.289571 -6.505819 -2.016807 50 xlsr300m-linea S1-lineA
+  CASA     U within_macro_eer 290 -4.699764 -7.333493 -2.043466 50 xlsr300m-linea S1-lineA
+  CASA     P       pooled_eer 290 -2.565568 -4.401609 -0.839923 50 xlsr300m-linea S1-lineA
+  CASA     P within_macro_eer 290 -3.308103 -5.952298 -1.421553 50 xlsr300m-linea S1-lineA
+  CASA     N       pooled_eer 290 -2.569769 -4.241405 -0.891448 50 xlsr300m-linea S1-lineA
+  CASA     N within_macro_eer 290 -3.409687 -6.014020 -1.042767 50 xlsr300m-linea S1-lineA
+  CASA     E       pooled_eer 290 -0.021507 -1.098906  0.812080 50 xlsr300m-linea S1-lineA
+  CASA     E within_macro_eer 290 -0.266086 -1.725089  1.546968 50 xlsr300m-linea S1-lineA
+  CASA     K       pooled_eer 290 -6.365294 -8.208124 -5.070786 50 xlsr300m-linea S1-lineA
+  CASA     K within_macro_eer 290 -7.131977 -9.682641 -4.903950 50 xlsr300m-linea S1-lineA
+  CASA BADGE       pooled_eer 290 -2.122915 -3.827831 -0.484339 50 xlsr300m-linea S1-lineA
+  CASA BADGE within_macro_eer 290 -2.871193 -5.994661 -0.501800 50 xlsr300m-linea S1-lineA

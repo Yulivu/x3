@@ -203,6 +203,17 @@ U8 intervals (delta = method - control; negative = method better)
 | S5 | C1 | 11.22 | 16.04 |
 
 
+`results/w22_families.csv` - transcode-family robustness (B1, same clips and draws; `cost_vs_*` are EER differences)
+
+| arm | clips | strict_draw | cost_vs_famA1_clips | cost_vs_clean_clips | cost_vs_famA1_strict_draw | cost_vs_clean_strict_draw |
+|---|---|---|---|---|---|---|
+| clean | 11.03 | 14.09 | -1.421 | 0 | -1.925 | 0 |
+| famA1 | 12.46 | 16.02 | 0 | 1.421 | 0 | 1.925 |
+| famB1 | 11.41 | 14.62 | -1.044 | 0.377 | -1.398 | 0.527 |
+| famB2 | 12.66 | 16.32 | 0.208 | 1.629 | 0.305 | 2.23 |
+| famB3 | 12.18 | 15.48 | -0.279 | 1.143 | -0.539 | 1.385 |
+
+
 `results/w6_summary_v3_mms1b.csv` (mms-1b/S3 on the v3 dev region)
 
 | method | clips | strict |
@@ -1009,5 +1020,5 @@ NOT_RUN - `results/w21_addgp.csv` missing
 
 ## 5. Reproduction and commit
 
-- commit: `a175204`
+- commit: `e7d1977`
 - environment: `scripts/w1_env.py`; queue: `queue.yaml`; criteria: `claims.yaml`
