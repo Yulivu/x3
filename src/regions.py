@@ -95,6 +95,21 @@ def _feature_dir(data_dir: Path, backbone: str) -> Path:
     return Path(data_dir) / "x3" / "feats" / backbone
 
 
+def _layer_block(mm, rows: np.ndarray, idxs: Sequence[int]) -> np.ndarray:
+    """``mm[rows][:, idxs, :]`` without materialising every layer.
+
+    ``mean.npy`` is ``[N, L+1, 1920]`` fp16 (2.8 GB for the full matrix), so the
+    naive ``mm[rows][:, idx, :]`` reads all ``L+1`` layers for those rows and
+    then throws most of it away - 68 s per call on the 16 vCPU box.  Reading one
+    layer slice at a time touches only the requested rows of that layer.
+    """
+    rows = np.asarray(rows, int)
+    out = np.empty((rows.size, len(idxs), mm.shape[2]), np.float32)
+    for j, i in enumerate(idxs):
+        out[:, j, :] = np.asarray(mm[:, int(i), :][rows], np.float32)
+    return out
+
+
 def load_spec_block(data_dir: Path, backbone: str, spec: str,
                     rows: Optional[Sequence[int]] = None,
                     want_zero: bool = True) -> np.ndarray:
@@ -112,10 +127,8 @@ def load_spec_block(data_dir: Path, backbone: str, spec: str,
     rows = np.arange(mean_mm.shape[0]) if rows is None else np.asarray(rows, int)
     need_mean = sorted({i for src, i in slices if src == "mean"})
     need_std = sorted({i for src, i in slices if src == "std"})
-    mean = (np.asarray(mean_mm[rows][:, need_mean, :], np.float32)
-            if need_mean else None)
-    std = (np.asarray(std_mm[rows][:, need_std, :], np.float32)
-           if need_std else None)
+    mean = _layer_block(mean_mm, rows, need_mean) if need_mean else None
+    std = _layer_block(std_mm, rows, need_std) if need_std else None
     zero = None
     if any(src == "zero" for src, _ in slices):
         if not want_zero:
