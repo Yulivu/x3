@@ -29,6 +29,9 @@ from scripts.sprint1 import download_itw as itw  # noqa: E402
 from scripts.sprint1 import fold_pca as fp  # noqa: E402
 from scripts.sprint1 import inknn_graph as ik  # noqa: E402
 from scripts.sprint1 import recode_feats as rf  # noqa: E402
+from scripts.sprint1 import counterfactual as cf  # noqa: E402
+from scripts.sprint1 import extra_feats as ef  # noqa: E402
+from scripts.sprint1 import x_e_audit_list as xe  # noqa: E402
 from scripts.sprint1.scheduler import Sprint, cmd_missing, load_packages  # noqa: E402
 
 
@@ -442,3 +445,75 @@ def test_transcode_roundtrip_when_ffmpeg_is_present(tmp_path: Path) -> None:
     out = rf.transcode_one(tone, "64k", tmp_path)
     assert out.ndim == 1 and out.size > 0
     assert np.abs(out).max() <= 1.0
+
+
+# --- G-B / G-C / X-E ---------------------------------------------------------
+def test_handcrafted_descriptors_are_finite_and_bounded() -> None:
+    x = np.sin(2 * np.pi * 220 * np.arange(32000) / 16000).astype(np.float32)
+    d = ef.handcrafted(x)
+    assert d.shape == (len(ef.DESC_NAMES),)
+    assert np.isfinite(d).all()
+    assert d[ef.DESC_NAMES.index("duration_s")] == pytest.approx(2.0, abs=0.01)
+    assert d[ef.DESC_NAMES.index("zcr")] > 0
+
+
+def test_layer_indices_stay_in_range() -> None:
+    idx = ef.layer_indices(48)
+    assert idx == sorted(set(idx))
+    assert all(1 <= v <= 48 for v in idx)
+    assert idx == ef.layer_indices(48)
+
+
+def _write_fake_audio_index(root: Path, n: int = 24) -> None:
+    audio = root / "sprint1" / "audio"
+    audio.mkdir(parents=True, exist_ok=True)
+    mm = np.memmap(audio / "dev_i16.mm", dtype=np.int16, mode="w+", shape=(n, 1600))
+    rng = np.random.default_rng(3)
+    for i in range(n):
+        mm[i] = (np.sin(2 * np.pi * (100 + 10 * i) * np.arange(1600) / 16000) * 8000).astype(np.int16)
+    mm.flush()
+    del mm
+    (audio / "dev_index.json").write_text(json.dumps({
+        "side": "dev", "path": str(audio / "dev_i16.mm"), "dtype": "int16",
+        "shape": [n, 1600], "rows": list(range(n)), "clip_id": list(range(n)),
+        "meta": {"speaker": [f"s{i % 4}" for i in range(n)],
+                 "platform": [["youtube", "douyin"][i % 2] for i in range(n)],
+                 "language": ["english"] * n,
+                 "label": [["bonafide", "spoof"][i % 2] for i in range(n)],
+                 "y": [i % 2 for i in range(n)],
+                 "file": ["eval-00000-of-00004.parquet"] * n},
+    }), encoding="utf-8")
+
+
+def test_g_b_and_g_c_need_p1_and_refuse_test(tmp_path: Path) -> None:
+    assert ef.main(["--root", str(tmp_path), "--limit", "2"]) == 2
+    assert cf.main(["--root", str(tmp_path)]) == 2
+    assert xe.main(["--root", str(tmp_path)]) == 2
+    _write_fake_audio_index(tmp_path, 8)
+    index = json.loads((tmp_path / "sprint1/audio/dev_index.json").read_text(encoding="utf-8"))
+    index["side"] = "test"
+    (tmp_path / "sprint1/audio/dev_index.json").write_text(json.dumps(index), encoding="utf-8")
+    assert cf.main(["--root", str(tmp_path)]) == 3
+    assert xe.main(["--root", str(tmp_path)]) == 3
+
+
+def test_extra_feats_handcrafted_block_on_a_tiny_memmap(tmp_path: Path) -> None:
+    _write_fake_audio_index(tmp_path, 6)
+    rc = ef.main(["--root", str(tmp_path), "--limit", "6", "--backbones", "",
+                  "--max-minutes", "0.05"])
+    assert rc == 0
+    npz = np.load(tmp_path / "sprint1/feats/extra_layers_dev.npz")
+    assert npz["handcrafted"].shape == (6, len(ef.DESC_NAMES))
+    assert np.isfinite(npz["handcrafted"]).all()
+    index = json.loads((tmp_path / "sprint1/feats/extra_index.json").read_text(encoding="utf-8"))
+    assert index["status"]["handcrafted"]["ok"] is True
+
+
+def test_x_e_writes_a_stratified_list(tmp_path: Path) -> None:
+    _write_fake_audio_index(tmp_path, 24)
+    rc = xe.main(["--root", str(tmp_path), "--total", "8"])
+    assert rc == 0
+    csv = pd.read_csv(tmp_path / "paper_tables/audit_list.csv")
+    assert len(csv) >= 4
+    assert {"clip_id", "platform", "label", "wav", "row"} <= set(csv.columns)
+    assert (tmp_path / "paper_tables/audit_audio").glob("*.wav")
