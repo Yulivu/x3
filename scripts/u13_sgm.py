@@ -11,6 +11,7 @@ import argparse
 import contextlib
 import multiprocessing as mp
 import sys
+import time
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -130,7 +131,9 @@ def main(argv=None):
 
     root = Path(a.root)
     data = data_root(a.data)
+    t0 = time.time()
     sub, X = R.load_region(root, data, a.backbone, a.spec, a.split)
+    print(f"loaded region {X.shape} in {time.time() - t0:.1f}s", flush=True)
     tracks = [t.strip().upper() for t in a.tracks.split(",") if t.strip()]
     _G.update({
         "y": sub["y"].to_numpy(int),
@@ -142,7 +145,9 @@ def main(argv=None):
         "backbone": a.backbone,
         "spec": a.spec,
     })
+    t1 = time.time()
     _G["Z64"] = prepare_features(X, 64)
+    print(f"prepared PCA-64 in {time.time() - t1:.1f}s", flush=True)
     print(f"{a.backbone}|{a.spec}: clips={len(sub)} "
           f"speakers={len(np.unique(_G['speaker']))} tracks={tracks} jobs={a.jobs}",
           flush=True)
