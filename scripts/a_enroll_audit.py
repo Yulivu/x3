@@ -327,8 +327,8 @@ def gate_g25(root: Path, variants: pd.DataFrame, backbones, ms) -> Dict[str, Any
         v = variants[(variants["backbone"] == bb) & (variants["m"] == 5)]
         if v.empty:
             continue
-        a0 = v[v["variant"] == "A0"].set_index("method")["pooled_eer"]
-        a1 = v[v["variant"] == "A1"].set_index("method")["pooled_eer"]
+        a0 = v[v["variant"] == "A0"].groupby("method")["pooled_eer"].mean()
+        a1 = v[v["variant"] == "A1"].groupby("method")["pooled_eer"].mean()
         entry: Dict[str, Any] = {}
         if {"B1", "OC+B1"} <= set(a0.index) and {"B1", "OC+B1"} <= set(a1.index):
             entry["gain_true"] = float(a0["B1"] - a0["OC+B1"])
@@ -348,16 +348,22 @@ def gate_g25(root: Path, variants: pd.DataFrame, backbones, ms) -> Dict[str, Any
                               "n_draws": len(per_draw)})
                 entry["A2_passes"] = bool(mean <= -G25_MARGIN
                                           and not (lo <= 0 <= hi))
+                entry["A2_inconclusive"] = bool(mean <= -G25_MARGIN
+                                                and (lo <= 0 <= hi))
+                entry["b_half_width"] = float((hi - lo) / 2.0)
         per[bb] = entry
     out["per_backbone"] = per
     valid = [e for e in per.values() if e.get("A2_passes")]
+    inconclusive = [e for e in per.values() if e.get("A2_inconclusive")]
     under = [bb for bb, e in per.items() if e.get("A2_coverage_clip", 1.0) < 0.30]
-    if under and not valid:
+    if under and not valid and not inconclusive:
         out["verdict"] = "ENROLL_UNTESTABLE"
         out["underpowered"] = under
     elif len(valid) == len(per) and per:
         ratio = max(e.get("shuffled_ratio", 1.0) for e in per.values())
         out["verdict"] = "ENROLL_GENERIC" if ratio > 0.5 else "ENROLL_VALID"
+    elif inconclusive:
+        out["verdict"] = "ENROLL_INCONCLUSIVE"
     else:
         out["verdict"] = "ENROLL_SHORTCUT"
     return out

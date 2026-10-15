@@ -190,6 +190,29 @@ def main(argv=None):
 
     df = pd.DataFrame(rows)
     write_csv_atomic(df, root / a.out)
+    # NEW_TASKS 07 section 0.1: how many speakers lose enrolment capacity, and
+    # what the genuine/spoof balance of E becomes once enrolment is removed.
+    cov: List[Dict[str, Any]] = []
+    y, sp = _G["y"], _G["speaker"]
+    total_real = float((y == 0).sum())
+    for (bb, spec) in zeros:
+        for m in ms:
+            per_spk = {s: int(((sp == s) & (y == 0)).sum()) for s in np.unique(sp)}
+            usable = {s: min(int(m), n // 2) for s, n in per_spk.items()
+                      if min(int(m), n // 2) > 0}
+            degraded = [s for s, n in per_spk.items() if n < int(m)]
+            enrolled = float(sum(usable.values()))
+            slots = float(len(per_spk) * int(m))
+            cov.append({"backbone": bb, "spec": spec, "m": int(m),
+                        "speakers_total": int(len(per_spk)),
+                        "speakers_degraded_n_real_lt_m": len(degraded),
+                        "speakers_usable": len(usable),
+                        "speakers_excluded": int(len(per_spk)) - len(usable),
+                        "mean_effective_m": (enrolled / len(usable)) if usable else 0.0,
+                        "capacity_fraction": (enrolled / slots) if slots else 0.0,
+                        "E_real_fraction": ((total_real - enrolled)
+                                            / (len(y) - enrolled))})
+    pd.DataFrame(cov).to_csv(root / "results" / "u12r_coverage.csv", index=False)
     (df.groupby(["backbone", "m", "method"])
        [["pooled_eer", "within_macro_eer", "worst_platform_eer", "auc"]]
        .mean().reset_index().to_csv(root / "results" / "u12r_summary.csv", index=False))
