@@ -331,3 +331,14 @@ def test_itw_disk_guard_blocks_without_downloading(tmp_path: Path,
     payload = json.loads(status.read_text(encoding="utf-8"))
     assert payload["status"] == "BLOCKED" and payload["reason"] == "disk"
     assert "attempts" not in payload
+
+
+def test_harness_selftest_passes_on_this_machine(tmp_path: Path) -> None:
+    pytest.importorskip("torch")
+    from scripts.sprint1 import harness_selftest as hs
+
+    rc = hs.main(["--root", str(tmp_path), "--out", "sprint1/harness_report.json",
+                  "--clips", "600", "--dim", "16"])
+    assert rc == 0, "the harness must agree with src.metrics3 before S1-B uses it"
+    report = json.loads((tmp_path / "sprint1" / "harness_report.json").read_text(encoding="utf-8"))
+    assert report["ok"] and report["n_checks"] >= 6
