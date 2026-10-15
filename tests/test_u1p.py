@@ -169,3 +169,28 @@ def test_verdicts_separate_a_real_but_small_gain_from_a_resolved_one():
     flags = u1p.verdicts(df, big)
     assert flags["LP_GAIN_UNSEEN_MEETS_2PT_BAR"] is True
     assert flags["LP_GAIN_UNSEEN_BELOW_RESOLUTION"] is False
+
+
+def test_u1p_refuses_the_test_region_without_freeze_ok(tmp_path):
+    """The freeze rule is enforced where the reading actually happens."""
+    import u1p_speaker_split_v3 as u1p
+
+    rc = u1p.main(["--root", str(tmp_path), "--region", "test", "--intervals-only"])
+    assert rc == 2
+
+
+def test_u1p_uses_a_tagged_output_for_the_test_region(tmp_path, monkeypatch):
+    (tmp_path / "FREEZE_OK").write_text("ok\n", encoding="utf-8")
+    seen = {}
+
+    def fake_load_region(root, data_dir, backbone, spec, split_name, side="dev"):
+        seen["side"] = side
+        raise SystemExit("stop before any model work")
+
+    monkeypatch.setattr(u1p.R, "load_region", fake_load_region)
+    try:
+        u1p.main(["--root", str(tmp_path), "--region", "test", "--draws", "1",
+                  "--jobs", "1"])
+    except SystemExit as exc:                       # the stub stops the run
+        assert "stop before" in str(exc)
+    assert seen.get("side") == "test"

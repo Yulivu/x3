@@ -340,6 +340,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--draws", type=int, default=N_DRAWS)
     parser.add_argument("--jobs", type=int, default=32)
     parser.add_argument("--budgets", default="290,100")
+    parser.add_argument("--region", default="dev", choices=["dev", "test"],
+                        help="the test region is only available once x3/FREEZE_OK exists")
+    parser.add_argument("--out-tag", default="",
+                        help="suffix for the output files")
     parser.add_argument("--interval-jobs", type=int, default=16)
     parser.add_argument("--intervals-only", action="store_true")
     parser.add_argument("--verdicts-only", action="store_true",
@@ -347,9 +351,15 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     args = parser.parse_args(argv)
 
     root = Path(args.root).resolve()
+    # the freeze rule is enforced at the lowest level too: no FREEZE_OK, no test row
+    if args.region == "test" and not (root / "FREEZE_OK").exists():
+        print(f"refusing to evaluate the test region: {root / 'FREEZE_OK'} is missing",
+              file=sys.stderr)
+        return 2
     budgets = [int(x) for x in str(args.budgets).split(",") if x.strip()]
-    draw_root = root / "results" / "u1p_draws"
-    out_csv = root / "results" / "u1p_speaker_split_v3.csv"
+    tag = args.out_tag or ("_test" if args.region == "test" else "")
+    draw_root = root / "results" / f"u1p_draws{tag}"
+    out_csv = root / "results" / f"u1p_speaker_split_v3{tag}.csv"
 
     if args.verdicts_only:
         df = pd.read_csv(out_csv)
@@ -362,7 +372,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     if not args.intervals_only:
         data_dir = data_root(args.data)
-        sub, F = R.load_region(root, data_dir, args.backbone, args.spec, args.split)
+        sub, F = R.load_region(root, data_dir, args.backbone, args.spec, args.split,
+                               side=args.region)
         transform, Z = w6.fit_preprocess(F)
         y = sub["y"].to_numpy()
         plat = sub["platform"].to_numpy()
