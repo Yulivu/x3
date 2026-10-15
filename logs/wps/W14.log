@@ -1,0 +1,8 @@
+
+===== 2026-10-15T02:52:02Z attempt 1 :: /root/miniconda3/bin/python scripts/w14_graphssl.py
+dev clips=7436 draws=50
+          pooled_eer  within_macro_eer    auc
+method                                       
+B9            13.466            14.939  0.922
+GraphSSL      13.410            14.915  0.935
+wrote /root/autodl-tmp/x3/results/w6_draws_xlsr300m-linea_S1-lineA_graphssl.csv

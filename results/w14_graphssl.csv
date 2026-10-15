@@ -1,0 +1,3 @@
+method,pooled_eer,within_macro_eer,auc
+B9,13.466,14.939,0.922
+GraphSSL,13.41,14.915,0.935

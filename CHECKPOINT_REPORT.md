@@ -542,7 +542,32 @@ Track Z (k=0, v3 dev): `results/w8_zlabel.csv`
 
 ## Work packages
 
-_(empty)_
+| wp | status | attempts | rc |
+|---|---|---|---|
+| W0 | DONE | 0 | 0 |
+| W1 | DONE | 0 | 0 |
+| W10 | DONE | 0 | 0 |
+| W11 | DONE | 0 | 0 |
+| W12 | DONE | 0 | 0 |
+| W13 | RUNNING | 1 | nan |
+| W14 | RUNNING | 1 | nan |
+| W15 | PENDING | 0 | nan |
+| W16 | DONE | 0 | 0 |
+| W17 | PENDING | 0 | nan |
+| W18 | DONE | 0 | 0 |
+| W19 | DONE | 0 | 0 |
+| W2 | DONE | 0 | 0 |
+| W20 | DONE | 0 | 0 |
+| W21 | PENDING | 0 | nan |
+| W22 | DONE | 0 | 0 |
+| W3 | DONE | 0 | 0 |
+| W4 | DONE | 0 | 0 |
+| W5 | DONE | 0 | 0 |
+| W6 | DONE | 0 | 0 |
+| W7 | DONE | 0 | 0 |
+| W8 | DONE | 0 | 0 |
+| W9 | DONE | 0 | 0 |
+| WF | PENDING | 0 | nan |
 
 ## Headline tables
 
@@ -673,4 +698,4 @@ _(empty)_
 | 23.74 | 21.04 | tiktok | 31.02 | 0.8508 | nan | 15002 | 3990 | 20.8 | 14.82 | 29.57 | 15.66 | 31.02 | 16.17 | 19.19 | track_z_v3_dev | dev | xls-r-2b | S3 | Z5-z1 | 0 | clips | 0 | nan | nan | nan | nan | nan | nan | Z1 | nan | nan |
 | 22.58 | 23.25 | tiktok | 37.22 | 0.8417 | nan | 15002 | 3990 | 19.71 | 17.95 | 23.83 | 27.41 | 37.22 | 15.83 | 20.78 | track_z_v3_dev | dev | xls-r-2b | S3 | Z4 | 0 | clips | 0 | nan | nan | nan | nan | nan | nan | Z2 posterior | 3 | 3973 |
 
-commit: `e7d1977`
+commit: `87ffe18`

@@ -9,3 +9,7 @@
 2026-10-14T23:14:23Z  HB  commit=d8f7f8e  done=U1p,v2v3,U8,U9,U10,DP  pending=-  tmux=-  note=W15 ITW_UNAVAILABLE (401), W21 ADDGP_UNAVAILABLE (no entry point)
 2026-10-14T23:32:06Z  HB  commit=a175204  done=U1p,v2v3,U8,U9,U10,DP  pending=-  tmux=-  note=W22 backlog complete: 200-draw rerun, 6-point k curve, spec sweep, Z4
 2026-10-15T00:31:52Z  HB  commit=e7d1977  done=U1p,v2v3,U8,U9,U10,DP  pending=-  tmux=-  note=W22 item 5+6 done: CASA on mms-1b, four transcode families
+2026-10-15T10:40:00Z  HB  queue recovery: verified W0-W12/W16/W18-W20/W22; pending W13,W14,W15,W17,W21; WF gated by FREEZE_OK
+2026-10-15T02:52:02Z | W13,W14 | GPU 0 %, 0 MiB, 32760 MiB | disk 70% | DONE=18 PENDING=4 RUNNING=2
+2026-10-15T03:22:13Z | W13,W14 | GPU 0 %, 4 MiB, 32760 MiB | disk 70% | DONE=18 PENDING=4 RUNNING=2
+2026-10-15T03:52:23Z | W13,W14 | GPU 0 %, 4 MiB, 32760 MiB | disk 70% | DONE=18 PENDING=4 RUNNING=2
