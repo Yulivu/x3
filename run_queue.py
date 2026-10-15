@@ -108,6 +108,9 @@ class Orchestrator:
         git_sync: bool = True,
         allow_shutdown: bool = True,
         once_mode: bool = False,
+        state_path: Optional[str] = None,
+        progress_path: Optional[str] = None,
+        done_dir: Optional[str] = None,
     ) -> None:
         self.root = Path(root)
         self.wps = {wp["id"]: wp for wp in wps}
@@ -122,8 +125,15 @@ class Orchestrator:
         self.logs = self.root / "logs"
         (self.logs / "done").mkdir(parents=True, exist_ok=True)
         (self.logs / "wps").mkdir(parents=True, exist_ok=True)
-        self.state_path = self.logs / "queue_state.json"
-        self.progress_path = self.root / "progress.log"
+        # Two queues may run side by side (a legacy work package that must finish
+        # plus the next queue).  Each keeps its own state/progress/marker files so
+        # neither orchestrator can overwrite the other's bookkeeping.
+        self.state_path = (self._under_root(state_path) if state_path
+                           else self.logs / "queue_state.json")
+        self.progress_path = (self._under_root(progress_path) if progress_path
+                              else self.root / "progress.log")
+        self.done_dir = self._under_root(done_dir) if done_dir else self.logs / "done"
+        self.done_dir.mkdir(parents=True, exist_ok=True)
         self.checkpoint_path = self.root / "CHECKPOINT_REPORT.md"
         self.all_done_path = self.root / "ALL_DONE"
 
@@ -131,6 +141,10 @@ class Orchestrator:
         self.running: Dict[str, Dict[str, Any]] = {}
         self.last_heartbeat = 0.0
         self.last_checkpoint = 0.0
+
+    def _under_root(self, path: str) -> Path:
+        p = Path(path)
+        return p if p.is_absolute() else self.root / p
 
     # ---------------------------------------------------------------- state
     def _load_state(self) -> Dict[str, Dict[str, Any]]:
@@ -167,7 +181,7 @@ class Orchestrator:
         return all((self.root / str(o)).exists() for o in outs) if outs else False
 
     def done_marker(self, wp_id: str) -> Path:
-        return self.logs / "done" / f"{wp_id}.DONE"
+        return self.done_dir / f"{wp_id}.DONE"
 
     def is_finished(self, wp: Dict[str, Any]) -> bool:
         return self.done_marker(wp["id"]).exists() and self.outputs_present(wp)
@@ -512,6 +526,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--no-shutdown", action="store_true", help="never call shutdown in wait mode")
     parser.add_argument("--dry-run", action="store_true", help="print the plan and exit")
     parser.add_argument("--once", action="store_true", help="single scheduling pass (used by tests)")
+    parser.add_argument("--state", default=None,
+                        help="state JSON path (default logs/queue_state.json)")
+    parser.add_argument("--progress", default=None,
+                        help="heartbeat log path (default progress.log)")
+    parser.add_argument("--done-dir", default=None,
+                        help="DONE-marker directory (default logs/done)")
     args = parser.parse_args(argv)
 
     root = Path(args.root).resolve()
@@ -538,6 +558,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         git_sync=not args.no_git,
         allow_shutdown=not args.no_shutdown,
         once_mode=args.once,
+        state_path=args.state,
+        progress_path=args.progress,
+        done_dir=args.done_dir,
     )
     if args.once:
         orch.run_once()
