@@ -234,6 +234,7 @@ def _nt02_block(root: Path) -> List[str]:
 
     w22k = read_csv(root, "w22_kcurve.csv")
     w22s = read_csv(root, "w22_spec_sensitivity.csv")
+    w22f = read_csv(root, "w22_families_summary.csv")
     if w22k is not None or w22s is not None:
         lines.append("### W22 backlog: budget curve and spec sensitivity")
         lines.append("")
@@ -254,6 +255,12 @@ def _nt02_block(root: Path) -> List[str]:
                          "draws, k=290, 30 draws)")
             lines.append("")
             lines.append(_md_table(piv, max_rows=20))
+        if w22f is not None:
+            lines.append("")
+            lines.append("`results/w22_families.csv` - transcode-family robustness "
+                         "(B1, same clips and draws; `cost_vs_*` are EER differences)")
+            lines.append("")
+            lines.append(_md_table(w22f, max_rows=10))
         lines.append("")
     if w6b is None:
         lines.append("NOT_RUN - `results/w6_summary_v3_mms1b.csv` missing "
