@@ -161,7 +161,8 @@ def gate_g28(root: Path, df: pd.DataFrame) -> Dict[str, Any]:
         if not {"OC_xls", "OC_mms"} <= set(means.index):
             continue
         ref_name = min(("OC_xls", "OC_mms"), key=lambda k: means.loc[k, "pooled_eer"])
-        cands = [c for c in ("E-norm_xls", "E-norm_mms", "multi-OC", "LCM")
+        # method names produced by ``_run_unit`` are Enorm_xls / Enorm_mms
+        cands = [c for c in ("Enorm_xls", "Enorm_mms", "multi-OC", "LCM")
                  if c in means.index]
         if not cands:
             continue
