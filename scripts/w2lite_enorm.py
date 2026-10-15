@@ -36,8 +36,8 @@ from src import regions as R  # noqa: E402
 from src.data import data_root  # noqa: E402
 from src.metrics3 import summarize  # noqa: E402
 from src.newtasks05 import (  # noqa: E402
-    enrol_mask, l2_normalise, one_thread_blas, worker_slots, write_csv_atomic,
-    zero_scores,
+    enrol_mask, l2_normalise, oc_scores, one_thread_blas, worker_slots,
+    write_csv_atomic, zero_scores,
 )
 
 M_LIST = (3, 5, 10)
@@ -54,15 +54,10 @@ def _z(x: np.ndarray) -> np.ndarray:
 
 
 def _o1(Xn: np.ndarray, sp: np.ndarray, ref: np.ndarray) -> np.ndarray:
-    out = np.full(Xn.shape[0], np.nan)
-    for s in np.unique(sp):
-        idx = np.where(sp == s)[0]
-        r = idx[ref[idx]]
-        if r.size == 0:
-            continue
-        out[idx] = (1.0 - Xn[idx] @ Xn[r].T).min(axis=1)
-    med = float(np.nanmedian(out)) if np.isfinite(out).any() else 0.0
-    return np.where(np.isnan(out), med, out)
+    """The SAME implementation U12R uses; a local re-derivation disagreed by up
+    to 0.062 on the score scale and moved the OC EER from 15.1 to 28.8, so the
+    shared helper is the single source of truth."""
+    return oc_scores(Xn, sp, ref)
 
 
 def _sigma(Xn: np.ndarray, sp: np.ndarray, ref: np.ndarray) -> Dict[str, float]:
