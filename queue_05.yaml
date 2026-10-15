@@ -1,0 +1,23 @@
+# NEW_TASKS 05 queue.  It is started only after the legacy x3-main process has
+# reaped W13/W14; queue.yaml remains an immutable record of the prior schedule.
+version: 5
+python: /root/miniconda3/bin/python
+wps:
+  - {id: TA05, tier: P0, lane: C, deps: [], est_h: 0.3, cmd: "/root/miniconda3/bin/python scripts/t_a_state.py", outputs: ["state.json"]}
+  - {id: TG05, tier: P0, lane: C, deps: [TA05], est_h: 0.5, cmd: "/root/miniconda3/bin/python scripts/t_g_saturation.py", outputs: ["results/t_g_saturation.csv"]}
+  - {id: U11, tier: P0, lane: C, deps: [TA05], est_h: 1.0, cmd: "/root/miniconda3/bin/python scripts/u11_zlabel.py", outputs: ["results/u11_zlabel.csv"]}
+  - {id: U13, tier: P0, lane: C, deps: [U11], est_h: 4.0, cmd: "/root/miniconda3/bin/python scripts/u13_sgm.py", outputs: ["results/u13_sgm_draws.csv", "results/u13_sgm_summary.csv"]}
+  - {id: U12, tier: P0, lane: C, deps: [U11], est_h: 2.0, cmd: "/root/miniconda3/bin/python scripts/u12_e0.py", outputs: ["results/u12_e0.csv"]}
+  - {id: U8R, tier: P0, lane: C, deps: [TA05], est_h: 3.0, cmd: "/root/miniconda3/bin/python scripts/u8_esn.py", outputs: ["results/u8_esn.csv", "results/u8_gate.json"]}
+  - {id: U14, tier: P0, lane: C, deps: [U13], est_h: 3.0, cmd: "/root/miniconda3/bin/python scripts/u14_uda.py", outputs: ["results/u14_uda.csv"]}
+  - {id: U1R, tier: P0, lane: C, deps: [TA05], est_h: 1.0, cmd: "/root/miniconda3/bin/python scripts/u1p_speaker_split_v3.py", outputs: ["results/u1p_speaker_split_v3.csv"]}
+  - {id: U9R, tier: P0, lane: C, deps: [TA05], est_h: 2.0, cmd: "/root/miniconda3/bin/python scripts/u9_projection.py", outputs: ["results/u9_projection.csv", "results/u9_gate.json"]}
+  - {id: U10R, tier: P0, lane: C, deps: [TA05], est_h: 1.0, cmd: "/root/miniconda3/bin/python scripts/u10_fusion.py", outputs: ["results/u10_fusion.csv"]}
+  - {id: DP05, tier: P1, lane: C, deps: [TG05, U13, U12, U8R, U14, U1R, U9R, U10R], est_h: 0.2, cmd: "/root/miniconda3/bin/python scripts/decision_point.py", outputs: ["DECISION_POINT.md"]}
+  - {id: TB05, tier: P2, lane: C, deps: [DP05], est_h: 4.0, cmd: "/root/miniconda3/bin/python scripts/t_b_original_features.py", outputs: ["results/t_b_original_features.csv"]}
+  - {id: TC05, tier: P2, lane: C, deps: [DP05], est_h: 1.0, cmd: "/root/miniconda3/bin/python scripts/t_c_recompute_headline.py", outputs: ["results/t_c_recompute.csv", "results/t_c_recompute_verdict.json"]}
+  - {id: TD05, tier: P2, lane: C, deps: [DP05], est_h: 1.0, cmd: "/root/miniconda3/bin/python scripts/t_d_samelabel_opponents.py", outputs: ["results/t_d_samelabel_opponents.csv"]}
+  - {id: TF05, tier: P2, lane: C, deps: [DP05], est_h: 0.2, cmd: "/root/miniconda3/bin/python scripts/t_f_anchor.py", outputs: ["results/t_f_anchor.json"]}
+  - {id: U4P, tier: P2, lane: C, deps: [DP05], est_h: 4.0, cmd: "/root/miniconda3/bin/python scripts/u4_malp.py", outputs: ["results/u4_malp.csv"]}
+  - {id: U5R, tier: P2, lane: C, deps: [DP05], est_h: 1.0, cmd: "/root/miniconda3/bin/python scripts/u5_noise.py", outputs: ["results/u5_noise.csv"]}
+  - {id: U15, tier: P3, lane: C, deps: [DECISION_APPROVED], gating: false, est_h: 0.0, cmd: "/root/miniconda3/bin/python scripts/u15_meta_adapter.py", outputs: ["results/u15_meta_adapter.json"]}

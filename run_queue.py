@@ -36,6 +36,9 @@ import yaml
 
 TIER_ORDER = {"P0": 0, "P1": 1, "P2": 2, "P3": 3}
 LANES = ("G", "C")
+# NEW_TASKS 05 permits two CPU work packages while a GPU task is active.  A
+# GPU/network job remains exclusive so feature extraction is never contended.
+LANE_CAPACITY = {"G": 1, "C": 2}
 CONTROL_DEPS = {"FREEZE_OK", "PAUSE", "SHUTDOWN_OK"}
 HEARTBEAT_SEC = 30 * 60
 CHECKPOINT_SEC = 3 * 3600
@@ -202,9 +205,10 @@ class Orchestrator:
             key=lambda wp: (TIER_ORDER.get(str(wp["tier"]), 99), self.order[wp["id"]]),
         )
         chosen: List[Dict[str, Any]] = []
-        busy: Set[str] = set()
+        busy = {lane: 0 for lane in LANES}
         for lanes in (info["lanes"] for info in self.running.values()):
-            busy |= lanes
+            for lane in lanes:
+                busy[lane] += 1
         for wp in ordered:
             wid = wp["id"]
             entry = self._entry(wid)
@@ -217,12 +221,13 @@ class Orchestrator:
             if self.blocked_by_failed_dep(wp):
                 continue
             lanes = parse_lanes(wp["lane"])
-            if lanes & busy:
+            if any(busy[lane] >= LANE_CAPACITY[lane] for lane in lanes):
                 continue
             if cmd_missing(wp["cmd"], self.root):
                 continue
             chosen.append(wp)
-            busy |= lanes
+            for lane in lanes:
+                busy[lane] += 1
         return chosen
 
     # -------------------------------------------------------------- running
