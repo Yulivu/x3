@@ -55,6 +55,7 @@ from src.cv import select_config, speaker_grouped_folds, stratified_folds  # noq
 from src.data import data_root  # noqa: E402
 from src.draws import draw_labels, draw_seed  # noqa: E402
 from src.metrics3 import summarize  # noqa: E402
+from src.newtasks05 import one_thread_blas, worker_slots  # noqa: E402
 from src.mpp import fit_cv as mpp_fit_cv  # noqa: E402
 from src.paired import load_draw_scores, save_draw_scores, two_intervals  # noqa: E402
 
@@ -237,7 +238,8 @@ def run_one(payload) -> Tuple[int, int, List[Dict[str, Any]]]:
 
 def _worker(payload):
     try:
-        return run_one(payload)
+        with one_thread_blas():
+            return run_one(payload)
     except Exception as exc:                           # pragma: no cover
         return payload[0], payload[1], [{"error": f"draw {payload[0]}: {exc}"}]
 
@@ -338,7 +340,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--spec", default="S3")
     parser.add_argument("--split", default=R.SPLIT_V3)
     parser.add_argument("--draws", type=int, default=N_DRAWS)
-    parser.add_argument("--jobs", type=int, default=32)
+    parser.add_argument("--jobs", type=int, default=worker_slots())
     parser.add_argument("--budgets", default="290,100")
     parser.add_argument("--region", default="dev", choices=["dev", "test"],
                         help="the test region is only available once x3/FREEZE_OK exists")

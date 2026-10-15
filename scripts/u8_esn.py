@@ -53,6 +53,7 @@ from src.esn import (  # noqa: E402
     standardise,
 )
 from src.metrics3 import eer, summarize  # noqa: E402
+from src.newtasks05 import one_thread_blas, worker_slots  # noqa: E402
 from src.paired import load_draw_scores, save_draw_scores, two_intervals  # noqa: E402
 
 N_DRAWS = 100
@@ -222,7 +223,8 @@ def run_one(payload) -> Tuple[int, int, List[Dict[str, Any]]]:
 
 def _worker(payload):
     try:
-        return run_one(payload)
+        with one_thread_blas():
+            return run_one(payload)
     except Exception as exc:                            # pragma: no cover
         return payload[0], payload[1], [{"error": f"d={payload[0]}: {exc}"}]
 
@@ -309,7 +311,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--spec", default="S3")
     parser.add_argument("--split", default=R.SPLIT_V3)
     parser.add_argument("--draws", type=int, default=N_DRAWS)
-    parser.add_argument("--jobs", type=int, default=32)
+    parser.add_argument("--jobs", type=int, default=worker_slots())
     parser.add_argument("--ms", default=",".join(map(str, M_LIST)))
     parser.add_argument("--interval-jobs", type=int, default=16)
     parser.add_argument("--intervals-only", action="store_true")

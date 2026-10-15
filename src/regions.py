@@ -25,9 +25,14 @@ from .data import data_root, load_mlitw
 SPLIT_V2 = "speaker_split_v2.json"
 SPLIT_V3 = "speaker_split_v3.json"
 SPECS = ("S1", "S2", "S3", "S4", "S5")
+# The incumbent Line A block is not stored in the x3 feature layout: it lives in
+# ``$DATA/mlitw_feats.npy`` with these layers (TASKBOOK 1.2 / w5_backbones).
+LINEA_BACKBONE = "xlsr300m-linea"
+LINEA_LAYERS = (8, 12, 16, 18, 20)
 
 __all__ = [
     "SPLIT_V2", "SPLIT_V3", "SPECS",
+    "LINEA_BACKBONE", "LINEA_LAYERS",
     "load_split", "speaker_sets", "region_keep", "region_rows",
     "spec_slices", "spec_names", "load_spec_block", "load_region",
 ]
@@ -110,10 +115,26 @@ def _layer_block(mm, rows: np.ndarray, idxs: Sequence[int]) -> np.ndarray:
     return out
 
 
+def _linea_block(data_dir: Path, rows) -> np.ndarray:
+    """The frozen Line A feature block, read layer by layer."""
+    path = Path(data_dir) / "mlitw_feats.npy"
+    if not path.exists():
+        raise FileNotFoundError(
+            f"{path} is missing: backbone {LINEA_BACKBONE!r} is the frozen Line A "
+            "block and T-B / T-G cannot run without it")
+    mm = np.load(path, mmap_mode="r")
+    idx = np.arange(mm.shape[0]) if rows is None else np.asarray(rows, int)
+    return np.ascontiguousarray(np.concatenate(
+        [np.asarray(mm[:, int(i), :][idx], np.float32) for i in LINEA_LAYERS], axis=1))
+
+
 def load_spec_block(data_dir: Path, backbone: str, spec: str,
                     rows: Optional[Sequence[int]] = None,
                     want_zero: bool = True) -> np.ndarray:
     """Build ``spec`` for ``rows`` (default: every clip), without loading all layers."""
+    if str(backbone) == LINEA_BACKBONE:
+        # Every spec name maps to the same frozen five-layer concatenation.
+        return _linea_block(data_dir, rows)
     fdir = _feature_dir(data_dir, backbone)
     info = json.loads((fdir / "layers.json").read_text(encoding="utf-8"))
     mean_mm = np.load(fdir / "mean.npy", mmap_mode="r")

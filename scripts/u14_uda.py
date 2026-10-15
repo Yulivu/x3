@@ -14,6 +14,11 @@ baselines are real implementations, not aliases:
 """
 from __future__ import annotations
 
+import os
+
+for _var in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS"):
+    os.environ.setdefault(_var, "4")
+
 import argparse
 import contextlib
 import multiprocessing as mp
@@ -33,7 +38,7 @@ sys.path[:0] = [str(REPO), str(REPO / "scripts")]
 from src import regions as R  # noqa: E402
 from src.data import data_root  # noqa: E402
 from src.metrics3 import summarize  # noqa: E402
-from src.newtasks05 import speaker_split, write_csv_atomic, zero_scores  # noqa: E402
+from src.newtasks05 import speaker_split, worker_slots, write_csv_atomic, zero_scores  # noqa: E402
 from src.sgm import fit_sgm_lr, prepare_features  # noqa: E402
 
 C_GRID = (0.01, 0.1, 1.0, 10.0)
@@ -185,7 +190,7 @@ def main(argv=None):
     p.add_argument("--spec", default="S3")
     p.add_argument("--split", default=R.SPLIT_V3)
     p.add_argument("--draws", type=int, default=100)
-    p.add_argument("--jobs", type=int, default=24)
+    p.add_argument("--jobs", type=int, default=worker_slots())
     p.add_argument("--out", default="results/u14_uda.csv")
     a = p.parse_args(argv)
 

@@ -7,6 +7,13 @@ or ``--jobs 64``.
 """
 from __future__ import annotations
 
+import os
+
+# Cap BLAS before numpy initialises it: the container is 16 vCPU even though
+# ``nproc`` reports the host's core count.
+for _var in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS"):
+    os.environ.setdefault(_var, "4")
+
 import argparse
 import contextlib
 import multiprocessing as mp
@@ -24,7 +31,9 @@ sys.path[:0] = [str(REPO), str(REPO / "scripts")]
 from src import regions as R  # noqa: E402
 from src.data import data_root  # noqa: E402
 from src.metrics3 import summarize  # noqa: E402
-from src.newtasks05 import enrol_mask, speaker_split, zero_scores, write_csv_atomic  # noqa: E402
+from src.newtasks05 import (  # noqa: E402
+    enrol_mask, speaker_split, worker_slots, write_csv_atomic, zero_scores,
+)
 from src.sgm import fit_1d, fit_sgm_lr, prepare_features  # noqa: E402
 
 _G: Dict[str, Any] = {}
@@ -124,7 +133,7 @@ def main(argv=None):
     p.add_argument("--split", default=R.SPLIT_V3)
     p.add_argument("--draws", type=int, default=100)
     p.add_argument("--tracks", default="Z,E0,F,U")
-    p.add_argument("--jobs", type=int, default=24)
+    p.add_argument("--jobs", type=int, default=worker_slots())
     p.add_argument("--out", default="results/u13_sgm_draws.csv")
     p.add_argument("--summary", default=None)
     a = p.parse_args(argv)
