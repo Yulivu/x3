@@ -21,3 +21,7 @@ wps:
   - {id: CONT, tier: P0, lane: C, deps: [], est_h: 2.0, cmd: "/root/miniconda3/bin/python scripts/w2lite_contam.py", outputs: ["results/w2lite_contam.csv", "results/w2lite_contam_gate.json"]}
   # NEW_TASKS 07 sections 2.3-2.5: E-norm-s, multi-backbone OC, LCM (gate G28).
   - {id: ENORM, tier: P0, lane: C, deps: [], est_h: 2.0, cmd: "/root/miniconda3/bin/python scripts/w2lite_enorm.py", outputs: ["results/w2lite_enorm.csv", "results/w2lite_enorm_gate.json"]}
+  # OC metric stability: same scores, same mask, two implementations gave EER
+  # 14.84 vs 28.75 with a 0.062 score delta.  Quantify the tie plateau before
+  # any G28 re-judgement.
+  - {id: TIE, tier: P0, lane: C, deps: [], est_h: 0.5, cmd: "/root/miniconda3/bin/python scripts/oc_tie_audit.py", outputs: ["results/oc_tie_audit.csv", "results/oc_tie_audit_summary.csv"]}
