@@ -32,6 +32,7 @@ from scripts.sprint1 import recode_feats as rf  # noqa: E402
 from scripts.sprint1 import counterfactual as cf  # noqa: E402
 from scripts.sprint1 import extra_feats as ef  # noqa: E402
 from scripts.sprint1 import x_e_audit_list as xe  # noqa: E402
+from scripts.sprint1 import base_m as bm  # noqa: E402
 from scripts.sprint1.scheduler import Sprint, cmd_missing, load_packages  # noqa: E402
 
 
@@ -345,6 +346,114 @@ def test_sample_library_caps_clips_per_speaker() -> None:
     small = stab.sample_library(rows[:6], speakers[:6], 40, np.random.default_rng(12))
     assert len(small) <= 6
     assert len(set(small)) == len(small)
+
+
+# --- S1-B BASE_M -------------------------------------------------------------
+def test_smallest_k_distances_masks_the_query_speaker() -> None:
+    rng = np.random.default_rng(5)
+    Z = rng.normal(size=(12, 4)).astype(np.float32)
+    speaker = np.array(["a", "a", "b", "b", "c", "c"] * 2)
+    d = bm.smallest_k_distances(Z, Z, speaker, speaker, 2)
+    assert d.shape == (12, 2)
+    # a query must never take a reference of its own speaker: distances are larger
+    # than the 0 it would get from itself
+    assert np.all(d[:, 0] > 1e-6)
+    # the query's own vector is in the pool, so a missing mask would give ~0
+    d_norm = bm.smallest_k_distances(Z, Z[:1], np.array(["a"]), np.array(["a"]), 1)
+    assert np.all(np.isnan(d_norm[:, 0]))
+
+
+def test_e_norm_s_shrinks_towards_the_global_scale() -> None:
+    rng = np.random.default_rng(6)
+    Z = rng.normal(size=(20, 4)).astype(np.float32)
+    speaker = np.array([f"s{i % 4}" for i in range(20)])
+    o1 = np.abs(rng.normal(size=5)).astype(np.float32)
+    scaled, sigma = bm.e_norm_s(o1, Z, speaker, sigma_global=1.0)
+    assert sigma > 0
+    assert np.allclose(scaled, o1 / sigma)
+    # a library with a tiny spread cannot collapse the scale to zero
+    Z_tight = np.ones((8, 4), np.float32) + 1e-9 * rng.normal(size=(8, 4)).astype(np.float32)
+    _, sigma_tight = bm.e_norm_s(o1, Z_tight, np.array(["s"] * 8), sigma_global=2.0)
+    assert sigma_tight > 0 and np.isfinite(sigma_tight)
+
+
+def test_fit_b1_picks_a_grid_value() -> None:
+    rng = np.random.default_rng(7)
+    Z = rng.normal(size=(200, 6)).astype(np.float32)
+    y = (rng.random(200) < 0.5).astype(int)
+    sp = np.array([f"s{i % 10}" for i in range(200)])
+    lr, C = bm.fit_b1(Z, y, sp)
+    assert C in bm.C_GRID
+    assert lr.decision_function(Z[:5]).shape == (5,)
+
+
+def test_threshold_helpers() -> None:
+    y = np.array([0, 0, 1, 1])
+    s = np.array([0.1, 0.4, 0.5, 0.9])
+    assert bm._tpr_at_threshold(y, s, 0.6) == pytest.approx(50.0)
+    assert bm._tpr_at_threshold(y, s, 0.5) == pytest.approx(100.0)
+    assert bm._hter(y, s, 0.6) == pytest.approx(25.0)
+    assert np.isnan(bm._tpr_at_threshold(y, s, float("nan")))
+
+
+def test_base_m_end_to_end_on_synthetic_inputs(tmp_path: Path,
+                                               monkeypatch: pytest.MonkeyPatch) -> None:
+    # 09 section 0: a platform enters the macro average only with >=30 clips per
+    # class, so the fixture has to clear that bar
+    n_platforms, speakers_per_platform, clips_per_speaker = 2, 6, 14
+    rows = []
+    for pi in range(n_platforms):
+        for si in range(speakers_per_platform):
+            for ci in range(clips_per_speaker):
+                rows.append({"speaker": f"p{pi}s{si}", "language": "en",
+                             "platform": f"plat{pi}",
+                             "label": "spoof" if ci % 2 else "bonafide"})
+    meta = pd.DataFrame(rows)
+    meta["clip_id"] = np.arange(len(meta))
+    meta["y"] = (meta["label"] == "spoof").astype(int)
+    meta["cell"] = meta["platform"] + "|" + meta["language"]
+    n = len(meta)
+    rng = np.random.default_rng(8)
+    block = rng.normal(size=(n, 5)).astype(np.float32)
+    block[:, -1] = (meta["y"].to_numpy() * 0.6 + rng.normal(size=n) * 0.4)
+
+    monkeypatch.setattr("src.data.load_mlitw", lambda *a, **k: meta)
+    monkeypatch.setattr("src.regions.load_spec_block",
+                        lambda data_dir, bb, spec, rows=None, want_zero=True:
+                        block if rows is None else block[np.asarray(rows, int)])
+    # Z0 must come from the backbone's scores.csv (spec S3 carries no zero column)
+    monkeypatch.setattr("src.newtasks05.zero_scores",
+                        lambda data_dir, bb, clip_id: (3.0 * meta["y"].to_numpy() - 1.0))
+
+    _write_fake_audio_index(tmp_path, n)          # dev rows = 0..n-1, side dev
+    dev_rows = np.arange(n)
+    tables = stab.build_p1(meta, dev_rows, draws=2, sizes=(10,), boot=3)
+    (tmp_path / "sprint1" / "tables").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "sprint1" / "tables" / "p1_folds.json").write_text(
+        json.dumps(tables), encoding="utf-8")
+    pca_dir = tmp_path / "sprint1" / "pca"
+    pca_dir.mkdir(parents=True, exist_ok=True)
+    Z = rng.normal(size=(n, 4)).astype(np.float32)
+    for p, t in tables["targets"].items():
+        t_rows = np.asarray(t["target_rows"], int)
+        s_rows = np.asarray(t["source_rows"], int)
+        np.savez_compressed(pca_dir / f"pca_syn_{p}.npz",
+                            target_rows=t_rows, source_rows=s_rows,
+                            Z_target=Z[t_rows], Z_source=Z[s_rows])
+
+    rc = bm.main(["--root", str(tmp_path), "--backbone" if False else "--backbones", "syn",
+                  "--sizes", "10", "--draws", "2", "--save-scores-count", "0"])
+    assert rc == 0
+    out = pd.read_csv(tmp_path / "sprint1" / "results" / "base_m.csv")
+    assert len(out) > 0
+    agg = pd.read_csv(tmp_path / "sprint1" / "results" / "base_m_agg.csv")
+    methods = set(agg["method"])
+    for m in ("Z0", "OC-1NN", "E-norm-s", "B1", "B1+refs", "OC+B1"):
+        assert m in methods
+    z0_auc = float(agg[agg["method"] == "Z0"]["auc_mean"].iloc[0])
+    assert z0_auc > 0.9, "Z0 must be the scores.csv column, not the S3 block's last column"
+    gate = pd.read_csv(tmp_path / "sprint1" / "results" / "base_m_gate.csv")
+    assert "strongest" in gate.columns and gate["strongest"].iloc[0] != "Z0"
 
 
 def test_p2_fallback_uses_u8_sampler() -> None:
